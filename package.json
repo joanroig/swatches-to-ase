@@ -1,0 +1,18 @@
+{
+  "name": "swatches-to-ase",
+  "version": "1.0.0",
+  "description": "Convert Procreate swatches file to Adobe ase format. Can be used for importing Procreate palettes into Photoshop or other programs like Illustrator or Affinity Designer.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ase-utils": "^0.1.1",
+    "color-convert": "^2.0.1",
+    "colorsys": "^1.0.22",
+    "procreate-swatches": "^0.1.1"
+  }
+}
