@@ -1,5 +1,5 @@
 #!/bin/sh
-branch=$(git branch --show-current)
+# branch=$(git branch --show-current)
 
 # # Prevent committing into master
 # if [ "$branch" = "master" ]; then
@@ -8,4 +8,4 @@ branch=$(git branch --show-current)
 # fi
 
 # Format staged files with eslint and prettier as a plugin
-yarn run format:staged
+npm run format:staged
