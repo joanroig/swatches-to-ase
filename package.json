@@ -1,18 +1,47 @@
 {
   "name": "swatches-to-ase",
-  "version": "1.0.0",
   "description": "Convert Procreate swatches file to Adobe ase format. Can be used for importing Procreate palettes into Photoshop or other programs like Illustrator or Affinity Designer.",
-  "main": "index.js",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "repository": "https://github.com/joanroig/candlesticks-api.git",
+  "author": "Joan Roig <joanroigsegura@gmail.com>",
+  "license": "MIT",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "build": "rimraf ./build && tsc -p tsconfig.build.json",
+    "run": "ts-node ./src/index.ts",
+    "run-bw": "ts-node ./src/index.ts true",
+    "run:dev": "nodemon",
+    "lint": "eslint . --ext .ts",
+    "format": "eslint . --ext .ts --fix",
+    "format:staged": "lint-staged",
+    "prepare": "husky install"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "ase-utils": "^0.1.1",
     "color-convert": "^2.0.1",
     "colorsys": "^1.0.22",
-    "procreate-swatches": "^0.1.1"
-  }
+    "eslint": "^8.29.0",
+    "husky": "^8.0.2",
+    "lint-staged": "^13.1.0",
+    "nodemon": "^2.0.20",
+    "procreate-swatches": "^0.1.1",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.3"
+  },
+  "devDependencies": {
+    "@types/color-convert": "^2.0.0",
+    "@types/node": "^18.11.11",
+    "@typescript-eslint/eslint-plugin": "^5.45.1",
+    "@typescript-eslint/parser": "^5.45.1"
+  },
+  "engines": {
+    "npm": "please-use-yarn",
+    "yarn": "^1.22.17"
+  },
+  "lint-staged": {
+    "src/**/*.{js,ts}": "eslint --cache --fix"
+  },
+  "typings": "src/global.d.ts"
 }
