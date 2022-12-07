@@ -22,14 +22,22 @@ Go to the `examples` folder to see some converted palettes like this one:
 
 ## How to use
 
-- Run `yarn` to install dependencies
-- Add your swatches files in the "palette-import" folder
-- Run `yarn run`
+Be sure to have [Node.js](https://nodejs.org/en/download/) installed, then:
+
+- Run `npm install` in the root folder to install dependencies.
+- Add your swatches files in the `palette-import` folder.
+- Run `npm run convert` to convert the palettes.
 - The converted files should be in the `palette-export` folder.
 
 ### Extras
 
-Run `yarn run-bw` to add black and white colors to the exported palettes.
+Run `npm run convert-bw` to add black and white colors to the exported palettes.
+
+<p align="center">
+  <img src="examples/ps-bw.png" alt="converted palette" width="300px"/>
+  <br>
+  <i>Converted palette with extra black and white colors imported in Photoshop</i>
+</p>
 
 ## Credits
 
