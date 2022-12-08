@@ -4,16 +4,18 @@ import { encode } from "ase-utils";
 // eslint-disable-next-line
 // @ts-ignore
 import { readSwatchesFile } from "procreate-swatches";
+// eslint-disable-next-line
+// @ts-ignore
+import ColorHelper from "color-to-name";
 
 import convert from "color-convert";
 import { HSV } from "color-convert/conversions";
 import fs from "fs";
 
 const addBlackWhite = process.argv[2];
+const inFolder = "palette-in/";
 
-const testFolder = "palette-import/";
-
-fs.readdir(testFolder, (err, files) => {
+fs.readdir(inFolder, (err, files) => {
   for (const file of files) {
     if (
       !file.includes(".") ||
@@ -24,23 +26,22 @@ fs.readdir(testFolder, (err, files) => {
     }
 
     console.info("Converting: " + file);
-
     const fileName = file.slice(0, file.lastIndexOf(".")) || file;
-    const data = fs.readFileSync("palette-import/" + fileName + ".swatches");
+    const data = fs.readFileSync(inFolder + file);
 
-    readSwatchesFile(data).then((result: any) => {
+    readSwatchesFile(data).then((result: { name: string; colors: [HSV[]] }) => {
       const colors = [];
 
       if (addBlackWhite) {
         colors.push(
           {
-            name: "Black",
+            name: "black",
             model: "RGB",
             color: [0, 0, 0],
             type: "global",
           },
           {
-            name: "White",
+            name: "white",
             model: "RGB",
             color: [255, 255, 255],
             type: "global",
@@ -48,28 +49,28 @@ fs.readdir(testFolder, (err, files) => {
         );
       }
 
-      result.colors.forEach((color: HSV[], index: string) => {
+      for (const color of result.colors) {
         if (color) {
           const rgb = convert.hsv.rgb(color[0]);
-          const asergb = [rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0]; // ase format needs rgb values from 0 to 1
+          // ase format needs rgb values from 0 to 1
+          const ase = [rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0];
+          // get the closest color name
+          const hex = `#${convert.rgb.hex(rgb)}`;
+          const name = ColorHelper.findClosestColor(hex).name;
+
           colors.push({
-            name: "Color " + index,
+            name,
             model: "RGB",
-            color: asergb,
+            color: ase,
             type: "global",
           });
         }
-      });
+      }
 
       const aseContent = {
-        version: "1.0",
-        groups: [] as any[],
         colors: colors,
       };
-      fs.writeFileSync(
-        "palette-export/" + fileName + ".ase",
-        encode(aseContent)
-      );
+      fs.writeFileSync("palette-out/" + fileName + ".ase", encode(aseContent));
     });
   }
   console.log("All done!");
