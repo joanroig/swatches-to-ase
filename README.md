@@ -24,6 +24,7 @@ Go to the `examples` folder to see some converted palettes like this one:
 
 Be sure to have [Node.js](https://nodejs.org/en/download/) installed, then:
 
+- [Download](https://github.com/joanroig/swatches-to-ase/archive/refs/heads/main.zip) or clone the repo.
 - Run `npm install` in the root folder to install dependencies.
 - Add your swatches files in the `palette-import` folder.
 - Run `npm run convert` to convert the palettes.
