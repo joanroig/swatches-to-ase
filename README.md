@@ -30,9 +30,16 @@ Be sure to have [Node.js](https://nodejs.org/en/download/) installed, then:
 - Run `npm run convert` to convert the palettes.
 - The converted files should be in the `palette-export` folder.
 
-### Extras
+## Configuration
 
-Run `npm run convert-bw` to add black and white colors to the exported palettes.
+The input, output, color naming and addition of black & white colors can be changed in: [config.json](config.json)
+
+### Configuration parameters
+
+- **inFolder:** folder used to read the swatches.
+- **outFolder:** folder used to output the resulting ase files.
+- **colorNameFormat:** sets the collection of color names to be used. Available namings are: _roygbiv, basic, html, x11, pantone, ntc_. See [color namer](https://github.com/colorjs/color-namer) for reference.
+- **addBlackWhite:** if true, two extra colors will be added:
 
 <p align="center">
   <img src="examples/ps-bw.png" alt="converted palette" width="300px"/>
@@ -51,3 +58,4 @@ https://bardotbrush.com/procreate-color-palettes/
 https://github.com/szydlovski/procreate-swatches
 https://www.npmjs.com/package/color-convert
 https://github.com/DominikGuzei/node-ase-utils
+https://github.com/colorjs/color-namer
