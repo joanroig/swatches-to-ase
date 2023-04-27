@@ -10,7 +10,6 @@
   "scripts": {
     "build": "rimraf ./build && tsc -p tsconfig.build.json",
     "convert": "npx tsx ./src/index.ts",
-    "convert-bw": "npx tsx ./src/index.ts true",
     "run:dev": "nodemon",
     "lint": "eslint . --ext .ts",
     "format": "eslint . --ext .ts --fix",
@@ -20,7 +19,7 @@
   "dependencies": {
     "ase-utils": "^0.1.1",
     "color-convert": "^2.0.1",
-    "color-to-name": "^1.1.0",
+    "color-namer": "^1.4.0",
     "eslint": "^8.39.0",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.2",
