@@ -55,7 +55,7 @@ https://bardotbrush.com/procreate-color-palettes/
 
 ### Libraries used
 
-https://github.com/szydlovski/procreate-swatches
-https://www.npmjs.com/package/color-convert
-https://github.com/DominikGuzei/node-ase-utils
-https://github.com/colorjs/color-namer
+- https://github.com/szydlovski/procreate-swatches
+- https://www.npmjs.com/package/color-convert
+- https://github.com/DominikGuzei/node-ase-utils
+- https://github.com/colorjs/color-namer
