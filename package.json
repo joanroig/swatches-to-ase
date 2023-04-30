@@ -3,7 +3,7 @@
   "description": "Convert Procreate swatches file to Adobe ase format. Can be used for importing Procreate palettes into Photoshop or other programs like Illustrator or Affinity Designer.",
   "version": "1.0.0",
   "main": "index.ts",
-  "repository": "https://github.com/joanroig/candlesticks-api.git",
+  "repository": "https://github.com/joanroig/swatches-to-ase.git",
   "author": "Joan Roig <joanroigsegura@gmail.com>",
   "license": "MIT",
   "type": "module",
