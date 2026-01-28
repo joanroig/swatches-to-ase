@@ -20,6 +20,7 @@
     "lint": "eslint . --ext .ts",
     "format": "eslint . --ext .ts --fix",
     "format:staged": "lint-staged",
+    "version:bump": "node scripts/bump-version.mjs",
     "prepare": "husky install"
   },
   "dependencies": {
