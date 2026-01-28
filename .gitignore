@@ -108,3 +108,6 @@ dist
 
 # build
 build
+dist-web
+dist-electron
+release
