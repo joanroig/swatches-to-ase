@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist-electron",
+    "rootDir": "..",
+    "target": "ES2020",
+    "module": "NodeNext",
+    "lib": ["ES2020"],
+    "types": ["node", "electron"]
+  },
+  "include": [
+    "../electron/**/*.ts",
+    "../src/core/**/*.ts",
+    "../src/core/**/*.d.ts"
+  ]
+}
