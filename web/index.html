@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swatches to ASE Studio</title>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-title">Swatches to ASE</span>
+          <span class="brand-subtitle">Studio</span>
+        </div>
+        <div class="tagline">Turn Procreate palettes into ASE files.</div>
+      </header>
+
+      <main class="grid">
+        <section class="panel panel-options" style="--delay: 0.05s">
+          <h2>Options</h2>
+          <div class="field">
+            <label for="format">Color name format</label>
+            <select id="format"></select>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="add-bw" checked />
+            <span class="toggle-track"></span>
+            <span class="toggle-label">Add black &amp; white</span>
+          </label>
+          <p class="hint">
+            Choose a naming family and optionally insert classic black and white
+            chips.
+          </p>
+        </section>
+
+        <section class="panel panel-drop" style="--delay: 0.15s">
+          <h2>Drop Zone</h2>
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="file-input" multiple accept=".swatches" />
+            <div class="drop-content">
+              <p>Drop your .swatches files here</p>
+              <span>or click to browse</span>
+            </div>
+          </div>
+          <p class="hint">
+            Exports a single zip file with all converted ASE palettes.
+          </p>
+        </section>
+
+        <section class="panel panel-log" style="--delay: 0.25s">
+          <h2>Session Log</h2>
+          <div class="log" id="log">
+            <div class="log-item info">Waiting for swatches files.</div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

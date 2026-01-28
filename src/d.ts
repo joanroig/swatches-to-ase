@@ -6,7 +6,7 @@ declare module "procreate-swatches" {
   export function readSwatchesFile(data: any): Promise<any>;
 }
 
-declare module "color-namer" {
+declare module "color-namer/dist/color-namer.js" {
   interface Names {
     ntc: Array<{ name: string }>;
   }
