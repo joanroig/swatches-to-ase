@@ -1,9 +1,7 @@
-import { encode } from "ase-utils";
-import convert from "color-convert";
-import { HSV } from "color-convert/conversions";
-import namer from "color-namer";
 import fs from "fs";
-import { readSwatchesFile } from "procreate-swatches";
+import path from "path";
+
+import { convertSwatchesToAse } from "../core/converter.js";
 
 export class ColorConverter {
   inFolderPath: string;
@@ -19,78 +17,31 @@ export class ColorConverter {
     this.addBlackWhite = config.addBlackWhite;
   }
 
-  start() {
-    fs.readdir(this.inFolderPath, async (err, files) => {
-      for (const file of files) {
-        if (
-          !file.includes(".") ||
-          file.slice(file.lastIndexOf("."), file.length) !== ".swatches"
-        ) {
-          // console.warn("File skipped: " + file);
-          continue;
-        }
+  async start() {
+    await fs.promises.mkdir(this.outFolderPath, { recursive: true });
+    const files = await fs.promises.readdir(this.inFolderPath);
 
-        console.info("Converting: " + file);
-        const fileName = file.slice(0, file.lastIndexOf(".")) || file;
-        const data = fs.readFileSync(this.inFolderPath + file);
-
-        await readSwatchesFile(data)
-          .then(async (result: { name: string; colors: [HSV[]] }) => {
-            const colors = [];
-
-            if (this.addBlackWhite) {
-              colors.push(
-                {
-                  name: "black",
-                  model: "RGB",
-                  color: [0, 0, 0],
-                  type: "global",
-                },
-                {
-                  name: "white",
-                  model: "RGB",
-                  color: [255, 255, 255],
-                  type: "global",
-                }
-              );
-            }
-
-            for (const color of result.colors) {
-              if (color) {
-                const rgb = convert.hsv.rgb(color[0]);
-                // ase format needs rgb values from 0 to 1
-                const ase = [rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0];
-                // get the closest color name
-                const hex = `#${convert.rgb.hex(rgb)}`;
-                const names = namer(hex, { pick: [this.colorNameFormat] });
-                const format = Object.keys(names)[0];
-                if (!format) {
-                  throw new Error(
-                    "Invalid color name format! Use one of the available formats in config.json: roygbiv, basic, html, x11, pantone, ntc"
-                  );
-                }
-                const name = names[format][0].name;
-
-                colors.push({
-                  name,
-                  model: "RGB",
-                  color: ase,
-                  type: "global",
-                });
-              }
-            }
-
-            const aseContent = {
-              colors: colors,
-            };
-            fs.writeFileSync(
-              this.outFolderPath + fileName + ".ase",
-              encode(aseContent)
-            );
-          })
-          .catch((e) => console.error(e));
+    for (const file of files) {
+      if (path.extname(file).toLowerCase() !== ".swatches") {
+        continue;
       }
-      console.log("All done!");
-    });
+
+      console.info("Converting: " + file);
+      const fileName = path.basename(file, ".swatches");
+      const inputPath = path.join(this.inFolderPath, file);
+      const outputPath = path.join(this.outFolderPath, `${fileName}.ase`);
+      const data = new Uint8Array(await fs.promises.readFile(inputPath));
+
+      try {
+        const aseBytes = await convertSwatchesToAse(data, {
+          colorNameFormat: this.colorNameFormat,
+          addBlackWhite: this.addBlackWhite,
+        });
+        await fs.promises.writeFile(outputPath, aseBytes);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    console.log("All done!");
   }
 }
