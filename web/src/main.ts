@@ -11,6 +11,7 @@ const fileInput = document.querySelector<HTMLInputElement>("#file-input");
 const formatSelect = document.querySelector<HTMLSelectElement>("#format");
 const addBwToggle = document.querySelector<HTMLInputElement>("#add-bw");
 const log = document.querySelector<HTMLDivElement>("#log");
+const versionBadge = document.querySelector<HTMLSpanElement>("#app-version");
 
 const state = {
   processing: false,
@@ -158,5 +159,13 @@ const setupFormatSelect = () => {
   formatSelect.value = "pantone";
 };
 
+const setupVersionBadge = () => {
+  if (!versionBadge) {
+    return;
+  }
+  versionBadge.textContent = `v${__APP_VERSION__}`;
+};
+
 setupFormatSelect();
 setupDropzone();
+setupVersionBadge();
