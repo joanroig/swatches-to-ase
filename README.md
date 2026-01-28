@@ -20,15 +20,33 @@ Go to the `examples` folder to see some converted palettes like this one:
   <i>Converted palette imported in Photoshop</i>
 </p>
 
-## How to use
+## GUI (Web + Desktop)
+
+The project now includes a cross-platform GUI that runs in the browser (GitHub
+Pages compatible) and as a desktop app for Windows, macOS, and Linux.
+
+### Web
+
+- Install dependencies with `npm install`.
+- Start the dev server with `npm run dev:web`.
+- Build a static site with `npm run build:web` (output: `dist-web`).
+- Drag and drop `.swatches` files to download a zip of ASE palettes.
+
+### Desktop
+
+- Run `npm run dev:desktop` to launch the Electron app with hot reload.
+- Build installers with `npm run dist:desktop` (outputs to `release`).
+- Desktop mode uses the same drag-and-drop workflow and saves a zip file.
+
+## CLI
 
 Be sure to have [Node.js](https://nodejs.org/en/download/) installed, then:
 
 - [Download](https://github.com/joanroig/swatches-to-ase/archive/refs/heads/main.zip) or clone the repo.
 - Run `npm install` in the root folder to install dependencies.
-- Add your swatches files in the `palette-import` folder.
+- Add your swatches files in the `palette-in` folder.
 - Run `npm run convert` to convert the palettes.
-- The converted files should be in the `palette-export` folder.
+- The converted files should be in the `palette-out` folder.
 
 ## Configuration
 
