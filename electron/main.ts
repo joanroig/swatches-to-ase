@@ -53,7 +53,7 @@ ipcMain.handle(
     if (result.canceled || !result.filePath) {
       return { saved: false };
     }
-    await fs.writeFile(result.filePath, Buffer.from(options.data));
+    await fs.writeFile(result.filePath, options.data);
     return { saved: true, path: result.filePath };
   }
 );
