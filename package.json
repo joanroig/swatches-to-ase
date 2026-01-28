@@ -2,7 +2,7 @@
   "name": "swatches-to-ase",
   "description": "Convert Procreate swatches file to Adobe ase format. Can be used for importing Procreate palettes into Photoshop or other programs like Illustrator or Affinity Designer.",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "dist-electron/electron/main.js",
   "repository": "https://github.com/joanroig/swatches-to-ase.git",
   "author": "Joan Roig <joanroigsegura@gmail.com>",
   "license": "MIT",
@@ -10,6 +10,12 @@
   "scripts": {
     "build": "rimraf ./build && tsc -p tsconfig.build.json",
     "convert": "npx tsx ./src/index.ts",
+    "dev:web": "vite",
+    "build:web": "vite build",
+    "preview:web": "vite preview",
+    "dev:desktop": "concurrently -k \"npm run dev:web\" \"tsc -p electron/tsconfig.json --watch\" \"wait-on http://localhost:5173 dist-electron/electron/main.js && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
+    "build:desktop": "npm run build:web && tsc -p electron/tsconfig.json",
+    "dist:desktop": "npm run build:desktop && electron-builder",
     "run:dev": "nodemon",
     "lint": "eslint . --ext .ts",
     "format": "eslint . --ext .ts --fix",
@@ -22,6 +28,7 @@
     "color-namer": "^1.4.0",
     "eslint": "^8.39.0",
     "husky": "^8.0.3",
+    "jszip": "^3.10.1",
     "lint-staged": "^13.2.2",
     "nodemon": "^2.0.22",
     "procreate-swatches": "^0.1.1",
@@ -33,10 +40,51 @@
     "@types/node": "^18.16.1",
     "@typescript-eslint/eslint-plugin": "^5.59.1",
     "@typescript-eslint/parser": "^5.59.1",
-    "tsx": "^3.12.6"
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^31.1.0",
+    "electron-builder": "^24.13.3",
+    "tsx": "^3.12.6",
+    "vite": "^5.4.21",
+    "wait-on": "^7.2.0"
   },
   "lint-staged": {
     "src/**/*.{js,ts}": "eslint --cache --fix"
   },
-  "typings": "src/global.d.ts"
+  "typings": "src/global.d.ts",
+  "build": {
+    "appId": "com.joanroig.swatchestoase",
+    "productName": "Swatches to ASE",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist-electron/**",
+      "dist-web/**",
+      "package.json"
+    ],
+    "publish": [
+      {
+        "provider": "github"
+      }
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
+  }
 }

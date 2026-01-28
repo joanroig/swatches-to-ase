@@ -1,13 +1,15 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
+    "module": "NodeNext",
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": false,
     "target": "es2016",
     "noImplicitAny": true,
-    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "legacy",
     "sourceMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
