@@ -56,6 +56,7 @@
   "build": {
     "appId": "com.joanroig.swatchestoase",
     "productName": "Swatches to ASE",
+    "icon": "assets/icon.png",
     "directories": {
       "output": "release"
     },
@@ -70,40 +71,39 @@
       }
     ],
     "mac": {
+      "icon": "assets/icon.icns",
       "target": [
-        {
-          "target": "dmg",
-          "artifactName": "swatches-to-ase-v${version}-macos-arm64-installer.${ext}"
-        },
-        {
-          "target": "zip",
-          "artifactName": "swatches-to-ase-v${version}-macos-arm64-portable.${ext}"
-        }
-      ]
+        "dmg",
+        "zip"
+      ],
+      "artifactName": "swatches-to-ase-v${version}-macos-arm64-portable.${ext}"
+    },
+    "dmg": {
+      "artifactName": "swatches-to-ase-v${version}-macos-arm64-installer.${ext}"
     },
     "win": {
+      "icon": "assets/icon.ico",
       "target": [
-        {
-          "target": "nsis",
-          "artifactName": "swatches-to-ase-v${version}-windows-installer.${ext}"
-        },
-        {
-          "target": "zip",
-          "artifactName": "swatches-to-ase-v${version}-windows-portable.${ext}"
-        }
-      ]
+        "nsis",
+        "zip"
+      ],
+      "artifactName": "swatches-to-ase-v${version}-windows-portable.${ext}"
+    },
+    "nsis": {
+      "artifactName": "swatches-to-ase-v${version}-windows-installer.${ext}"
     },
     "linux": {
+      "icon": "assets/icon.png",
       "target": [
-        {
-          "target": "AppImage",
-          "artifactName": "swatches-to-ase-v${version}-linux-amd64-portable.${ext}"
-        },
-        {
-          "target": "deb",
-          "artifactName": "swatches-to-ase-v${version}-linux-amd64-installer.${ext}"
-        }
+        "AppImage",
+        "deb"
       ]
+    },
+    "appImage": {
+      "artifactName": "swatches-to-ase-v${version}-linux-amd64-portable.${ext}"
+    },
+    "deb": {
+      "artifactName": "swatches-to-ase-v${version}-linux-amd64-installer.${ext}"
     }
   }
 }
