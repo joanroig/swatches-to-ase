@@ -32,7 +32,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: ".nvmrc"
 
       - name: Bump and commit version
         if: github.event.inputs.version_bump != 'none'
@@ -100,14 +100,16 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: ".nvmrc"
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build desktop packages
-        run: npm run dist:desktop -- --publish never --${{ matrix.platform }} ${{ matrix.target }}
+        run: |
+          npm run build:desktop
+          npx --no-install electron-builder --publish never --${{ matrix.platform }} ${{ matrix.target }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: refs/tags/${{ needs.version.outputs.tag }}
