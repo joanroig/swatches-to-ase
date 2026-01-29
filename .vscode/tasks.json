@@ -19,6 +19,26 @@
           "endsPattern": "Local:"
         }
       }
+    },
+    {
+      "label": "npm: dist:desktop (win)",
+      "type": "shell",
+      "command": "npm run dist:desktop -- --win"
+    },
+    {
+      "label": "npm: dist:desktop (mac)",
+      "type": "shell",
+      "command": "npm run dist:desktop -- --mac"
+    },
+    {
+      "label": "npm: dist:desktop (linux)",
+      "type": "shell",
+      "command": "npm run dist:desktop -- --linux"
+    },
+    {
+      "label": "npm: dist:desktop (all)",
+      "type": "shell",
+      "command": "npm run dist:desktop -- --win --mac --linux"
     }
   ]
 }

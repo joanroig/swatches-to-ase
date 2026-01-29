@@ -1,11 +1,5 @@
 #!/bin/sh
-# branch=$(git branch --show-current)
+. "$(dirname "$0")/_/husky.sh"
 
-# # Prevent committing into master
-# if [ "$branch" = "master" ]; then
-#   echo "You can't commit directly to master branch"
-#   exit 1
-# fi
-
-# Format staged files with eslint and prettier as a plugin
+# Format staged files with lint-staged
 npm run format:staged

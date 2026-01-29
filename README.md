@@ -1,8 +1,31 @@
-# Swatches to ASE
+<p align="center">
+  <img src="web/public/favicon.svg" width="140px" alt="Logo">
+</p>
 
-Convert Procreate Swatches files to ASE format (Adobe Swatch Exchange).
+<h1 align="center">Swatches to ASE</h1>
 
-Can be used for importing Procreate palettes into Photoshop or other compatible programs like Illustrator or Affinity Designer.
+<p align="center">
+  <strong>Convert Procreate palettes for Photoshop, Illustrator, and Affinity.</strong>
+  <br />
+  <a href="https://joanroig.github.io/swatches-to-ase/"><strong>Open Web App</strong></a> • 
+  <a href="https://github.com/joanroig/swatches-to-ase/releases"><strong>Download Desktop</strong></a>
+</p>
+
+<p align="center">
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-20%2B-43853d?logo=node.js&logoColor=white" alt="Node.js 20+"/></a>
+  <a href="https://github.com/joanroig/swatches-to-ase/actions/workflows/release.yml"><img src="https://github.com/joanroig/swatches-to-ase/actions/workflows/release.yml/badge.svg" alt="Build and Release"/></a>
+  <a href="https://github.com/joanroig/swatches-to-ase/actions/workflows/pages.yml"><img src="https://github.com/joanroig/swatches-to-ase/actions/workflows/pages.yml/badge.svg" alt="Deploy Pages"/></a>
+  <a href="https://joanroig.github.io/swatches-to-ase/"><img src="https://img.shields.io/badge/GitHub%20Pages-live-brightgreen" alt="GitHub Pages"/></a>
+</p>
+
+---
+
+<p align="center">
+  <a href="https://joanroig.github.io/swatches-to-ase/">
+    <img alt="Showcase" src="img/showcase.png">
+  </a>
+  <p align="center"><sub>Available for web, Windows, macOS, and Linux</sub></p>
+</p>
 
 ## Example
 
@@ -30,12 +53,14 @@ Pages compatible) and as a desktop app for Windows, macOS, and Linux.
 - Install dependencies with `npm install`.
 - Start the dev server with `npm run dev:web`.
 - Build a static site with `npm run build:web` (output: `dist-web`).
-- Drag and drop `.swatches` files to download a zip of ASE palettes.
+- Preview the static build with `npm run preview:web`.
+- Choose a color naming format, toggle black/white extras, then drag and drop `.swatches` files to download `swatches-ase.zip`.
 
 ### Desktop
 
 - Run `npm run dev:desktop` to launch the Electron app with hot reload.
-- Build installers with `npm run dist:desktop` (outputs to `release`).
+- Build the desktop bundle with `npm run build:desktop` (outputs: `dist-electron`, `dist-web`).
+- Build installers with `npm run dist:desktop` (outputs: `release`).
 - Desktop mode uses the same drag-and-drop workflow and saves a zip file.
 
 ## CLI
@@ -48,9 +73,9 @@ Be sure to have [Node.js](https://nodejs.org/en/download/) installed, then:
 - Run `npm run convert` to convert the palettes.
 - The converted files should be in the `palette-out` folder.
 
-## Configuration
+## Configuration (CLI)
 
-The input, output, color naming and addition of black & white colors can be changed in: [config.json](config.json)
+The input/output folders, color naming, and optional black & white colors can be changed in: [config.json](config.json)
 
 ### Configuration parameters
 
@@ -75,5 +100,5 @@ https://bardotbrush.com/procreate-color-palettes/
 
 - https://github.com/szydlovski/procreate-swatches
 - https://www.npmjs.com/package/color-convert
-- https://github.com/DominikGuzei/node-ase-utils
 - https://github.com/colorjs/color-namer
+- https://stuk.github.io/jszip/
