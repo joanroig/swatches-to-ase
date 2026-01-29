@@ -70,27 +70,27 @@ jobs:
           - os: macos-latest
             platform: mac
             target: dmg
-            artifact_glob: "*.dmg"
+            artifact_suffix: "macos-arm64-installer.dmg"
           - os: macos-latest
             platform: mac
             target: zip
-            artifact_glob: "*.zip"
+            artifact_suffix: "macos-arm64-portable.zip"
           - os: windows-latest
             platform: win
             target: nsis
-            artifact_glob: "*.exe"
+            artifact_suffix: "windows-installer.exe"
           - os: windows-latest
             platform: win
             target: zip
-            artifact_glob: "*.zip"
+            artifact_suffix: "windows-portable.zip"
           - os: ubuntu-latest
             platform: linux
             target: AppImage
-            artifact_glob: "*.AppImage"
+            artifact_suffix: "linux-amd64-portable.AppImage"
           - os: ubuntu-latest
             platform: linux
             target: deb
-            artifact_glob: "*.deb"
+            artifact_suffix: "linux-amd64-installer.deb"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -118,7 +118,7 @@ jobs:
         with:
           tag_name: ${{ needs.version.outputs.tag }}
           name: Release ${{ needs.version.outputs.tag }}
-          files: release/${{ matrix.artifact_glob }}
+          files: release/swatches-to-ase-v${{ needs.version.outputs.version }}-${{ matrix.artifact_suffix }}
           draft: false
           prerelease: false
           generate_release_notes: true
