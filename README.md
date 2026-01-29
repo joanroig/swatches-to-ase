@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-20%2B-43853d?logo=node.js&logoColor=white" alt="Node.js 20+"/></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22%2B-43853d?logo=node.js&logoColor=white" alt="Node.js 22+"/></a>
   <a href="https://github.com/joanroig/swatches-to-ase/actions/workflows/release.yml"><img src="https://github.com/joanroig/swatches-to-ase/actions/workflows/release.yml/badge.svg" alt="Build and Release"/></a>
   <a href="https://github.com/joanroig/swatches-to-ase/actions/workflows/pages.yml"><img src="https://github.com/joanroig/swatches-to-ase/actions/workflows/pages.yml/badge.svg" alt="Deploy Pages"/></a>
   <a href="https://joanroig.github.io/swatches-to-ase/"><img src="https://img.shields.io/badge/GitHub%20Pages-live-brightgreen" alt="GitHub Pages"/></a>
@@ -65,7 +65,7 @@ Pages compatible) and as a desktop app for Windows, macOS, and Linux.
 
 ## CLI
 
-Be sure to have [Node.js](https://nodejs.org/en/download/) installed, then:
+Be sure to have [Node.js](https://nodejs.org/en/download/) 22+ installed, then:
 
 - [Download](https://github.com/joanroig/swatches-to-ase/archive/refs/heads/main.zip) or clone the repo.
 - Run `npm install` in the root folder to install dependencies.
