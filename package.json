@@ -71,20 +71,38 @@
     ],
     "mac": {
       "target": [
-        "dmg",
-        "zip"
+        {
+          "target": "dmg",
+          "artifactName": "swatches-to-ase-v${version}-macos-arm64-installer.${ext}"
+        },
+        {
+          "target": "zip",
+          "artifactName": "swatches-to-ase-v${version}-macos-arm64-portable.${ext}"
+        }
       ]
     },
     "win": {
       "target": [
-        "nsis",
-        "zip"
+        {
+          "target": "nsis",
+          "artifactName": "swatches-to-ase-v${version}-windows-installer.${ext}"
+        },
+        {
+          "target": "zip",
+          "artifactName": "swatches-to-ase-v${version}-windows-portable.${ext}"
+        }
       ]
     },
     "linux": {
       "target": [
-        "AppImage",
-        "deb"
+        {
+          "target": "AppImage",
+          "artifactName": "swatches-to-ase-v${version}-linux-amd64-portable.${ext}"
+        },
+        {
+          "target": "deb",
+          "artifactName": "swatches-to-ase-v${version}-linux-amd64-installer.${ext}"
+        }
       ]
     }
   }
