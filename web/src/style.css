@@ -68,6 +68,14 @@ body::after {
   margin-bottom: 40px;
 }
 
+.topbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
 .brand {
   display: flex;
   align-items: baseline;
@@ -100,10 +108,45 @@ body::after {
   background: rgba(255, 255, 255, 0.6);
 }
 
+.github-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ink);
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.7);
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow: 0 12px 24px rgba(28, 26, 22, 0.08);
+}
+
+.github-button svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.github-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(28, 26, 22, 0.3);
+  box-shadow: 0 16px 28px rgba(28, 26, 22, 0.14);
+}
+
 .tagline {
   font-size: 1.1rem;
   max-width: 620px;
   color: var(--muted);
+}
+
+.footer {
+  margin-top: 36px;
+  display: flex;
+  justify-content: center;
 }
 
 .grid {
@@ -302,6 +345,10 @@ button.ghost {
   }
 
   .topbar {
+    align-items: flex-start;
+  }
+
+  .topbar-row {
     align-items: flex-start;
   }
 

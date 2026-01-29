@@ -6,6 +6,10 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 
+const devIconPath = isDev
+  ? path.join(process.cwd(), "assets", "icon.png")
+  : undefined;
+
 const createWindow = () => {
   const win = new BrowserWindow({
     width: 1080,
@@ -13,6 +17,7 @@ const createWindow = () => {
     minWidth: 960,
     minHeight: 640,
     backgroundColor: "#f3efe9",
+    ...(devIconPath ? { icon: devIconPath } : {}),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
