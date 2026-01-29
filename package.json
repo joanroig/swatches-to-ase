@@ -30,7 +30,7 @@
     "eslint": "^8.39.0",
     "husky": "^8.0.3",
     "jszip": "^3.10.1",
-    "lint-staged": "^13.2.2",
+    "lint-staged": "^16.0.0",
     "nodemon": "^2.0.22",
     "procreate-swatches": "^0.1.1",
     "rimraf": "^5.0.0",
