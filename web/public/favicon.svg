@@ -1,6 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Swatches to ASE">
-  <rect width="32" height="32" x="0" y="0" fill="#1c1a16"/>
-  <rect width="32" height="32" x="32" y="0" fill="#d4633f"/>
-  <rect width="32" height="32" x="0" y="32" fill="#2d7c8a"/>
-  <rect width="32" height="32" x="32" y="32" fill="#f3efe9"/>
+  <defs>
+    <clipPath id="rounded">
+      <rect width="64" height="64" rx="16" ry="16"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#rounded)">
+    <rect width="32" height="32" x="0" y="0" fill="#1c1a16"/>
+    <rect width="32" height="32" x="32" y="0" fill="#d4633f"/>
+    <rect width="32" height="32" x="0" y="32" fill="#2d7c8a"/>
+    <rect width="32" height="32" x="32" y="32" fill="#f3efe9"/>
+  </g>
 </svg>
