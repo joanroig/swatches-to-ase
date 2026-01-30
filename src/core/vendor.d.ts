@@ -6,5 +6,10 @@ declare module "color-namer/dist/color-namer.js" {
 declare module "procreate-swatches" {
   export function readSwatchesFile(
     data: ArrayBuffer | Uint8Array
-  ): Promise<any>;
+  ): Promise<unknown>;
+  export function createSwatchesFile(
+    name: string,
+    colors: Array<[[number, number, number], string] | [number[], string]>,
+    format?: "uint8array" | "buffer" | "blob"
+  ): Promise<Uint8Array>;
 }

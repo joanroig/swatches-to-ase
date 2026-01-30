@@ -1,6 +1,7 @@
 {
   "inFolder": "palette-in/",
   "outFolder": "palette-out/",
+  "outFormats": ["ase"],
   "colorNameFormat": "pantone",
   "addBlackWhite": true
 }

@@ -1,14 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Swatches to ASE">
-  <defs>
-    <clipPath id="rounded">
-      <rect width="64" height="64" rx="16" ry="16"/>
-    </clipPath>
-  </defs>
-
-  <g clip-path="url(#rounded)">
-    <rect width="32" height="32" x="0" y="0" fill="#1c1a16"/>
-    <rect width="32" height="32" x="32" y="0" fill="#d4633f"/>
-    <rect width="32" height="32" x="0" y="32" fill="#2d7c8a"/>
-    <rect width="32" height="32" x="32" y="32" fill="#f3efe9"/>
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2" viewBox="0 0 64 64">
+  <clipPath id="a">
+    <path d="M64 16v32c0 8.831-7.169 16-16 16H16C7.169 64 0 56.831 0 48V16C0 7.169 7.169 0 16 0h32c8.831 0 16 7.169 16 16Z"/>
+  </clipPath>
+  <g clip-path="url(#a)">
+    <path d="M-2-8h16v80H-2z" style="fill:#658af1" transform="matrix(.84619 -.5925 .57358 .81915 -16.662 27.0087)"/>
+    <path d="M12-8h22v80H12z" style="fill:#61e0c5" transform="matrix(.55851 -.39108 .57358 .81915 -11.5176 23.4065)"/>
+    <path d="M24-8h14v80H24z" style="fill:#f2ca64" transform="matrix(.87766 -.61455 .57358 .81915 -13.592 24.859)"/>
+    <path d="M38-8h14v80H38z" style="fill:#f6a26a" transform="matrix(.87766 -.61455 .57358 .81915 -13.592 24.859)"/>
+    <path d="M52-8h14v80H52z" style="fill:#ef4d50" transform="matrix(.97137 -.68016 .57358 .81915 -18.4647 28.271)"/>
   </g>
 </svg>

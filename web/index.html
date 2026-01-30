@@ -4,75 +4,450 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Swatches to ASE Studio</title>
+    <title>Palette Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&display=swap"
+    />
+    <style>
+      :root {
+        background: #eef1f7;
+        color: #141627;
+      }
+      :root[data-theme="noir"] {
+        background: #0f111a;
+        color: #f8fafc;
+      }
+      :root[data-theme="graphite"] {
+        background: #141822;
+        color: #f1f5f9;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: inherit;
+        color: inherit;
+      }
+      body:not(.is-ready) .page {
+        visibility: hidden;
+      }
+      .loading-screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: inherit;
+        color: inherit;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        z-index: 1000;
+      }
+    </style>
+    <script>
+      try {
+        const raw = localStorage.getItem("palette-studio.preferences");
+        if (raw) {
+          const prefs = JSON.parse(raw);
+          if (prefs && prefs.theme) {
+            document.documentElement.dataset.theme = prefs.theme;
+          }
+        }
+      } catch {
+        // Ignore theme pre-hydration failures.
+      }
+    </script>
+    <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <div class="page">
-      <header class="topbar">
-        <div class="topbar-row">
-          <div class="brand">
-            <span class="brand-title">Swatches to ASE</span>
-            <span class="brand-subtitle">Studio</span>
-            <span class="brand-version" id="app-version"></span>
+    <div
+      class="loading-screen"
+      id="loading-screen"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div class="loading-card">
+        <div class="loading-brand">
+          <img class="loading-logo" src="/favicon.svg" alt="" />
+          <div class="loading-text">
+            <span class="loading-title">Palette Studio</span>
+            <span class="loading-subtitle">Loading workspace...</span>
           </div>
         </div>
-        <div class="tagline">Turn Procreate palettes into ASE files.</div>
+        <div class="loading-spinner" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <img class="brand-logo" src="/favicon.svg" alt="Palette Studio" />
+          <div class="brand-text">
+            <span class="brand-title">Palette</span>
+            <span class="brand-subtitle">Studio</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button class="ghost" id="open-settings">Settings</button>
+        </div>
       </header>
 
-      <main class="grid">
-        <section class="panel panel-options" style="--delay: 0.05s">
-          <h2>Options</h2>
-          <div class="field">
-            <label for="format">Color name format</label>
-            <select id="format"></select>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="add-bw" checked />
-            <span class="toggle-track"></span>
-            <span class="toggle-label">Add black &amp; white</span>
-          </label>
-          <p class="hint">
-            Choose a naming family and optionally insert classic black and white
-            chips.
-          </p>
-        </section>
-
-        <section class="panel panel-drop" style="--delay: 0.15s">
-          <h2>Drop Zone</h2>
-          <div class="dropzone" id="dropzone">
-            <input type="file" id="file-input" multiple accept=".swatches" />
-            <div class="drop-content">
-              <p>Drop your .swatches files here</p>
-              <span>or click to browse</span>
+      <main class="layout layout-single">
+        <section class="panel panel-palettes" style="--delay: 0.15s">
+          <div class="panel-header">
+            <div class="panel-heading">
+              <h2>Palettes</h2>
+              <p class="hint">Select a palette to preview or edit.</p>
+            </div>
+            <div class="panel-actions">
+              <button class="ghost" id="open-import">Import</button>
+              <button class="ghost" id="open-generate">Generate</button>
+              <button class="ghost" id="remove-all-palettes">Remove all</button>
+              <button class="primary export-trigger" id="open-export" disabled>
+                Batch export
+              </button>
             </div>
           </div>
-          <p class="hint">
-            Exports a single zip file with all converted ASE palettes.
-          </p>
-        </section>
-
-        <section class="panel panel-log" style="--delay: 0.25s">
-          <h2>Session Log</h2>
-          <div class="log" id="log">
-            <div class="log-item info">Waiting for swatches files.</div>
-          </div>
+          <div class="palette-list" id="palette-list"></div>
         </section>
       </main>
 
+      <div class="modal is-hidden" id="import-modal" aria-hidden="true">
+        <div class="modal-backdrop" data-close="true"></div>
+        <div class="modal-card" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <h3>Import palettes</h3>
+            <button class="ghost" data-close="true">Close</button>
+          </div>
+          <div class="modal-body">
+            <div class="dropzone" id="dropzone">
+              <input
+                type="file"
+                id="file-input"
+                multiple
+                accept=".swatches,.ase,.gpl"
+              />
+              <div class="drop-content">
+                <p>Drop palette files here</p>
+                <span>.swatches, .ase, or .gpl</span>
+              </div>
+            </div>
+            <p class="hint">
+              Import defaults live in Settings for name formats and import options.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal is-hidden" id="settings-modal" aria-hidden="true">
+        <div class="modal-backdrop" data-close="true"></div>
+        <div class="modal-card" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <h3>Settings</h3>
+            <button class="ghost" data-close="true">Close</button>
+          </div>
+          <div class="modal-body">
+            <div class="field">
+              <label for="theme-select">Theme</label>
+              <select id="theme-select">
+                <option value="studio">Studio light</option>
+                <option value="noir">Noir dark</option>
+                <option value="graphite">Graphite</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="format">Default name format</label>
+              <select id="format"></select>
+            </div>
+            <div class="field">
+              <label for="color-notation">Color representation</label>
+              <select id="color-notation"></select>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="add-bw" />
+              <span class="toggle-track"></span>
+              <span class="toggle-label">Add black &amp; white to imports</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="auto-rename-colors" />
+              <span class="toggle-track"></span>
+              <span class="toggle-label">Auto-rename edited colors</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal is-hidden" id="generate-modal" aria-hidden="true">
+        <div class="modal-backdrop" data-close="true"></div>
+        <div class="modal-card" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <h3>Generate palette</h3>
+            <button class="ghost" data-close="true">Close</button>
+          </div>
+          <div class="modal-body">
+            <div class="field">
+              <label for="generate-name">Palette name</label>
+              <input
+                type="text"
+                id="generate-name"
+                placeholder="Generated palette"
+              />
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="generate-style">Palette style</label>
+                <select id="generate-style">
+                  <option value="analogous">Analogous</option>
+                  <option value="cold-pair">Cold pair</option>
+                  <option value="complementary">Complementary</option>
+                  <option value="contrasting">Contrasting</option>
+                  <option value="neutral">Neutral</option>
+                  <option value="pastel-pair">Pastel pair</option>
+                  <option value="same-family">Same family</option>
+                  <option value="shade">Shade</option>
+                  <option value="triadic">Triadic</option>
+                  <option value="vivid-pair">Vivid pair</option>
+                  <option value="warm-cold">Warm / Cold</option>
+                  <option value="warm-pair">Warm pair</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="generate-format">Color naming</label>
+                <select id="generate-format"></select>
+              </div>
+              <div class="field">
+                <label for="generate-count">Number of colors</label>
+                <input type="number" id="generate-count" min="1" max="16" value="5" />
+              </div>
+              <div class="field">
+                <label>Base color</label>
+                <div class="inline-field">
+                  <label class="toggle is-compact">
+                    <input type="checkbox" id="generate-use-base" />
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">Use base</span>
+                  </label>
+                  <input type="color" id="generate-base-color" value="#38bdf8" />
+                </div>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button class="ghost" data-close="true">Cancel</button>
+              <button class="ghost" id="generate-empty-button" type="button">
+                Create empty palette
+              </button>
+              <button class="primary" id="confirm-generate">Create palette</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal is-hidden" id="view-modal" aria-hidden="true">
+        <div class="modal-backdrop" data-close="true"></div>
+        <div class="modal-card modal-view" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <div>
+              <h3>Quick view</h3>
+              <p class="hint" id="view-subtitle"></p>
+            </div>
+            <div class="modal-header-actions">
+              <button class="ghost" id="view-edit" type="button">Edit</button>
+              <button class="ghost" data-close="true" type="button">Close</button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="view-display" id="view-display">
+              <div class="view-values" id="view-values"></div>
+            </div>
+            <div class="view-strip" id="view-strip"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal is-hidden" id="editor-modal" aria-hidden="true">
+        <div class="modal-backdrop" data-close="true"></div>
+        <div class="modal-card modal-editor" role="dialog" aria-modal="true">
+          <div class="modal-header editor-header">
+            <div class="editor-name" id="editor-name">
+              <label class="sr-only" for="palette-name">Palette name</label>
+              <input type="text" id="palette-name" placeholder="Palette name" />
+            </div>
+            <div class="editor-header-actions">
+              <button class="ghost" id="open-view" type="button">View</button>
+              <button class="ghost" data-close="true">Close</button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="palette-preview" id="palette-preview"></div>
+            <div class="editor" id="palette-editor">
+              <p class="empty">Select a palette to preview and edit.</p>
+            </div>
+            <div class="editor-footer is-hidden" id="editor-footer">
+              <div class="field">
+                <select
+                  id="color-notation-editor"
+                  aria-label="Color representation"
+                ></select>
+              </div>
+              <div class="editor-footer-actions">
+                <button class="ghost" id="editor-export" type="button">
+                  Export
+                </button>
+                <button class="primary" id="add-color">Add color</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="modal is-hidden"
+        id="export-modal"
+        aria-hidden="true"
+        data-export-mode="single"
+      >
+        <div class="modal-backdrop" data-close="true"></div>
+        <div class="modal-card modal-wide" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <h3>Export palettes</h3>
+            <button class="ghost" data-close="true">Close</button>
+          </div>
+          <div class="modal-body">
+            <div class="export-section">
+              <div class="export-section-header">
+                <h4>File formats</h4>
+                <p class="hint">Choose a format and the palettes to export.</p>
+              </div>
+              <div
+                class="export-grid export-grid--formats"
+                role="radiogroup"
+                aria-label="Export format"
+              >
+                <label class="export-tile">
+                  <input type="radio" name="export-format" value="ase" />
+                  <span class="tile-content">
+                    <span class="tile-icon">ASE</span>
+                    <span class="tile-title">ASE</span>
+                    <span class="tile-subtitle">Adobe Swatch Exchange</span>
+                  </span>
+                </label>
+                <label class="export-tile">
+                  <input type="radio" name="export-format" value="swatches" />
+                  <span class="tile-content">
+                    <span class="tile-icon">SWA</span>
+                    <span class="tile-title">Swatches</span>
+                    <span class="tile-subtitle">Procreate .swatches</span>
+                  </span>
+                </label>
+                <label class="export-tile">
+                  <input type="radio" name="export-format" value="gpl" />
+                  <span class="tile-content">
+                    <span class="tile-icon">GPL</span>
+                    <span class="tile-title">GIMP</span>
+                    <span class="tile-subtitle">GIMP palette</span>
+                  </span>
+                </label>
+                <label class="export-tile">
+                  <input type="radio" name="export-format" value="all" checked />
+                  <span class="tile-content">
+                    <span class="tile-icon">ALL</span>
+                    <span class="tile-title">All formats</span>
+                    <span class="tile-subtitle">ASE + Swatches + GPL</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="export-section export-section--actions">
+              <div class="export-section-header">
+                <h4>Quick exports</h4>
+                <p class="hint">Share or open this palette in other tools.</p>
+              </div>
+              <div class="export-grid export-grid--actions" aria-label="Quick export">
+                <button class="export-action" type="button" data-export-action="url">
+                  <span class="action-icon" data-icon="link"></span>
+                  <span>URL</span>
+                </button>
+                <button class="export-action" type="button" data-export-action="share">
+                  <span class="action-icon" data-icon="share"></span>
+                  <span>Share</span>
+                </button>
+                <button class="export-action" type="button" data-export-action="pdf">
+                  <span class="action-icon" data-icon="pdf"></span>
+                  <span>PDF</span>
+                </button>
+                <button class="export-action" type="button" data-export-action="image">
+                  <span class="action-icon" data-icon="image"></span>
+                  <span>Image</span>
+                </button>
+                <button class="export-action" type="button" data-export-action="css">
+                  <span class="action-icon" data-icon="css"></span>
+                  <span>CSS</span>
+                </button>
+                <button class="export-action" type="button" data-export-action="svg">
+                  <span class="action-icon" data-icon="svg"></span>
+                  <span>SVG</span>
+                </button>
+                <button class="export-action" type="button" data-export-action="code">
+                  <span class="action-icon" data-icon="code"></span>
+                  <span>Code</span>
+                </button>
+                <button class="export-action" type="button" data-export-action="tailwind">
+                  <span class="action-icon" data-icon="tailwind"></span>
+                  <span>Tailwind</span>
+                </button>
+                <button class="export-action" type="button" data-export-action="embed">
+                  <span class="action-icon" data-icon="embed"></span>
+                  <span>Embed</span>
+                </button>
+                <button class="export-action" type="button" data-export-action="coolors">
+                  <span class="action-icon" data-icon="coolors"></span>
+                  <span>Coolors</span>
+                </button>
+                <button class="export-action" type="button" data-export-action="x">
+                  <span class="action-icon" data-icon="x"></span>
+                  <span>X</span>
+                </button>
+                <button class="export-action" type="button" data-export-action="pinterest">
+                  <span class="action-icon" data-icon="pinterest"></span>
+                  <span>Pinterest</span>
+                </button>
+              </div>
+            </div>
+            <div class="export-controls">
+              <div class="export-actions">
+                <button class="primary" id="export-all">Download</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <footer class="footer">
-        <a
-          class="github-button"
-          href="https://github.com/joanroig/swatches-to-ase"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-            <path
-              d="M12 2C6.48 2 2 6.58 2 12.24c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.49 0-.24-.01-1.04-.01-1.88-2.51.55-3.04-1.1-3.04-1.1-.41-1.08-1.01-1.37-1.01-1.37-.83-.58.06-.57.06-.57.92.07 1.41.98 1.41.98.82 1.44 2.15 1.02 2.68.78.08-.61.32-1.02.58-1.25-2-.23-4.1-1.03-4.1-4.58 0-1.01.35-1.84.92-2.49-.09-.23-.4-1.17.09-2.44 0 0 .75-.25 2.46.95.71-.2 1.47-.3 2.23-.3.76 0 1.52.1 2.23.3 1.71-1.2 2.46-.95 2.46-.95.49 1.27.18 2.21.09 2.44.57.65.92 1.48.92 2.49 0 3.56-2.1 4.35-4.11 4.58.33.29.62.86.62 1.73 0 1.25-.01 2.26-.01 2.57 0 .27.18.6.69.49A10.21 10.21 0 0 0 22 12.24C22 6.58 17.52 2 12 2Z"
-            />
-          </svg>
-          <span>GitHub</span>
-        </a>
+        <div class="footer-actions">
+          <a
+            class="footer-button version-button"
+            id="app-version"
+            href="https://github.com/joanroig/palette-studio/releases"
+            target="_blank"
+            rel="noreferrer"
+          ></a>
+          <a
+            class="footer-button github-button"
+            href="https://github.com/joanroig/palette-studio"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+              <path
+                d="M12 2C6.48 2 2 6.58 2 12.24c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.49 0-.24-.01-1.04-.01-1.88-2.51.55-3.04-1.1-3.04-1.1-.41-1.08-1.01-1.37-1.01-1.37-.83-.58.06-.57.06-.57.92.07 1.41.98 1.41.98.82 1.44 2.15 1.02 2.68.78.08-.61.32-1.02.58-1.25-2-.23-4.1-1.03-4.1-4.58 0-1.01.35-1.84.92-2.49-.09-.23-.4-1.17.09-2.44 0 0 .75-.25 2.46.95.71-.2 1.47-.3 2.23-.3.76 0 1.52.1 2.23.3 1.71-1.2 2.46-.95 2.46-.95.49 1.27.18 2.21.09 2.44.57.65.92 1.48.92 2.49 0 3.56-2.1 4.35-4.11 4.58.33.29.62.86.62 1.73 0 1.25-.01 2.26-.01 2.57 0 .27.18.6.69.49A10.21 10.21 0 0 0 22 12.24C22 6.58 17.52 2 12 2Z"
+              />
+            </svg>
+            <span>GitHub</span>
+          </a>
+        </div>
       </footer>
     </div>
     <script type="module" src="/src/main.ts"></script>
