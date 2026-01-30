@@ -77,12 +77,12 @@ jobs:
             target: zip
             arch_flag: "--arm64"
             artifact_suffix: "macos-arm64-portable.zip"
-          - os: macos-13
+          - os: macos-15-intel
             platform: mac
             target: dmg
             arch_flag: "--x64"
             artifact_suffix: "macos-x64-installer.dmg"
-          - os: macos-13
+          - os: macos-15-intel
             platform: mac
             target: zip
             arch_flag: "--x64"
