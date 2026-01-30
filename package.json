@@ -83,10 +83,10 @@
         "dmg",
         "zip"
       ],
-      "artifactName": "palette-studio-v${version}-macos-arm64-portable.${ext}"
+      "artifactName": "palette-studio-v${version}-macos-${arch}-portable.${ext}"
     },
     "dmg": {
-      "artifactName": "palette-studio-v${version}-macos-arm64-installer.${ext}"
+      "artifactName": "palette-studio-v${version}-macos-${arch}-installer.${ext}"
     },
     "win": {
       "icon": "assets/icon.ico",
