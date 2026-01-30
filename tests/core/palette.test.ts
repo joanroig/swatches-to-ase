@@ -42,6 +42,17 @@ test("convertSwatchesToAse produces stable ASE output", async () => {
   }
 });
 
+test("readPaletteFile preserves swatches metadata", async () => {
+  const input = fs.readFileSync(
+    path.resolve("examples/palette-in", "Kitchen_Plant.swatches")
+  );
+  const expected = await readSwatchesFile(input);
+  const palette = await readPaletteFile(input, "Kitchen_Plant.swatches", options);
+
+  assert.equal(palette.name, expected.name);
+  assert.equal(palette.colors.length, expected.colors.filter(Boolean).length);
+});
+
 test("palette exports remain deterministic across formats", async () => {
   const input = fs.readFileSync(
     path.resolve("examples/palette-in", "Kitchen_Plant.swatches")
@@ -63,6 +74,7 @@ test("palette exports remain deterministic across formats", async () => {
   assert.equal(gplActual.replace(/\r\n/g, "\n"), gplExpected);
 
   const decoded = await readSwatchesFile(swatchesActual);
+  assert.equal(decoded.name, palette.name);
   const decodedColors = decoded.colors.filter(Boolean) as Array<
     [[number, number, number], string]
   >;

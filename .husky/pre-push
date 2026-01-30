@@ -1,0 +1,2 @@
+# Ensure type errors are caught before pushing
+npm run typecheck

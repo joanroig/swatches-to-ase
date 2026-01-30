@@ -173,7 +173,9 @@ const parseSwatches = async (
     if (!entry?.[0]) {
       continue;
     }
-    const rgbRaw = convert.hsv.rgb(entry[0]);
+    const [h, s, v] = entry[0];
+    const hsv: [number, number, number] = [h ?? 0, s ?? 0, v ?? 0];
+    const rgbRaw = convert.hsv.rgb(hsv);
     const rgb = normalizeRgb(rgbRaw);
     colors.push({
       name: nameColor(rgb, format),
@@ -257,14 +259,14 @@ export const exportPaletteToAse = (palette: Palette): Uint8Array => {
 export const exportPaletteToSwatches = async (
   palette: Palette
 ): Promise<Uint8Array> => {
-  const entries = palette.colors.map((color) => {
+  const entries: Array<[number[], string]> = palette.colors.map((color) => {
     const rgb: [number, number, number] = [
       Math.round(color.rgb[0] * 255),
       Math.round(color.rgb[1] * 255),
       Math.round(color.rgb[2] * 255),
     ];
     const hsv = convert.rgb.hsv(rgb);
-    return [hsv, "hsv"] as const;
+    return [hsv, "hsv"];
   });
   return createSwatchesFile(palette.name, entries, "uint8array");
 };
