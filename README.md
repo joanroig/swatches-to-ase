@@ -2,30 +2,44 @@
   <img src="web/public/favicon.svg" width="140px" alt="Logo">
 </p>
 
-<h1 align="center">Swatches to ASE</h1>
+<h1 align="center">Palette Studio</h1>
 
 <p align="center">
-  <strong>Convert Procreate palettes for Photoshop, Illustrator, and Affinity.</strong>
+  <strong>Import, edit, and export palettes across Procreate, Adobe, and GIMP formats.</strong>
   <br />
-  <a href="https://joanroig.github.io/swatches-to-ase/"><strong>Open Web App</strong></a> • 
-  <a href="https://github.com/joanroig/swatches-to-ase/releases"><strong>Download Desktop</strong></a>
+  <a href="https://joanroig.github.io/palette-studio/"><strong>Open Web App</strong></a> •
+  <a href="https://github.com/joanroig/palette-studio/releases"><strong>Download Desktop</strong></a>
 </p>
 
 <p align="center">
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22%2B-43853d?logo=node.js&logoColor=white" alt="Node.js 22+"/></a>
-  <a href="https://github.com/joanroig/swatches-to-ase/actions/workflows/release.yml"><img src="https://github.com/joanroig/swatches-to-ase/actions/workflows/release.yml/badge.svg" alt="Build and Release"/></a>
-  <a href="https://github.com/joanroig/swatches-to-ase/actions/workflows/pages.yml"><img src="https://github.com/joanroig/swatches-to-ase/actions/workflows/pages.yml/badge.svg" alt="Deploy Pages"/></a>
-  <a href="https://joanroig.github.io/swatches-to-ase/"><img src="https://img.shields.io/badge/GitHub%20Pages-live-brightgreen" alt="GitHub Pages"/></a>
+  <a href="https://github.com/joanroig/palette-studio/actions/workflows/release.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/release.yml/badge.svg" alt="Build and Release"/></a>
+  <a href="https://github.com/joanroig/palette-studio/actions/workflows/tests.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/tests.yml/badge.svg" alt="Tests"/></a>
+  <a href="https://github.com/joanroig/palette-studio/actions/workflows/pages.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/pages.yml/badge.svg" alt="Deploy Pages"/></a>
+  <a href="https://joanroig.github.io/palette-studio/"><img src="https://img.shields.io/badge/GitHub%20Pages-live-brightgreen" alt="GitHub Pages"/></a>
 </p>
 
----
+<br>
 
 <p align="center">
-  <a href="https://joanroig.github.io/swatches-to-ase/">
+  <a href="https://joanroig.github.io/palette-studio/">
     <img alt="Showcase" src="img/showcase.png">
   </a>
-  <p align="center"><sub>Available for web, Windows, macOS, and Linux</sub></p>
+  <br>
+  <i>Available for web, Windows, macOS, and Linux</i>
 </p>
+
+<br>
+
+## Highlights
+
+- Import `.swatches`, `.ase`, and `.gpl` palettes.
+- Generate palettes by style (analogous, complementary, triadic, etc.) with optional base colors.
+- Edit colors, rename, reorder by drag-and-drop, and switch between HEX/RGB/HSB/HSL/CMYK/LAB views.
+- Export single or batch palettes to ASE, Swatches, and GIMP GPL (zip downloads for multi-export).
+- Quick exports for PNG, PDF, CSS variables, Tailwind config, SVG, JSON, and embed snippets.
+- Share palettes via URL (Coolors, X, Pinterest) and import from shared links.
+- Preferences and palettes are stored locally in the browser/desktop app.
 
 ## Example
 
@@ -54,23 +68,26 @@ Pages compatible) and as a desktop app for Windows, macOS, and Linux.
 - Start the dev server with `npm run dev:web`.
 - Build a static site with `npm run build:web` (output: `dist-web`).
 - Preview the static build with `npm run preview:web`.
-- Choose a color naming format, toggle black/white extras, then drag and drop `.swatches` files to download `swatches-ase.zip`.
+- Upload `.swatches`, `.ase`, or `.gpl` palette files.
+- Generate new palettes, edit names/colors, and reorder swatches.
+- Export single palettes or batch export as ASE/Swatches/GPL.
+- Use quick exports for images, PDF, CSS, Tailwind, SVG, JSON, embed snippets, or share URLs.
 
 ### Desktop
 
 - Run `npm run dev:desktop` to launch the Electron app with hot reload.
 - Build the desktop bundle with `npm run build:desktop` (outputs: `dist-electron`, `dist-web`).
 - Build installers with `npm run dist:desktop` (outputs: `release`).
-- Desktop mode uses the same drag-and-drop workflow and saves a zip file.
+- Desktop mode uses the same drag-and-drop workflow and saves zip exports via a native dialog.
 
 ## CLI
 
 Be sure to have [Node.js](https://nodejs.org/en/download/) 22+ installed, then:
 
-- [Download](https://github.com/joanroig/swatches-to-ase/archive/refs/heads/main.zip) or clone the repo.
+- [Download](https://github.com/joanroig/palette-studio/archive/refs/heads/main.zip) or clone the repo.
 - Run `npm install` in the root folder to install dependencies.
-- Add your swatches files in the `palette-in` folder.
-- Run `npm run convert` to convert the palettes.
+- Add your palette files (`.swatches`, `.ase`, `.gpl`) in the `palette-in` folder.
+- Run `npm run convert` to convert the palettes into the formats you choose.
 - The converted files should be in the `palette-out` folder.
 
 ## Configuration (CLI)
@@ -79,8 +96,9 @@ The input/output folders, color naming, and optional black & white colors can be
 
 ### Configuration parameters
 
-- **inFolder:** folder used to read the swatches.
-- **outFolder:** folder used to output the resulting ase files.
+- **inFolder:** folder used to read the palette files.
+- **outFolder:** folder used to output the converted palettes.
+- **outFormats:** output formats as an array or comma-separated string. Use `ase`, `swatches`, `gpl`, or `all`. Defaults to `ase`.
 - **colorNameFormat:** sets the collection of color names to be used. Available namings are: _roygbiv, basic, html, x11, pantone, ntc_. See [color namer](https://github.com/colorjs/color-namer) for reference.
 - **addBlackWhite:** if true, two extra colors will be added:
 
@@ -89,6 +107,12 @@ The input/output folders, color naming, and optional black & white colors can be
   <br>
   <i>Converted palette with extra black and white colors imported in Photoshop</i>
 </p>
+
+## Tests
+
+- Run unit tests with `npm test`.
+- Run coverage with `npm run test:coverage`.
+- Run GUI tests with `npm run test:gui` (installs Playwright as needed).
 
 ## Credits
 

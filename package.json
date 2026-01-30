@@ -1,9 +1,9 @@
 {
-  "name": "swatches-to-ase",
-  "description": "Convert Procreate swatches file to Adobe ase format. Can be used for importing Procreate palettes into Photoshop or other programs like Illustrator or Affinity Designer.",
-  "version": "2.0.0",
+  "name": "palette-studio",
+  "description": "Import, edit, and export palette files across Procreate Swatches, Adobe ASE, and other popular formats.",
+  "version": "3.0.0",
   "main": "dist-electron/electron/main.js",
-  "repository": "https://github.com/joanroig/swatches-to-ase.git",
+  "repository": "https://github.com/joanroig/palette-studio.git",
   "author": "Joan Roig <joanroigsegura@gmail.com>",
   "license": "MIT",
   "engines": {
@@ -20,6 +20,9 @@
     "build:desktop": "npm run build:web && tsc -p electron/tsconfig.json",
     "dist:desktop": "npm run build:desktop && electron-builder",
     "run:dev": "nodemon",
+    "test": "node --test --import tsx",
+    "test:coverage": "node --test --experimental-test-coverage --import tsx",
+    "test:gui": "node scripts/ensure-playwright.mjs && playwright test",
     "lint": "eslint . --ext .ts",
     "format": "eslint . --ext .ts --fix",
     "format:staged": "lint-staged",
@@ -27,7 +30,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "ase-utils": "^0.1.1",
     "color-convert": "^3.1.3",
     "color-namer": "^1.4.0",
     "eslint": "^9.39.2",
@@ -44,6 +46,7 @@
     "@types/node": "^25.1.0",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
+    "@playwright/test": "^1.51.1",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "electron": "^40.1.0",
@@ -57,8 +60,8 @@
   },
   "typings": "src/global.d.ts",
   "build": {
-    "appId": "com.joanroig.swatchestoase",
-    "productName": "Swatches to ASE",
+    "appId": "com.joanroig.palettestudio",
+    "productName": "Palette Studio",
     "icon": "assets/icon.png",
     "directories": {
       "output": "release"
@@ -79,10 +82,10 @@
         "dmg",
         "zip"
       ],
-      "artifactName": "swatches-to-ase-v${version}-macos-arm64-portable.${ext}"
+      "artifactName": "palette-studio-v${version}-macos-arm64-portable.${ext}"
     },
     "dmg": {
-      "artifactName": "swatches-to-ase-v${version}-macos-arm64-installer.${ext}"
+      "artifactName": "palette-studio-v${version}-macos-arm64-installer.${ext}"
     },
     "win": {
       "icon": "assets/icon.ico",
@@ -90,10 +93,10 @@
         "nsis",
         "zip"
       ],
-      "artifactName": "swatches-to-ase-v${version}-windows-portable.${ext}"
+      "artifactName": "palette-studio-v${version}-windows-portable.${ext}"
     },
     "nsis": {
-      "artifactName": "swatches-to-ase-v${version}-windows-installer.${ext}"
+      "artifactName": "palette-studio-v${version}-windows-installer.${ext}"
     },
     "linux": {
       "icon": "assets/icon.png",
@@ -103,10 +106,10 @@
       ]
     },
     "appImage": {
-      "artifactName": "swatches-to-ase-v${version}-linux-amd64-portable.${ext}"
+      "artifactName": "palette-studio-v${version}-linux-amd64-portable.${ext}"
     },
     "deb": {
-      "artifactName": "swatches-to-ase-v${version}-linux-amd64-installer.${ext}"
+      "artifactName": "palette-studio-v${version}-linux-amd64-installer.${ext}"
     }
   }
 }

@@ -7,7 +7,7 @@ const packageJson = JSON.parse(
 ) as { version?: string; build?: { productName?: string }; name?: string };
 const appVersion = packageJson.version ?? "0.0.0";
 const appName =
-  packageJson.build?.productName ?? packageJson.name ?? "Swatches to ASE";
+  packageJson.build?.productName ?? packageJson.name ?? "Palette Studio";
 
 console.info(`${appName} v${appVersion}`);
 
