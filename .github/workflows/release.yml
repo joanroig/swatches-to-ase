@@ -120,7 +120,7 @@ jobs:
         with:
           tag_name: ${{ needs.version.outputs.tag }}
           name: Release ${{ needs.version.outputs.tag }}
-          files: release/swatches-to-ase-v${{ needs.version.outputs.version }}-${{ matrix.artifact_suffix }}
+          files: release/palette-studio-v${{ needs.version.outputs.version }}-${{ matrix.artifact_suffix }}
           draft: false
           prerelease: false
           generate_release_notes: true

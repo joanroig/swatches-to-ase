@@ -16,7 +16,8 @@
     "outDir": "build",
     "baseUrl": ".",
     "paths": {
-      "*": ["node_modules/*"]
+      "*": ["node_modules/*"],
+      "@core/*": ["src/core/*"]
     }
   },
   "ts-node": {
