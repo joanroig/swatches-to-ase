@@ -70,26 +70,42 @@ jobs:
           - os: macos-latest
             platform: mac
             target: dmg
+            arch_flag: "--arm64"
             artifact_suffix: "macos-arm64-installer.dmg"
           - os: macos-latest
             platform: mac
             target: zip
+            arch_flag: "--arm64"
             artifact_suffix: "macos-arm64-portable.zip"
+          - os: macos-13
+            platform: mac
+            target: dmg
+            arch_flag: "--x64"
+            artifact_suffix: "macos-x64-installer.dmg"
+          - os: macos-13
+            platform: mac
+            target: zip
+            arch_flag: "--x64"
+            artifact_suffix: "macos-x64-portable.zip"
           - os: windows-latest
             platform: win
             target: nsis
+            arch_flag: ""
             artifact_suffix: "windows-installer.exe"
           - os: windows-latest
             platform: win
             target: zip
+            arch_flag: ""
             artifact_suffix: "windows-portable.zip"
           - os: ubuntu-latest
             platform: linux
             target: AppImage
+            arch_flag: ""
             artifact_suffix: "linux-amd64-portable.AppImage"
           - os: ubuntu-latest
             platform: linux
             target: deb
+            arch_flag: ""
             artifact_suffix: "linux-amd64-installer.deb"
     steps:
       - name: Checkout code
@@ -109,7 +125,7 @@ jobs:
       - name: Build desktop packages
         run: |
           npm run build:desktop
-          npx --no-install electron-builder --publish never --${{ matrix.platform }} ${{ matrix.target }}
+          npx --no-install electron-builder --publish never --${{ matrix.platform }} ${{ matrix.target }} ${{ matrix.arch_flag }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: refs/tags/${{ needs.version.outputs.tag }}
