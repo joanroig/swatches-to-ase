@@ -1,7 +1,7 @@
 {
   "name": "palette-studio",
   "description": "Import, edit, and export palette files across Procreate Swatches, Adobe ASE, and other popular formats.",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "main": "dist-electron/electron/main.js",
   "repository": "https://github.com/joanroig/palette-studio.git",
   "author": "Joan Roig <joanroigsegura@gmail.com>",
