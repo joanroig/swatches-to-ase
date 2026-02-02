@@ -2,6 +2,7 @@ import {
   addBwToggle,
   addColorButton,
   autoRenameToggle,
+  cloudModal,
   cloudSignInButton,
   cloudSignOutButton,
   cloudSyncButton,
@@ -22,6 +23,7 @@ import {
   generateModal,
   generateUseBaseToggle,
   importModal,
+  openCloudButton,
   openDiscoverButton,
   openExportButton,
   openGenerateButton,
@@ -69,11 +71,16 @@ import {
   renderDiscovery,
 } from "./cloud/discovery";
 import { syncToCloud } from "./cloud/sync";
+import {
+  resetCloudProfileDraft,
+  setupCloudProfileControls,
+} from "./cloud/profile";
 import { signInWithPopup, signOut } from "firebase/auth";
 import { firebaseClient } from "./cloud/context";
 
 export const setupActions = () => {
   setButtonContent(openDiscoverButton, "globe", "Discover");
+  setButtonContent(openCloudButton, "cloud", "Cloud");
   setButtonContent(openSettingsButton, "settings", "Settings");
   setButtonContent(openImportButton, "import", "Import");
   setButtonContent(openGenerateButton, "generate", "Generate");
@@ -102,6 +109,11 @@ export const setupActions = () => {
       renderDiscovery();
     });
     setModalOpen(discoverModal, true);
+  });
+
+  openCloudButton?.addEventListener("click", () => {
+    resetCloudProfileDraft();
+    setModalOpen(cloudModal, true);
   });
 
   openSettingsButton?.addEventListener("click", () => {
@@ -292,17 +304,20 @@ export const setupActions = () => {
 
   setupModal(importModal);
   setupModal(settingsModal);
+  setupModal(cloudModal);
   setupModal(generateModal);
   setupModal(editorModal);
   setupModal(exportModal);
   setupModal(viewModal);
   setupModal(discoverModal);
+  setupCloudProfileControls();
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       closeOpenModals([
         importModal,
         settingsModal,
+        cloudModal,
         generateModal,
         editorModal,
         exportModal,

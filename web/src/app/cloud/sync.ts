@@ -2,14 +2,10 @@ import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 import {
-  cloudAvatar,
-  cloudEmail,
-  cloudName,
   cloudSignInButton,
   cloudSignOutButton,
   cloudStatus,
   cloudSyncButton,
-  cloudUserCard,
 } from "../dom";
 import { cloudState, discoveryState, state } from "../state";
 import type { CloudUser } from "../types";
@@ -22,6 +18,8 @@ import { showToast } from "../ui/notifications";
 import { firebaseClient, firebaseConfigStatus } from "./context";
 import { upsertPublicPalette } from "./public";
 import { fetchUserInteractions, renderDiscovery } from "./discovery";
+import { renderCloudUserCard } from "./user-card";
+import { syncCloudProfileForm } from "./profile";
 
 let cloudUnsubscribe: (() => void) | null = null;
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -37,25 +35,6 @@ const setCloudStatusMessage = (message: string) => {
   if (cloudStatus) {
     cloudStatus.textContent = message;
   }
-};
-
-const renderCloudUser = () => {
-  if (!cloudUserCard || !cloudAvatar || !cloudName || !cloudEmail) {
-    return;
-  }
-  if (!cloudState.user) {
-    cloudUserCard.classList.add("is-hidden");
-    cloudAvatar.src = "";
-    cloudAvatar.alt = "";
-    cloudName.textContent = "";
-    cloudEmail.textContent = "";
-    return;
-  }
-  cloudUserCard.classList.remove("is-hidden");
-  cloudAvatar.src = cloudState.user.photoUrl ?? "";
-  cloudAvatar.alt = cloudState.user.name;
-  cloudName.textContent = cloudState.user.name;
-  cloudEmail.textContent = cloudState.user.email ?? "";
 };
 
 const updateCloudControls = () => {
@@ -82,7 +61,7 @@ const updateCloudControls = () => {
     cloudSyncButton.disabled = !cloudState.user || cloudState.isSyncing;
   }
 
-  renderCloudUser();
+  renderCloudUserCard();
 };
 
 const applyRemoteState = (payload: ReturnType<typeof parseSyncPayload>) => {
@@ -194,6 +173,7 @@ export const setupCloudAuth = () => {
       : null;
     cloudState.lastSyncedAt = null;
     updateCloudControls();
+    syncCloudProfileForm();
     renderPaletteList();
     if (cloudUnsubscribe) {
       cloudUnsubscribe();

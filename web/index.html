@@ -91,6 +91,7 @@
         </div>
         <div class="topbar-actions">
           <button class="ghost" id="open-discover">Discover</button>
+          <button class="ghost" id="open-cloud">Cloud</button>
           <button class="ghost" id="open-settings">Settings</button>
         </div>
       </header>
@@ -176,7 +177,18 @@
               <span class="toggle-track"></span>
               <span class="toggle-label">Auto-rename edited colors</span>
             </label>
-            <div class="divider"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal is-hidden" id="cloud-modal" aria-hidden="true">
+        <div class="modal-backdrop" data-close="true"></div>
+        <div class="modal-card" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <h3>Cloud</h3>
+            <button class="ghost" data-close="true">Close</button>
+          </div>
+          <div class="modal-body">
             <div class="section">
               <div class="section-header">
                 <div>
@@ -203,6 +215,48 @@
                   <span class="cloud-name" id="cloud-name"></span>
                   <span class="cloud-email" id="cloud-email"></span>
                 </div>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="section">
+              <div class="section-header">
+                <div>
+                  <h4>Profile</h4>
+                  <p class="hint">
+                    Update your name and photo for shared palettes.
+                  </p>
+                </div>
+              </div>
+              <div class="cloud-profile">
+                <img
+                  class="cloud-avatar cloud-profile-avatar"
+                  id="cloud-profile-avatar"
+                  alt=""
+                />
+                <div class="cloud-profile-fields">
+                  <div class="field">
+                    <label for="cloud-profile-name">Display name</label>
+                    <input
+                      type="text"
+                      id="cloud-profile-name"
+                      placeholder="Palette Studio user"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="cloud-profile-photo">Profile photo</label>
+                    <input
+                      type="file"
+                      id="cloud-profile-photo"
+                      accept="image/*"
+                    />
+                    <p class="hint">PNG or JPG works best.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="cloud-profile-actions">
+                <button class="primary" id="cloud-profile-save" type="button">
+                  Save profile
+                </button>
               </div>
             </div>
           </div>

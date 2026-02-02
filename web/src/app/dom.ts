@@ -33,6 +33,8 @@ export const editorExportButton =
   document.querySelector<HTMLButtonElement>("#editor-export");
 export const openSettingsButton =
   document.querySelector<HTMLButtonElement>("#open-settings");
+export const openCloudButton =
+  document.querySelector<HTMLButtonElement>("#open-cloud");
 export const openDiscoverButton =
   document.querySelector<HTMLButtonElement>("#open-discover");
 export const openImportButton =
@@ -49,6 +51,8 @@ export const importModal =
   document.querySelector<HTMLDivElement>("#import-modal");
 export const settingsModal =
   document.querySelector<HTMLDivElement>("#settings-modal");
+export const cloudModal =
+  document.querySelector<HTMLDivElement>("#cloud-modal");
 export const generateModal =
   document.querySelector<HTMLDivElement>("#generate-modal");
 export const editorModal =
@@ -114,3 +118,14 @@ export const cloudAvatar =
 export const cloudName = document.querySelector<HTMLSpanElement>("#cloud-name");
 export const cloudEmail =
   document.querySelector<HTMLSpanElement>("#cloud-email");
+export const cloudProfileAvatar = document.querySelector<HTMLImageElement>(
+  "#cloud-profile-avatar"
+);
+export const cloudProfileNameInput = document.querySelector<HTMLInputElement>(
+  "#cloud-profile-name"
+);
+export const cloudProfilePhotoInput = document.querySelector<HTMLInputElement>(
+  "#cloud-profile-photo"
+);
+export const cloudProfileSaveButton =
+  document.querySelector<HTMLButtonElement>("#cloud-profile-save");
