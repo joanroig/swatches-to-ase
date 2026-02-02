@@ -1,4 +1,4 @@
-import type { ExportMode, Palette } from "./types";
+import type { CloudUser, ExportMode, Palette, PublicPalette } from "./types";
 
 export const state = {
   processing: false,
@@ -18,4 +18,20 @@ export const viewState = {
 export const dragState = {
   paletteId: null as string | null,
   colorId: null as string | null,
+};
+
+export const cloudState = {
+  isConfigured: false,
+  user: null as CloudUser | null,
+  lastSyncedAt: null as string | null,
+  isSyncing: false,
+  lastRevision: null as string | null,
+  applyingRemote: false,
+};
+
+export const discoveryState = {
+  palettes: [] as PublicPalette[],
+  likedIds: new Set<string>(),
+  savedIds: new Set<string>(),
+  loading: false,
 };

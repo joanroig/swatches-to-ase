@@ -13,7 +13,19 @@ import {
   colorNotationEditorSelect,
   colorNotationSelect,
   confirmGenerateButton,
+  cloudAvatar,
+  cloudEmail,
+  cloudName,
+  cloudSignInButton,
+  cloudSignOutButton,
+  cloudStatus,
+  cloudSyncButton,
+  cloudUserCard,
   dropzone,
+  discoverEmpty,
+  discoverList,
+  discoverModal,
+  refreshDiscoverButton,
   editorExportButton,
   editorFooter,
   editorModal,
@@ -38,6 +50,7 @@ import {
   openExportButton,
   openGenerateButton,
   openImportButton,
+  openDiscoverButton,
   openSettingsButton,
   openViewButton,
   paletteEditor,
@@ -61,8 +74,21 @@ import {
   STORAGE_KEY,
   VALID_NAME_FORMATS,
 } from "./app/config";
-import { dragState, exportState, state, viewState } from "./app/state";
-import type { ExportMode, Palette, Preferences } from "./app/types";
+import {
+  cloudState,
+  discoveryState,
+  dragState,
+  exportState,
+  state,
+  viewState,
+} from "./app/state";
+import type {
+  CloudUser,
+  ExportMode,
+  Palette,
+  Preferences,
+  PublicPalette,
+} from "./app/types";
 import { generatePaletteColors } from "./app/palette/generation";
 import {
   createGeneratedPaletteName,
@@ -91,11 +117,48 @@ import {
   rgbToHex,
 } from "./app/utils/color";
 import { sanitizeFileName } from "./app/utils/text";
+import { getFirebaseClient, getFirebaseConfigStatus } from "./app/cloud/client";
+import { buildSyncPayload, parseSyncPayload } from "./app/cloud/serializer";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  increment,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut,
+} from "firebase/auth";
 
 const updateProcessingState = (busy: boolean) => {
   state.processing = busy;
   dropzone?.classList.toggle("is-busy", busy);
 };
+
+const firebaseClient = getFirebaseClient();
+const firebaseConfigStatus = getFirebaseConfigStatus();
+cloudState.isConfigured = firebaseConfigStatus.isConfigured;
+
+let cloudUnsubscribe: (() => void) | null = null;
+let discoveryUnsubscribe: (() => void) | null = null;
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
+
+const getPreferencesPayload = (): Preferences => ({
+  theme: themeSelect?.value ?? "studio",
+  colorNameFormat: formatSelect?.value ?? generateFormatSelect?.value ?? "pantone",
+  addBlackWhite: addBwToggle?.checked ?? false,
+  exportFormat: getSelectedExportFormat(),
+  colorNotation: getColorNotation(),
+  autoRenameColors: autoRenameToggle?.checked ?? false,
+});
 
 const getOptions = () => ({
   colorNameFormat: formatSelect?.value ?? "pantone",
@@ -108,16 +171,11 @@ const getColorNotation = () =>
   "hex";
 
 const persistPreferences = () => {
-  const payload: Preferences = {
-    theme: themeSelect?.value ?? "studio",
-    colorNameFormat:
-      formatSelect?.value ?? generateFormatSelect?.value ?? "pantone",
-    addBlackWhite: addBwToggle?.checked ?? false,
-    exportFormat: getSelectedExportFormat(),
-    colorNotation: getColorNotation(),
-    autoRenameColors: autoRenameToggle?.checked ?? false,
-  };
+  const payload = getPreferencesPayload();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  if (!cloudState.applyingRemote) {
+    scheduleCloudSync();
+  }
 };
 
 const persistPalettes = () => {
@@ -126,6 +184,9 @@ const persistPalettes = () => {
     activePaletteId: state.activePaletteId,
   };
   localStorage.setItem(PALETTES_KEY, JSON.stringify(payload));
+  if (!cloudState.applyingRemote) {
+    scheduleCloudSync();
+  }
 };
 
 const applyTheme = (theme: string) => {
@@ -153,6 +214,392 @@ const waitForAppReady = async () => {
   });
 };
 
+const formatSyncTimestamp = (value: string | null) => {
+  if (!value) {
+    return "Not synced yet";
+  }
+  return `Last synced at ${value}`;
+};
+
+const setCloudStatusMessage = (message: string) => {
+  if (cloudStatus) {
+    cloudStatus.textContent = message;
+  }
+};
+
+const renderCloudUser = () => {
+  if (!cloudUserCard || !cloudAvatar || !cloudName || !cloudEmail) {
+    return;
+  }
+  if (!cloudState.user) {
+    cloudUserCard.classList.add("is-hidden");
+    cloudAvatar.src = "";
+    cloudAvatar.alt = "";
+    cloudName.textContent = "";
+    cloudEmail.textContent = "";
+    return;
+  }
+  cloudUserCard.classList.remove("is-hidden");
+  cloudAvatar.src = cloudState.user.photoUrl ?? "";
+  cloudAvatar.alt = cloudState.user.name;
+  cloudName.textContent = cloudState.user.name;
+  cloudEmail.textContent = cloudState.user.email ?? "";
+};
+
+const updateCloudControls = () => {
+  if (!cloudState.isConfigured) {
+    const missing = firebaseConfigStatus.missingKeys.join(", ");
+    setCloudStatusMessage(
+      `Firebase keys missing: ${missing}. Add them to enable sync.`
+    );
+  } else if (!cloudState.user) {
+    setCloudStatusMessage("Sign in to sync palettes between devices.");
+  } else if (cloudState.isSyncing) {
+    setCloudStatusMessage("Syncing palettes to the cloud...");
+  } else {
+    setCloudStatusMessage(formatSyncTimestamp(cloudState.lastSyncedAt));
+  }
+
+  if (cloudSignInButton) {
+    cloudSignInButton.disabled = !cloudState.isConfigured || !!cloudState.user;
+  }
+  if (cloudSignOutButton) {
+    cloudSignOutButton.disabled = !cloudState.user;
+  }
+  if (cloudSyncButton) {
+    cloudSyncButton.disabled = !cloudState.user || cloudState.isSyncing;
+  }
+
+  renderCloudUser();
+};
+
+const scheduleCloudSync = () => {
+  if (!firebaseClient || !cloudState.user) {
+    return;
+  }
+  if (syncTimer) {
+    clearTimeout(syncTimer);
+  }
+  syncTimer = setTimeout(() => {
+    syncTimer = null;
+    void syncToCloud();
+  }, 700);
+};
+
+const applyRemotePreferences = (prefs: Preferences) => {
+  if (themeSelect && prefs.theme) {
+    themeSelect.value = prefs.theme;
+  }
+  if (formatSelect && prefs.colorNameFormat) {
+    formatSelect.value = prefs.colorNameFormat;
+  }
+  if (generateFormatSelect && prefs.colorNameFormat) {
+    generateFormatSelect.value = prefs.colorNameFormat;
+  }
+  if (addBwToggle) {
+    addBwToggle.checked = prefs.addBlackWhite ?? false;
+  }
+  if (autoRenameToggle) {
+    autoRenameToggle.checked = prefs.autoRenameColors ?? false;
+  }
+  if (prefs.exportFormat) {
+    setSelectedExportFormat(prefs.exportFormat);
+  }
+  if (prefs.colorNotation) {
+    applyColorNotation(prefs.colorNotation, false);
+  }
+  applyTheme(themeSelect?.value ?? prefs.theme ?? "studio");
+};
+
+const applyRemoteState = (payload: ReturnType<typeof parseSyncPayload>) => {
+  if (!payload) {
+    return;
+  }
+  cloudState.applyingRemote = true;
+  cloudState.lastRevision = payload.revision;
+  state.palettes = payload.palettes;
+  state.activePaletteId = payload.activePaletteId;
+  applyRemotePreferences(payload.preferences);
+  persistPreferences();
+  persistPalettes();
+  renderPaletteList();
+  renderEditor();
+  updateExportAvailability();
+  cloudState.applyingRemote = false;
+};
+
+const upsertPublicPalette = async (palette: Palette) => {
+  if (!firebaseClient || !cloudState.user || !palette.isPublic) {
+    return;
+  }
+  const isNew = !palette.publicId;
+  const publicId = palette.publicId ?? createId();
+  if (isNew) {
+    palette.publicId = publicId;
+    persistPalettes();
+  }
+  const payload = {
+    name: palette.name,
+    colors: palette.colors,
+    ownerId: cloudState.user.uid,
+    ownerName: cloudState.user.name,
+    ownerPhoto: cloudState.user.photoUrl ?? null,
+    updatedAt: serverTimestamp(),
+    ...(isNew
+      ? { createdAt: serverTimestamp(), likesCount: 0, savesCount: 0 }
+      : {}),
+  };
+  await setDoc(doc(firebaseClient.db, "publicPalettes", publicId), payload, {
+    merge: true,
+  });
+};
+
+const removePublicPalette = async (palette: Palette) => {
+  if (!firebaseClient || !cloudState.user || !palette.publicId) {
+    return;
+  }
+  await deleteDoc(doc(firebaseClient.db, "publicPalettes", palette.publicId));
+};
+
+const syncToCloud = async () => {
+  if (!firebaseClient || !cloudState.user) {
+    return;
+  }
+  cloudState.isSyncing = true;
+  updateCloudControls();
+  const payload = buildSyncPayload(
+    state.palettes,
+    state.activePaletteId,
+    getPreferencesPayload()
+  );
+  cloudState.lastRevision = payload.revision;
+  try {
+    await setDoc(
+      doc(firebaseClient.db, "users", cloudState.user.uid, "state", "app"),
+      { ...payload, updatedAt: serverTimestamp() },
+      { merge: true }
+    );
+    await Promise.all(
+      payload.palettes
+        .filter((palette) => palette.isPublic)
+        .map((palette) => upsertPublicPalette(palette))
+    );
+    cloudState.lastSyncedAt = new Date().toLocaleTimeString();
+  } catch (error) {
+    console.error(error);
+    showToast("Cloud sync failed. Check your connection.", "error");
+  } finally {
+    cloudState.isSyncing = false;
+    updateCloudControls();
+  }
+};
+
+const listenToCloudState = () => {
+  if (!firebaseClient || !cloudState.user) {
+    return;
+  }
+  if (cloudUnsubscribe) {
+    cloudUnsubscribe();
+  }
+  let handledEmpty = false;
+  cloudUnsubscribe = onSnapshot(
+    doc(firebaseClient.db, "users", cloudState.user.uid, "state", "app"),
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        if (!handledEmpty) {
+          handledEmpty = true;
+          void syncToCloud();
+        }
+        return;
+      }
+      handledEmpty = true;
+      const payload = parseSyncPayload(snapshot.data());
+      if (!payload || payload.revision === cloudState.lastRevision) {
+        return;
+      }
+      applyRemoteState(payload);
+      cloudState.lastSyncedAt = new Date().toLocaleTimeString();
+      updateCloudControls();
+    }
+  );
+};
+
+const fetchUserInteractions = async () => {
+  if (!firebaseClient || !cloudState.user) {
+    discoveryState.likedIds.clear();
+    discoveryState.savedIds.clear();
+    return;
+  }
+  const likesSnapshot = await getDocs(
+    collection(firebaseClient.db, "users", cloudState.user.uid, "likes")
+  );
+  discoveryState.likedIds = new Set(likesSnapshot.docs.map((doc) => doc.id));
+  const savesSnapshot = await getDocs(
+    collection(firebaseClient.db, "users", cloudState.user.uid, "saves")
+  );
+  discoveryState.savedIds = new Set(savesSnapshot.docs.map((doc) => doc.id));
+};
+
+const renderDiscovery = () => {
+  if (!discoverList || !discoverEmpty) {
+    return;
+  }
+  discoverList.innerHTML = "";
+  const hasItems = discoveryState.palettes.length > 0;
+  discoverEmpty.classList.toggle("is-hidden", hasItems);
+
+  if (!hasItems) {
+    return;
+  }
+
+  discoveryState.palettes.forEach((palette) => {
+    const card = document.createElement("article");
+    card.className = "discover-card";
+
+    const header = document.createElement("div");
+    header.className = "discover-header";
+    const title = document.createElement("div");
+    title.className = "discover-title";
+    title.textContent = palette.name;
+    const author = document.createElement("div");
+    author.className = "discover-author";
+    author.textContent = palette.ownerName
+      ? `by ${palette.ownerName}`
+      : "Shared palette";
+    header.append(title, author);
+
+    const strip = document.createElement("div");
+    strip.className = "discover-strip";
+    palette.colors.slice(0, 6).forEach((color) => {
+      const chip = document.createElement("span");
+      chip.style.background = rgbToHex(color.rgb);
+      strip.appendChild(chip);
+    });
+
+    const stats = document.createElement("div");
+    stats.className = "discover-stats";
+    const likes = document.createElement("span");
+    likes.className = "discover-stat";
+    likes.textContent = `${palette.likesCount ?? 0} likes`;
+    const saves = document.createElement("span");
+    saves.className = "discover-stat";
+    saves.textContent = `${palette.savesCount ?? 0} saves`;
+    stats.append(likes, saves);
+
+    const actions = document.createElement("div");
+    actions.className = "discover-actions";
+    const saveButton = document.createElement("button");
+    saveButton.className = "ghost";
+    setButtonContent(
+      saveButton,
+      "bookmark",
+      discoveryState.savedIds.has(palette.id) ? "Saved" : "Save"
+    );
+    if (discoveryState.savedIds.has(palette.id)) {
+      saveButton.classList.add("is-active");
+    }
+    saveButton.addEventListener("click", async () => {
+      const copy: Palette = {
+        id: createId(),
+        name: palette.name,
+        colors: palette.colors.map((color) => ({ ...color, id: createId() })),
+      };
+      state.palettes.unshift(copy);
+      syncActivePalette(copy.id);
+      showToast("Palette saved to your library.", "success");
+      if (!firebaseClient || !cloudState.user) {
+        return;
+      }
+      await setDoc(
+        doc(firebaseClient.db, "users", cloudState.user.uid, "saves", palette.id),
+        { savedAt: serverTimestamp() }
+      );
+      await updateDoc(
+        doc(firebaseClient.db, "publicPalettes", palette.id),
+        { savesCount: increment(1) }
+      );
+      discoveryState.savedIds.add(palette.id);
+      renderDiscovery();
+    });
+
+    const likeButton = document.createElement("button");
+    likeButton.className = "ghost";
+    setButtonContent(
+      likeButton,
+      "heart",
+      discoveryState.likedIds.has(palette.id) ? "Liked" : "Like"
+    );
+    if (discoveryState.likedIds.has(palette.id)) {
+      likeButton.classList.add("is-active");
+    }
+    likeButton.addEventListener("click", async () => {
+      if (!firebaseClient || !cloudState.user) {
+        showToast("Sign in to like palettes.", "info");
+        return;
+      }
+      const likeDoc = doc(
+        firebaseClient.db,
+        "users",
+        cloudState.user.uid,
+        "likes",
+        palette.id
+      );
+      if (discoveryState.likedIds.has(palette.id)) {
+        await deleteDoc(likeDoc);
+        await updateDoc(
+          doc(firebaseClient.db, "publicPalettes", palette.id),
+          { likesCount: increment(-1) }
+        );
+        discoveryState.likedIds.delete(palette.id);
+      } else {
+        await setDoc(likeDoc, { likedAt: serverTimestamp() });
+        await updateDoc(
+          doc(firebaseClient.db, "publicPalettes", palette.id),
+          { likesCount: increment(1) }
+        );
+        discoveryState.likedIds.add(palette.id);
+      }
+      renderDiscovery();
+    });
+
+    actions.append(saveButton, likeButton);
+
+    card.append(header, strip, stats, actions);
+    discoverList.appendChild(card);
+  });
+};
+
+const listenToDiscovery = () => {
+  if (!firebaseClient) {
+    return;
+  }
+  if (discoveryUnsubscribe) {
+    discoveryUnsubscribe();
+  }
+  discoveryState.loading = true;
+  const discoverQuery = query(
+    collection(firebaseClient.db, "publicPalettes"),
+    orderBy("updatedAt", "desc")
+  );
+  discoveryUnsubscribe = onSnapshot(discoverQuery, (snapshot) => {
+    discoveryState.palettes = snapshot.docs.map((docSnap) => {
+      const data = docSnap.data() as PublicPalette;
+      return {
+        id: docSnap.id,
+        name: data.name ?? "Untitled palette",
+        colors: Array.isArray(data.colors) ? data.colors : [],
+        ownerId: data.ownerId ?? "",
+        ownerName: data.ownerName ?? null,
+        ownerPhoto: data.ownerPhoto ?? null,
+        createdAt: data.createdAt ?? null,
+        likesCount: data.likesCount ?? 0,
+        savesCount: data.savesCount ?? 0,
+      };
+    });
+    discoveryState.loading = false;
+    renderDiscovery();
+  });
+};
 
 const getSelectedExportFormat = () =>
   exportFormatOptions.find((option) => option.checked)?.value ?? "all";
@@ -173,7 +620,7 @@ const setExportMode = (mode: ExportMode) => {
   updateExportAvailability();
 };
 
-const applyColorNotation = (value: string) => {
+const applyColorNotation = (value: string, persist = true) => {
   const normalized = value || "hex";
   if (colorNotationSelect) {
     colorNotationSelect.value = normalized;
@@ -181,7 +628,9 @@ const applyColorNotation = (value: string) => {
   if (colorNotationEditorSelect) {
     colorNotationEditorSelect.value = normalized;
   }
-  persistPreferences();
+  if (persist) {
+    persistPreferences();
+  }
   renderEditor();
 };
 
@@ -350,6 +799,7 @@ const renderPaletteList = () => {
     header.className = "palette-card-header";
 
     const meta = document.createElement("div");
+    meta.className = "palette-meta";
 
     const title = document.createElement("div");
     title.className = "palette-title";
@@ -359,7 +809,17 @@ const renderPaletteList = () => {
     count.className = "palette-count";
     count.textContent = `${palette.colors.length} colors`;
 
-    meta.append(title, count);
+    const metaRow = document.createElement("div");
+    metaRow.className = "palette-meta-row";
+    metaRow.append(title);
+    if (palette.isPublic) {
+      const badge = document.createElement("span");
+      badge.className = "palette-badge";
+      badge.textContent = "Public";
+      metaRow.appendChild(badge);
+    }
+
+    meta.append(metaRow, count);
 
     const actions = document.createElement("div");
     actions.className = "palette-actions";
@@ -395,6 +855,28 @@ const renderPaletteList = () => {
       setModalOpen(exportModal, true);
     });
 
+    const publishButton = document.createElement("button");
+    publishButton.className = "ghost";
+    setButtonContent(
+      publishButton,
+      "globe",
+      palette.isPublic ? "Unpublish" : "Publish"
+    );
+    publishButton.setAttribute(
+      "aria-label",
+      palette.isPublic ? "Unpublish" : "Publish"
+    );
+    publishButton.title = cloudState.user
+      ? palette.isPublic
+        ? "Unpublish"
+        : "Publish"
+      : "Sign in to publish";
+    publishButton.disabled = !cloudState.isConfigured || !cloudState.user;
+    publishButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      void togglePaletteVisibility(palette.id);
+    });
+
     const removeButton = document.createElement("button");
     removeButton.className = "ghost";
     setButtonContent(removeButton, "trash", "Remove");
@@ -412,7 +894,7 @@ const renderPaletteList = () => {
       syncActivePalette(state.palettes[0]?.id ?? null);
     });
 
-    actions.append(viewButton, editButton, exportButton, removeButton);
+    actions.append(viewButton, editButton, exportButton, publishButton, removeButton);
 
     header.append(meta);
 
@@ -451,6 +933,40 @@ const renderPaletteList = () => {
   }
   updateExportAvailability();
   renderViewModal();
+};
+
+const togglePaletteVisibility = async (paletteId: string) => {
+  const palette = state.palettes.find((item) => item.id === paletteId);
+  if (!palette) {
+    return;
+  }
+  if (!firebaseClient || !cloudState.user) {
+    showToast("Sign in to publish palettes.", "info");
+    return;
+  }
+  if (palette.isPublic) {
+    palette.isPublic = false;
+    persistPalettes();
+    try {
+      await removePublicPalette(palette);
+      showToast("Palette removed from discovery.", "success");
+    } catch (error) {
+      console.error(error);
+      showToast("Failed to unpublish palette.", "error");
+    }
+  } else {
+    palette.isPublic = true;
+    palette.publicId = palette.publicId ?? createId();
+    persistPalettes();
+    try {
+      await upsertPublicPalette(palette);
+      showToast("Palette published to discovery.", "success");
+    } catch (error) {
+      console.error(error);
+      showToast("Failed to publish palette.", "error");
+    }
+  }
+  renderPaletteList();
 };
 
 const updatePalette = (paletteId: string, updater: (palette: Palette) => void) => {
@@ -1355,6 +1871,7 @@ const createGeneratedPalette = (isEmpty: boolean) => {
 };
 
 const setupActions = () => {
+  setButtonContent(openDiscoverButton, "globe", "Discover");
   setButtonContent(openSettingsButton, "settings", "Settings");
   setButtonContent(openImportButton, "import", "Import");
   setButtonContent(openGenerateButton, "generate", "Generate");
@@ -1367,7 +1884,23 @@ const setupActions = () => {
   setButtonContent(confirmGenerateButton, "generate", "Create palette");
   setButtonContent(generateEmptyButton, "plus", "Create empty palette");
   setButtonContent(viewEditButton, "edit", "Edit");
+  setButtonContent(refreshDiscoverButton, "refresh", "Refresh");
+  setButtonContent(cloudSignInButton, "login", "Sign in with Google");
+  setButtonContent(cloudSignOutButton, "logout", "Sign out");
+  setButtonContent(cloudSyncButton, "cloud", "Sync now");
   hydrateExportActionIcons(exportActionIcons);
+
+  openDiscoverButton?.addEventListener("click", () => {
+    if (!cloudState.isConfigured) {
+      showToast("Firebase is not configured for discovery yet.", "info");
+      return;
+    }
+    void fetchUserInteractions().then(() => {
+      listenToDiscovery();
+      renderDiscovery();
+    });
+    setModalOpen(discoverModal, true);
+  });
 
   openSettingsButton?.addEventListener("click", () => {
     setModalOpen(settingsModal, true);
@@ -1496,6 +2029,42 @@ const setupActions = () => {
     openEditorForPalette(viewState.paletteId);
   });
 
+  refreshDiscoverButton?.addEventListener("click", () => {
+    void fetchUserInteractions().then(() => {
+      listenToDiscovery();
+      renderDiscovery();
+    });
+  });
+
+  cloudSignInButton?.addEventListener("click", async () => {
+    if (!firebaseClient) {
+      showToast("Firebase is not configured yet.", "error");
+      return;
+    }
+    try {
+      await signInWithPopup(firebaseClient.auth, firebaseClient.provider);
+    } catch (error) {
+      console.error(error);
+      showToast("Unable to sign in. Please try again.", "error");
+    }
+  });
+
+  cloudSignOutButton?.addEventListener("click", async () => {
+    if (!firebaseClient) {
+      return;
+    }
+    try {
+      await signOut(firebaseClient.auth);
+    } catch (error) {
+      console.error(error);
+      showToast("Unable to sign out.", "error");
+    }
+  });
+
+  cloudSyncButton?.addEventListener("click", () => {
+    void syncToCloud();
+  });
+
   formatSelect?.addEventListener("change", () =>
     syncNameFormat(formatSelect.value)
   );
@@ -1525,6 +2094,7 @@ const setupActions = () => {
   setupModal(editorModal);
   setupModal(exportModal);
   setupModal(viewModal);
+  setupModal(discoverModal);
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
@@ -1535,6 +2105,7 @@ const setupActions = () => {
         editorModal,
         exportModal,
         viewModal,
+        discoverModal,
       ]);
     }
   });
@@ -1548,28 +2119,7 @@ const hydratePreferences = () => {
   }
   try {
     const prefs = JSON.parse(raw) as Preferences;
-    if (themeSelect && prefs.theme) {
-      themeSelect.value = prefs.theme;
-    }
-    if (formatSelect && prefs.colorNameFormat) {
-      formatSelect.value = prefs.colorNameFormat;
-    }
-    if (generateFormatSelect && prefs.colorNameFormat) {
-      generateFormatSelect.value = prefs.colorNameFormat;
-    }
-  if (addBwToggle) {
-    addBwToggle.checked = prefs.addBlackWhite ?? false;
-  }
-    if (autoRenameToggle) {
-      autoRenameToggle.checked = prefs.autoRenameColors ?? false;
-    }
-    if (prefs.exportFormat) {
-      setSelectedExportFormat(prefs.exportFormat);
-    }
-    if (prefs.colorNotation) {
-      applyColorNotation(prefs.colorNotation);
-    }
-    applyTheme(themeSelect?.value ?? prefs.theme ?? "studio");
+    applyRemotePreferences(prefs);
   } catch {
     applyTheme(themeSelect?.value ?? "studio");
   }
@@ -1592,6 +2142,38 @@ const hydratePalettes = () => {
   } catch {
     // Ignore invalid saved palettes
   }
+};
+
+const setupCloudAuth = () => {
+  updateCloudControls();
+  if (!firebaseClient) {
+    return;
+  }
+  onAuthStateChanged(firebaseClient.auth, async (user) => {
+    cloudState.user = user
+      ? ({
+          uid: user.uid,
+          name: user.displayName ?? "Palette Studio user",
+          email: user.email,
+          photoUrl: user.photoURL,
+        } as CloudUser)
+      : null;
+    cloudState.lastSyncedAt = null;
+    updateCloudControls();
+    renderPaletteList();
+    if (cloudUnsubscribe) {
+      cloudUnsubscribe();
+      cloudUnsubscribe = null;
+    }
+    if (!cloudState.user) {
+      discoveryState.likedIds.clear();
+      discoveryState.savedIds.clear();
+      renderDiscovery();
+      return;
+    }
+    await fetchUserInteractions();
+    listenToCloudState();
+  });
 };
 
 const importSharedPaletteFromUrl = () => {
@@ -1655,6 +2237,7 @@ setupVersionBadge();
 setupActions();
 hydratePreferences();
 hydratePalettes();
+setupCloudAuth();
 importSharedPaletteFromUrl();
 renderPaletteList();
 renderEditor();

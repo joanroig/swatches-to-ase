@@ -73,6 +73,77 @@ Pages compatible) and as a desktop app for Windows, macOS, and Linux.
 - Export single palettes or batch export as ASE/Swatches/GPL.
 - Use quick exports for images, PDF, CSS, Tailwind, SVG, JSON, embed snippets, or share URLs.
 
+### Firebase Sync + Discovery (Free Tier)
+
+Palette Studio can sync palettes between devices, publish public palettes, and
+show a discovery feed using Firebase Auth + Firestore (Spark/free tier).
+
+1. Create a Firebase project (Spark plan) and add a Web app.
+2. Enable Authentication → Sign-in method → Google (and optionally add your
+   support email).
+3. Create a Firestore database in production mode.
+4. Copy the Firebase config into `web/.env` using `web/.env.example` as a guide:
+   ```
+   VITE_FIREBASE_API_KEY=...
+   VITE_FIREBASE_AUTH_DOMAIN=...
+   VITE_FIREBASE_PROJECT_ID=...
+   VITE_FIREBASE_APP_ID=...
+   VITE_FIREBASE_STORAGE_BUCKET=...
+   VITE_FIREBASE_MESSAGING_SENDER_ID=...
+   ```
+5. Restart the dev server or rebuild the app.
+
+**Optional: GitHub Actions secrets**
+Add the same `VITE_FIREBASE_*` keys as repository secrets to ensure builds
+deploy with Firebase enabled (for Pages and releases).
+
+**Recommended Firestore rules**
+Use rules that only allow authenticated users to read/write their own sync
+document, and allow public palettes to be read by anyone while restricting
+writes to their owners. For example:
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/state/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /users/{userId}/{collectionId}/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /publicPalettes/{paletteId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null
+        && request.auth.uid == request.resource.data.ownerId;
+    }
+  }
+}
+```
+
+### Android (Capacitor)
+
+Palette Studio can be wrapped as an Android app using Capacitor:
+
+1. Build the web app: `npm run build:web`
+2. Add Android once: `npx cap add android`
+3. Sync web assets: `npm run build:android`
+4. Open Android Studio: `npm run open:android`
+
+Be sure to register the Android app in Firebase and add the generated
+`google-services.json` to the Android project when you enable sync.
+
+### Firebase security and key restrictions
+
+To ensure only this app can talk to Firebase:
+
+- **Restrict API keys** in Google Cloud Console → APIs & Services → Credentials.
+  - For web: restrict HTTP referrers to your production domains.
+  - For Android: restrict by package name and SHA-1 certificate fingerprints.
+- **Enable App Check** with reCAPTCHA v3 (web) and Play Integrity (Android) to
+  stop unauthorized clients.
+- **Lock down Firestore rules** (see above) and avoid public write access.
+- **Rotate keys** if you suspect leakage and keep `.env` out of version control.
+
 ### Desktop
 
 - Run `npm run dev:desktop` to launch the Electron app with hot reload.

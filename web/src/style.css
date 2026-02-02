@@ -827,6 +827,12 @@ button:disabled {
   box-shadow: none;
 }
 
+button.is-active {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: rgba(79, 70, 229, 0.08);
+}
+
 .dropzone {
   border: 2px dashed var(--stroke);
   border-radius: 18px;
@@ -1021,6 +1027,160 @@ button:disabled {
   flex-wrap: wrap;
   border-top: 1px solid var(--stroke);
   padding-top: 10px;
+}
+
+.palette-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(14, 165, 233, 0.12);
+  color: var(--accent-3);
+}
+
+.palette-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.palette-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--stroke);
+  margin: 18px 0;
+}
+
+.section {
+  display: grid;
+  gap: 12px;
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.cloud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cloud-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+}
+
+.cloud-user.is-hidden {
+  display: none;
+}
+
+.cloud-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  object-fit: cover;
+}
+
+.cloud-meta {
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.cloud-name {
+  font-weight: 600;
+}
+
+.cloud-email {
+  color: var(--muted);
+}
+
+.discover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.discover-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow-soft);
+}
+
+.discover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.discover-title {
+  font-weight: 600;
+}
+
+.discover-author {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.discover-strip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+}
+
+.discover-strip span {
+  height: 30px;
+}
+
+.discover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.discover-actions button {
+  flex: 1 1 auto;
+  min-width: 120px;
+}
+
+.discover-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.discover-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .chip {
@@ -1669,7 +1829,7 @@ button.icon-only .icon {
 
   .palette-actions {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 8px;
   }
 

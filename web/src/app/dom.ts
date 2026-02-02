@@ -33,6 +33,8 @@ export const editorExportButton =
   document.querySelector<HTMLButtonElement>("#editor-export");
 export const openSettingsButton =
   document.querySelector<HTMLButtonElement>("#open-settings");
+export const openDiscoverButton =
+  document.querySelector<HTMLButtonElement>("#open-discover");
 export const openImportButton =
   document.querySelector<HTMLButtonElement>("#open-import");
 export const openGenerateButton =
@@ -54,6 +56,8 @@ export const editorModal =
 export const exportModal =
   document.querySelector<HTMLDivElement>("#export-modal");
 export const viewModal = document.querySelector<HTMLDivElement>("#view-modal");
+export const discoverModal =
+  document.querySelector<HTMLDivElement>("#discover-modal");
 export const generateNameInput =
   document.querySelector<HTMLInputElement>("#generate-name");
 export const generateStyleSelect =
@@ -89,3 +93,24 @@ export const viewSubtitle =
   document.querySelector<HTMLParagraphElement>("#view-subtitle");
 export const viewEditButton =
   document.querySelector<HTMLButtonElement>("#view-edit");
+export const discoverList =
+  document.querySelector<HTMLDivElement>("#discover-list");
+export const discoverEmpty =
+  document.querySelector<HTMLParagraphElement>("#discover-empty");
+export const refreshDiscoverButton =
+  document.querySelector<HTMLButtonElement>("#refresh-discover");
+export const cloudStatus =
+  document.querySelector<HTMLParagraphElement>("#cloud-status");
+export const cloudSignInButton =
+  document.querySelector<HTMLButtonElement>("#cloud-signin");
+export const cloudSignOutButton =
+  document.querySelector<HTMLButtonElement>("#cloud-signout");
+export const cloudSyncButton =
+  document.querySelector<HTMLButtonElement>("#cloud-sync");
+export const cloudUserCard =
+  document.querySelector<HTMLDivElement>("#cloud-user");
+export const cloudAvatar =
+  document.querySelector<HTMLImageElement>("#cloud-avatar");
+export const cloudName = document.querySelector<HTMLSpanElement>("#cloud-name");
+export const cloudEmail =
+  document.querySelector<HTMLSpanElement>("#cloud-email");
