@@ -1,0 +1,148 @@
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .panel-actions {
+    width: 100%;
+  }
+
+  .export-controls {
+    justify-content: stretch;
+  }
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 28px 16px 54px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-actions .field {
+    width: 100%;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-header {
+    grid-template-columns: 1fr;
+  }
+
+  .color-row {
+    grid-template-columns: 36px 48px 1fr;
+  }
+
+  input[type="color"] {
+    width: 48px;
+    height: 48px;
+  }
+
+  .color-actions {
+    grid-column: span 3;
+    justify-self: start;
+  }
+
+  .export-actions,
+  .editor-header-actions,
+  .modal-actions,
+  .panel-actions,
+  .editor-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .palette-actions {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .palette-actions button {
+    width: 100%;
+    padding: 9px 8px;
+    justify-content: center;
+  }
+
+  .palette-actions button span {
+    display: none;
+  }
+
+  .editor-footer-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  .toast-stack {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .toast {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px), (max-height: 720px) {
+  .modal-card.modal-view {
+    padding: 18px;
+  }
+
+  .modal-card.modal-view .modal-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .modal-card.modal-view .modal-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .modal-card.modal-view .modal-body {
+    gap: 12px;
+  }
+
+  .view-display {
+    min-height: clamp(160px, 32vh, 220px);
+    padding: 16px;
+  }
+
+  .view-values {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px 16px;
+  }
+
+  .view-strip {
+    overflow-x: auto;
+  }
+
+  .view-swatch {
+    flex: 1 1 48px;
+    min-width: 48px;
+  }
+}

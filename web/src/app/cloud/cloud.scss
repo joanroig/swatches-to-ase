@@ -1,0 +1,42 @@
+.cloud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cloud-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+}
+
+.cloud-user.is-hidden {
+  display: none;
+}
+
+.cloud-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  object-fit: cover;
+}
+
+.cloud-meta {
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.cloud-name {
+  font-weight: 600;
+}
+
+.cloud-email {
+  color: var(--muted);
+}

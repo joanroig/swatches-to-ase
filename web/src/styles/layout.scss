@@ -1,0 +1,178 @@
+.page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 32px 24px 72px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 32px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: "Fraunces", serif;
+  letter-spacing: -0.02em;
+}
+
+.brand-text {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.brand-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  box-shadow: 0 12px 24px rgba(28, 26, 22, 0.12);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.brand-title {
+  font-size: clamp(2.2rem, 3vw, 3.1rem);
+  line-height: 1;
+}
+
+.brand-subtitle {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.tagline {
+  font-size: 1rem;
+  max-width: 520px;
+  color: var(--muted);
+}
+
+.footer {
+  margin-top: 36px;
+  display: flex;
+  justify-content: center;
+}
+
+.footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+.sidebar {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+.workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--stroke-strong);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  animation: rise 0.6s ease forwards;
+  opacity: 0;
+  transform: translateY(12px);
+  animation-delay: var(--delay);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.panel-heading h2 {
+  margin: 0 0 8px;
+}
+
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.panel-actions button {
+  white-space: nowrap;
+}
+
+.panel h2 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+
+.panel p {
+  margin: 12px 0 0;
+  color: var(--muted);
+}
+
+.panel-options,
+.panel-drop,
+.panel-export,
+.panel-log,
+.panel-list,
+.panel-editor {
+  grid-column: auto;
+}
+
+.divider {
+  height: 1px;
+  background: var(--stroke);
+  margin: 18px 0;
+}
+
+.section {
+  display: grid;
+  gap: 12px;
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+@keyframes rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

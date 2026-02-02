@@ -1,0 +1,104 @@
+body:not(.is-ready) {
+  overflow: hidden;
+}
+
+body:not(.is-ready) .page {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.is-ready .page {
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--ink);
+  z-index: 1000;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body.is-ready .loading-screen {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+}
+
+.loading-card {
+  display: grid;
+  gap: 18px;
+  align-items: center;
+  justify-items: center;
+  text-align: center;
+  padding: 28px 32px;
+  border-radius: 22px;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow-soft);
+  min-width: min(320px, 90vw);
+}
+
+.loading-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.loading-logo {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  box-shadow: 0 10px 20px rgba(20, 22, 39, 0.12);
+}
+
+.loading-text {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+
+.loading-title {
+  font-family: inherit;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.loading-subtitle {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.loading-spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 3px solid var(--stroke);
+  border-top-color: var(--accent);
+  animation: loading-spin 0.9s linear infinite;
+}
+
+@keyframes loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-ready .page,
+  body.is-ready .loading-screen {
+    transition: none;
+  }
+
+  .loading-spinner {
+    animation: none;
+  }
+}

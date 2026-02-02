@@ -1,0 +1,68 @@
+.discover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.discover-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow-soft);
+}
+
+.discover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.discover-title {
+  font-weight: 600;
+}
+
+.discover-author {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.discover-strip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+}
+
+.discover-strip span {
+  height: 30px;
+}
+
+.discover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.discover-actions button {
+  flex: 1 1 auto;
+  min-width: 120px;
+}
+
+.discover-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.discover-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
