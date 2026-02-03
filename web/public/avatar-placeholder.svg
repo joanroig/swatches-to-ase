@@ -7,5 +7,5 @@
   </defs>
   <rect width="96" height="96" rx="22" fill="#e2e8f0" />
   <circle cx="48" cy="38" r="16" fill="url(#grad)" />
-  <path d="M20 84c4-18 52-18 56 0" fill="url(#grad)" />
+  <path d="M20 71c4-18 52-18 56 0" fill="url(#grad)" />
 </svg>

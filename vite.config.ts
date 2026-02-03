@@ -1,12 +1,10 @@
-import { defineConfig } from "vite";
-import path from "path";
 import fs from "fs";
+import path from "path";
 import { fileURLToPath } from "url";
+import { defineConfig } from "vite";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
-const packageJson = JSON.parse(
-  fs.readFileSync(path.resolve(rootDir, "package.json"), "utf-8")
-) as { version?: string };
+const packageJson = JSON.parse(fs.readFileSync(path.resolve(rootDir, "package.json"), "utf-8")) as { version?: string };
 
 export default defineConfig({
   root: "web",

@@ -1,42 +1,27 @@
+import { exportPaletteToAse, exportPaletteToGpl, exportPaletteToSwatches } from "@core/palette";
 import JSZip from "jszip";
-import {
-  exportPaletteToAse,
-  exportPaletteToGpl,
-  exportPaletteToSwatches,
-} from "@core/palette";
 
-import {
-  exportActionButtons,
-  exportAllButton,
-  exportFormatOptions,
-  exportModal,
-  openExportButton,
-  removeAllButton,
-} from "../dom";
-import { buildSharedPaletteUrl } from "../share";
-import {
-  buildCodeExport,
-  buildCssExport,
-  buildEmbedExport,
-  buildSvgExport,
-  buildTailwindExport,
-} from "./builders";
-import { appendLog, showToast } from "../ui/notifications";
-import { sanitizeFileName } from "../utils/text";
-import { rgbToHex } from "../utils/color";
+import { exportActionButtons, exportAllButton, exportFormatOptions, exportModal, openExportButton, removeAllButton } from "../dom";
 import { updateProcessingState } from "../processing";
-import type { ExportMode, Palette } from "../types";
-import { exportState, state } from "../state";
+import { getPreferencesPayload } from "../preferences";
+import { buildCompleteShareUrl, buildSharedPaletteUrl } from "../share";
+import { cloudState, exportState, state } from "../state";
+import type { ExportMode, Palette, SharedWorkspacePayload } from "../types";
+import { t } from "../i18n";
+import { appendLog, showToast } from "../ui/notifications";
+import { rgbToHex } from "../utils/color";
+import { sanitizeFileName } from "../utils/text";
+import { buildCodeExport, buildCssExport, buildEmbedExport, buildSvgExport, buildTailwindExport } from "./builders";
 import { getPaletteHexes, selectExportTargets, selectPrimaryExportPalette } from "./helpers";
 
 const getPaletteForExportAction = () => {
   const palette = getPrimaryExportPalette();
   if (!palette) {
-    appendLog("No palette selected for export.", "error");
+    appendLog(t("log.noPaletteSelected"), "error");
     return null;
   }
   if (palette.colors.length === 0) {
-    appendLog("Selected palette has no colors.", "error");
+    appendLog(t("log.paletteNoColors"), "error");
     return null;
   }
   return palette;
@@ -51,7 +36,7 @@ const copyToClipboard = async (text: string, successMessage: string) => {
     appendLog(successMessage, "success");
     showToast(successMessage, "success");
   } catch (error) {
-    const message = `Clipboard unavailable: ${(error as Error).message}`;
+    const message = t("log.clipboardUnavailable", { message: (error as Error).message });
     appendLog(message, "error");
     showToast(message, "error");
   }
@@ -71,7 +56,7 @@ const downloadBlob = (fileName: string, data: BlobPart, mime: string) => {
 
 const downloadText = (fileName: string, content: string, mime: string) => {
   downloadBlob(fileName, content, mime);
-  appendLog(`Downloaded ${fileName}`, "success");
+  appendLog(t("log.downloaded", { file: fileName }), "success");
 };
 
 const downloadPng = async (palette: Palette) => {
@@ -82,7 +67,7 @@ const downloadPng = async (palette: Palette) => {
   canvas.height = height;
   const context = canvas.getContext("2d");
   if (!context) {
-    appendLog("Unable to render image.", "error");
+    appendLog(t("log.imageRenderFailed"), "error");
     return;
   }
   palette.colors.forEach((color, index) => {
@@ -91,19 +76,21 @@ const downloadPng = async (palette: Palette) => {
   });
   canvas.toBlob((blob) => {
     if (!blob) {
-      appendLog("Unable to generate image file.", "error");
+      appendLog(t("log.imageGenerateFailed"), "error");
       return;
     }
     downloadBlob(`${sanitizeFileName(palette.name)}.png`, blob, "image/png");
-    appendLog("Downloaded palette image.", "success");
+    appendLog(t("log.downloadedImage"), "success");
   }, "image/png");
 };
 
 const openPrintExport = (palette: Palette) => {
+  const pageTitle = t("export.print.title", { name: palette.name });
+  const footerLabel = t("export.print.generatedFrom");
   const html = `
     <html>
       <head>
-        <title>${palette.name} palette</title>
+        <title>${pageTitle}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 32px; }
           h1 { font-size: 20px; }
@@ -115,22 +102,15 @@ const openPrintExport = (palette: Palette) => {
       <body>
         <h1>${palette.name}</h1>
         <div class="row">
-          ${palette.colors
-            .map(
-              (color) =>
-                `<div class="swatch" style="background:${rgbToHex(
-                  color.rgb
-                ).toUpperCase()}"></div>`
-            )
-            .join("")}
+          ${palette.colors.map((color) => `<div class="swatch" style="background:${rgbToHex(color.rgb).toUpperCase()}"></div>`).join("")}
         </div>
-        <div class="label">Generated from Palette Studio</div>
+        <div class="label">${footerLabel}</div>
       </body>
     </html>
   `;
   const printWindow = window.open("", "_blank");
   if (!printWindow) {
-    appendLog("Unable to open print preview.", "error");
+    appendLog(t("log.printPreviewFailed"), "error");
     return;
   }
   printWindow.document.write(html);
@@ -140,15 +120,13 @@ const openPrintExport = (palette: Palette) => {
 };
 
 const openShareLink = (url: string, text: string) => {
-  const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
-    text
-  )}&url=${encodeURIComponent(url)}`;
+  const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
   window.open(shareUrl, "_blank");
 };
 
 const openPinterestLink = (url: string, description: string) => {
   const pinUrl = `https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(
-    url
+    url,
   )}&description=${encodeURIComponent(description)}`;
   window.open(pinUrl, "_blank");
 };
@@ -187,13 +165,13 @@ const exportSinglePalette = async (palette: Palette, formatOverride?: string) =>
 
 const exportPalettes = async (palettes: Palette[]) => {
   if (palettes.length === 0) {
-    appendLog("No palettes to export yet.", "error");
+    appendLog(t("log.noPalettesToExport"), "error");
     return;
   }
   updateProcessingState(true);
   const format = getSelectedExportFormat();
   const zip = new JSZip();
-  appendLog(`Exporting ${palettes.length} palette(s)...`, "info");
+  appendLog(t("log.exporting", { count: palettes.length }), "info");
 
   try {
     for (const palette of palettes) {
@@ -232,9 +210,9 @@ const exportPalettes = async (palettes: Palette[]) => {
     });
 
     if (saveResult?.saved) {
-      appendLog("Zip file saved on desktop.", "success");
+      appendLog(t("log.zipSaved"), "success");
     } else if (window.desktopApi) {
-      appendLog("Zip save canceled.", "info");
+      appendLog(t("log.zipCanceled"), "info");
     } else {
       const blob = new Blob([zipBytes], { type: "application/zip" });
       const url = URL.createObjectURL(blob);
@@ -245,7 +223,7 @@ const exportPalettes = async (palettes: Palette[]) => {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      appendLog("Zip file ready for download.", "success");
+      appendLog(t("log.zipReady"), "success");
     }
   } finally {
     updateProcessingState(false);
@@ -257,8 +235,23 @@ const getPrimaryExportPalette = () => {
   return selectPrimaryExportPalette(targets, state.palettes, state.activePaletteId);
 };
 
-export const getSelectedExportFormat = () =>
-  exportFormatOptions.find((option) => option.checked)?.value ?? "all";
+const buildCompleteSharePayload = (): SharedWorkspacePayload => {
+  const activePaletteIndex = state.activePaletteId ? state.palettes.findIndex((palette) => palette.id === state.activePaletteId) : -1;
+  return {
+    version: 1,
+    user: cloudState.user?.name ? { name: cloudState.user.name } : undefined,
+    palettes: state.palettes.map((palette) => ({
+      name: palette.name,
+      colors: palette.colors.map((color) => ({
+        hex: rgbToHex(color.rgb).replace("#", "").toUpperCase(),
+      })),
+    })),
+    preferences: getPreferencesPayload(),
+    activePaletteIndex: activePaletteIndex >= 0 ? activePaletteIndex : null,
+  };
+};
+
+export const getSelectedExportFormat = () => exportFormatOptions.find((option) => option.checked)?.value ?? "all";
 
 export const setSelectedExportFormat = (format: string) => {
   const normalized = format.toLowerCase();
@@ -292,12 +285,11 @@ export const updateExportAvailability = () => {
   });
 };
 
-export const getExportTargets = () =>
-  selectExportTargets(exportState.mode, state.palettes, state.activePaletteId);
+export const getExportTargets = () => selectExportTargets(exportState.mode, state.palettes, state.activePaletteId);
 
 export const exportPalettesSmart = async (palettes: Palette[]) => {
   if (palettes.length === 0) {
-    appendLog("No palettes to export yet.", "error");
+    appendLog(t("log.noPalettesToExport"), "error");
     return;
   }
   const format = getSelectedExportFormat();
@@ -316,27 +308,50 @@ export const handleExportAction = async (action: string | undefined) => {
   const cleanName = sanitizeFileName(palette.name);
   const coolorsUrl = `https://coolors.co/${getPaletteHexes(palette).join("-")}`;
   const shareUrl = buildSharedPaletteUrl(palette);
+  const workspaceOwner = cloudState.user?.name?.trim();
 
   switch (action) {
     case "url":
-      await copyToClipboard(shareUrl, "Share URL copied to clipboard.");
+      await copyToClipboard(shareUrl, t("toast.exportShareUrlCopied"));
       break;
     case "share":
       if (navigator.share) {
         try {
           await navigator.share({
             title: palette.name,
-            text: `${palette.name} palette`,
+            text: t("export.share.palette", { name: palette.name }),
             url: shareUrl,
           });
-          appendLog("Share sheet opened.", "success");
+          appendLog(t("log.shareOpened"), "success");
         } catch (error) {
-          appendLog(`Share canceled: ${(error as Error).message}`, "info");
+          appendLog(t("log.shareCanceled", { message: (error as Error).message }), "info");
         }
       } else {
-        await copyToClipboard(shareUrl, "Share URL copied to clipboard.");
+        await copyToClipboard(shareUrl, t("toast.exportShareUrlCopied"));
       }
       break;
+    case "share-full": {
+      const completeShareUrl = buildCompleteShareUrl(buildCompleteSharePayload());
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: workspaceOwner
+              ? t("export.share.workspaceTitle", { owner: workspaceOwner })
+              : t("export.share.workspaceTitleGeneric"),
+            text: workspaceOwner
+              ? t("export.share.workspaceText", { owner: workspaceOwner })
+              : t("export.share.workspaceTitleGeneric"),
+            url: completeShareUrl,
+          });
+          appendLog(t("log.shareOpened"), "success");
+        } catch (error) {
+          appendLog(t("log.shareCanceled", { message: (error as Error).message }), "info");
+        }
+      } else {
+        await copyToClipboard(completeShareUrl, t("toast.exportCompleteShareCopied"));
+      }
+      break;
+    }
     case "pdf":
       openPrintExport(palette);
       break;
@@ -346,43 +361,43 @@ export const handleExportAction = async (action: string | undefined) => {
     case "css": {
       const css = buildCssExport(palette);
       downloadText(`${cleanName}.css`, css, "text/css");
-      await copyToClipboard(css, "CSS variables copied to clipboard.");
+      await copyToClipboard(css, t("toast.exportCssCopied"));
       break;
     }
     case "svg": {
       const svg = buildSvgExport(palette);
       downloadText(`${cleanName}.svg`, svg, "image/svg+xml");
-      await copyToClipboard(svg, "SVG copied to clipboard.");
+      await copyToClipboard(svg, t("toast.exportSvgCopied"));
       break;
     }
     case "code": {
       const code = buildCodeExport(palette);
       downloadText(`${cleanName}.json`, code, "application/json");
-      await copyToClipboard(code, "Code copied to clipboard.");
+      await copyToClipboard(code, t("toast.exportCodeCopied"));
       break;
     }
     case "tailwind": {
       const tailwind = buildTailwindExport(palette);
       downloadText(`${cleanName}.tailwind.js`, tailwind, "text/javascript");
-      await copyToClipboard(tailwind, "Tailwind config copied to clipboard.");
+      await copyToClipboard(tailwind, t("toast.exportTailwindCopied"));
       break;
     }
     case "embed": {
       const embed = buildEmbedExport(palette);
       downloadText(`${cleanName}.html`, embed, "text/html");
-      await copyToClipboard(embed, "Embed snippet copied to clipboard.");
+      await copyToClipboard(embed, t("toast.exportEmbedCopied"));
       break;
     }
     case "coolors":
       window.open(coolorsUrl, "_blank");
       break;
     case "x":
-      openShareLink(shareUrl, `${palette.name} palette`);
+      openShareLink(shareUrl, t("export.share.palette", { name: palette.name }));
       break;
     case "pinterest":
-      openPinterestLink(shareUrl, `${palette.name} palette`);
+      openPinterestLink(shareUrl, t("export.share.palette", { name: palette.name }));
       break;
     default:
-      appendLog("Export action not available yet.", "error");
+      appendLog(t("log.exportActionUnavailable"), "error");
   }
 };

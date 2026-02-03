@@ -2,12 +2,19 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug: Web (Vite + Chrome)",
-      "type": "chrome",
+      "name": "Run: Web (Vite)",
+      "type": "node",
       "request": "launch",
-      "url": "http://localhost:5173",
-      "webRoot": "${workspaceFolder}/src",
-      "preLaunchTask": "npm: dev:web"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:web"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "serverReadyAction": {
+        "pattern": "Local:\\s+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "openExternally"
+      },
+      "skipFiles": ["<node_internals>/**"]
     },
     {
       "name": "Run: Desktop (Electron)",
@@ -20,7 +27,7 @@
       "skipFiles": ["<node_internals>/**"]
     },
     {
-      "name": "Debug: Convert CLI",
+      "name": "Run: Convert CLI",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",

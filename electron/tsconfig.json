@@ -8,9 +8,5 @@
     "lib": ["ES2020"],
     "types": ["node", "electron"]
   },
-  "include": [
-    "../electron/**/*.ts",
-    "../src/core/**/*.ts",
-    "../src/core/**/*.d.ts"
-  ]
+  "include": ["../electron/**/*.ts", "../electron/**/*.cts", "../src/core/**/*.ts", "../src/core/**/*.d.ts"]
 }

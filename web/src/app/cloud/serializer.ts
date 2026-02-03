@@ -1,18 +1,23 @@
+import type {
+  Palette,
+  PaletteColor,
+  Preferences,
+  StoredPalette,
+  StoredPaletteColor,
+  StoredSyncPayload,
+  SyncPayload,
+} from "../types";
 import { createId } from "../utils/id";
-import type { Palette, PaletteColor, Preferences, SyncPayload } from "../types";
 
 const isRgbTuple = (value: unknown): value is [number, number, number] =>
-  Array.isArray(value) &&
-  value.length === 3 &&
-  value.every((channel) => typeof channel === "number");
+  Array.isArray(value) && value.length === 3 && value.every((channel) => typeof channel === "number");
 
-const sanitizeColor = (color: PaletteColor): PaletteColor => ({
+const sanitizeColor = (color: PaletteColor): StoredPaletteColor => ({
   id: color.id,
-  name: color.name,
   rgb: [...color.rgb] as [number, number, number],
 });
 
-const sanitizePalette = (palette: Palette): Palette => ({
+const sanitizePalette = (palette: Palette): StoredPalette => ({
   id: palette.id,
   name: palette.name,
   colors: palette.colors.map(sanitizeColor),
@@ -23,36 +28,32 @@ const sanitizePalette = (palette: Palette): Palette => ({
 export const buildSyncPayload = (
   palettes: Palette[],
   activePaletteId: string | null,
-  preferences: Preferences
-): SyncPayload => ({
+  preferences: Preferences,
+): StoredSyncPayload => ({
   palettes: palettes.map(sanitizePalette),
   activePaletteId,
   preferences,
   revision: createId(),
 });
 
-const isPaletteColor = (value: unknown): value is PaletteColor => {
+const isStoredPaletteColor = (value: unknown): value is StoredPaletteColor => {
   if (!value || typeof value !== "object") {
     return false;
   }
-  const candidate = value as PaletteColor;
-  return (
-    typeof candidate.id === "string" &&
-    typeof candidate.name === "string" &&
-    isRgbTuple(candidate.rgb)
-  );
+  const candidate = value as StoredPaletteColor;
+  return typeof candidate.id === "string" && isRgbTuple(candidate.rgb);
 };
 
-const isPalette = (value: unknown): value is Palette => {
+const isStoredPalette = (value: unknown): value is StoredPalette => {
   if (!value || typeof value !== "object") {
     return false;
   }
-  const candidate = value as Palette;
+  const candidate = value as StoredPalette;
   return (
     typeof candidate.id === "string" &&
     typeof candidate.name === "string" &&
     Array.isArray(candidate.colors) &&
-    candidate.colors.every(isPaletteColor)
+    candidate.colors.every(isStoredPaletteColor)
   );
 };
 
@@ -61,13 +62,21 @@ const isPreferences = (value: unknown): value is Preferences => {
     return false;
   }
   const candidate = value as Preferences;
+  const motionValid =
+    typeof candidate.motion === "undefined" || candidate.motion === "system" || candidate.motion === "on" || candidate.motion === "off";
+  const languageValid =
+    typeof candidate.language === "undefined" ||
+    candidate.language === "system" ||
+    candidate.language === "en" ||
+    candidate.language === "es";
   return (
     typeof candidate.theme === "string" &&
     typeof candidate.colorNameFormat === "string" &&
     typeof candidate.addBlackWhite === "boolean" &&
     typeof candidate.exportFormat === "string" &&
     typeof candidate.colorNotation === "string" &&
-    typeof candidate.autoRenameColors === "boolean"
+    motionValid &&
+    languageValid
   );
 };
 
@@ -75,10 +84,10 @@ export const parseSyncPayload = (value: unknown): SyncPayload | null => {
   if (!value || typeof value !== "object") {
     return null;
   }
-  const candidate = value as SyncPayload;
+  const candidate = value as StoredSyncPayload;
   if (
     !Array.isArray(candidate.palettes) ||
-    !candidate.palettes.every(isPalette) ||
+    !candidate.palettes.every(isStoredPalette) ||
     !isPreferences(candidate.preferences) ||
     typeof candidate.revision !== "string"
   ) {
@@ -86,7 +95,13 @@ export const parseSyncPayload = (value: unknown): SyncPayload | null => {
   }
   return {
     palettes: candidate.palettes.map((palette) => ({
-      ...palette,
+      id: palette.id,
+      name: palette.name,
+      colors: palette.colors.map((color) => ({
+        id: color.id,
+        name: "",
+        rgb: [...color.rgb] as [number, number, number],
+      })),
       isPublic: palette.isPublic ?? false,
       publicId: palette.publicId ?? null,
     })),

@@ -23,12 +23,14 @@
 
 .toast-stack {
   position: fixed;
-  right: 24px;
+  left: 50%;
   bottom: 24px;
   display: grid;
   gap: 10px;
   z-index: 30;
   pointer-events: none;
+  transform: translateX(-50%);
+  justify-items: center;
 }
 
 .toast {
@@ -74,7 +76,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .toast {
+  body:not([data-motion="on"]) .toast {
     transition: none;
   }
+}
+
+body[data-motion="off"] .toast {
+  transition: none;
 }

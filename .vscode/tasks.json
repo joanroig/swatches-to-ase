@@ -2,25 +2,6 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "npm: dev:web",
-      "type": "npm",
-      "script": "dev:web",
-      "isBackground": true,
-      "problemMatcher": {
-        "owner": "vite",
-        "pattern": [
-          {
-            "regexp": ".*"
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "VITE v",
-          "endsPattern": "Local:"
-        }
-      }
-    },
-    {
       "label": "npm: dist:desktop (win)",
       "type": "shell",
       "command": "npm run dist:desktop -- --win"
@@ -39,6 +20,26 @@
       "label": "npm: dist:desktop (all)",
       "type": "shell",
       "command": "npm run dist:desktop -- --win --mac --linux"
+    },
+    {
+      "label": "npm: build:android",
+      "type": "shell",
+      "command": "npm run build:android"
+    },
+    {
+      "label": "npm: open:android",
+      "type": "shell",
+      "command": "npm run open:android"
+    },
+    {
+      "label": "npm: build:ios",
+      "type": "shell",
+      "command": "npm run build:ios"
+    },
+    {
+      "label": "npm: open:ios",
+      "type": "shell",
+      "command": "npm run open:ios"
     }
   ]
 }

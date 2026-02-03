@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  buildSyncPayload,
-  parseSyncPayload,
-} from "../../web/src/app/cloud/serializer.js";
+import { buildSyncPayload, parseSyncPayload } from "../../web/src/app/cloud/serializer.js";
 import type { Palette, Preferences } from "../../web/src/app/types.js";
 
 const samplePalette: Palette = {
@@ -24,7 +21,6 @@ const samplePreferences: Preferences = {
   addBlackWhite: false,
   exportFormat: "all",
   colorNotation: "hex",
-  autoRenameColors: false,
 };
 
 test("buildSyncPayload includes palettes, preferences, and revision", () => {

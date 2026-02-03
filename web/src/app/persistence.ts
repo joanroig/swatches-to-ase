@@ -9,9 +9,7 @@ export const setScheduleCloudSync = (handler: (() => void) | null) => {
   scheduleCloudSync = handler;
 };
 
-export const setPreferencesPayloadGetter = (
-  getter: (() => Preferences) | null
-) => {
+export const setPreferencesPayloadGetter = (getter: (() => Preferences) | null) => {
   getPreferencesPayload = getter;
 };
 

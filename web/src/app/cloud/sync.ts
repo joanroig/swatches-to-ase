@@ -1,34 +1,29 @@
-import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 
-import {
-  cloudSignInButton,
-  cloudSignOutButton,
-  cloudStatus,
-  cloudSyncButton,
-} from "../dom";
+import { cloudSignInButton, cloudSignOutButton, cloudStatus, cloudSyncButton } from "../dom";
+import { t } from "../i18n";
+import { renderPaletteList, syncPaletteColorNames } from "../palette/ui";
+import { persistPreferences } from "../persistence";
+import { applyRemotePreferences, getPreferencesPayload } from "../preferences";
 import { cloudState, discoveryState, state } from "../state";
 import type { CloudUser } from "../types";
-import { buildSyncPayload, parseSyncPayload } from "./serializer";
-import { applyRemotePreferences, getPreferencesPayload } from "../preferences";
-import { persistPalettes, persistPreferences } from "../persistence";
-import { renderEditor, renderPaletteList } from "../palette/ui";
-import { updateExportAvailability } from "../export/manager";
 import { showToast } from "../ui/notifications";
 import { firebaseClient, firebaseConfigStatus } from "./context";
-import { upsertPublicPalette } from "./public";
 import { fetchUserInteractions, renderDiscovery } from "./discovery";
-import { renderCloudUserCard } from "./user-card";
 import { syncCloudProfileForm } from "./profile";
+import { upsertPublicPalette } from "./public";
+import { buildSyncPayload, parseSyncPayload } from "./serializer";
+import { renderCloudUserCard } from "./user-card";
 
 let cloudUnsubscribe: (() => void) | null = null;
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 
 const formatSyncTimestamp = (value: string | null) => {
   if (!value) {
-    return "Not synced yet";
+    return t("cloud.status.notSynced");
   }
-  return `Last synced at ${value}`;
+  return t("cloud.status.lastSynced", { time: value });
 };
 
 const setCloudStatusMessage = (message: string) => {
@@ -40,13 +35,11 @@ const setCloudStatusMessage = (message: string) => {
 const updateCloudControls = () => {
   if (!cloudState.isConfigured) {
     const missing = firebaseConfigStatus.missingKeys.join(", ");
-    setCloudStatusMessage(
-      `Firebase keys missing: ${missing}. Add them to enable sync.`
-    );
+    setCloudStatusMessage(t("cloud.status.missingKeys", { missing }));
   } else if (!cloudState.user) {
-    setCloudStatusMessage("Sign in to sync palettes between devices.");
+    setCloudStatusMessage(t("cloud.status.signedOut"));
   } else if (cloudState.isSyncing) {
-    setCloudStatusMessage("Syncing palettes to the cloud...");
+    setCloudStatusMessage(t("cloud.status.syncing"));
   } else {
     setCloudStatusMessage(formatSyncTimestamp(cloudState.lastSyncedAt));
   }
@@ -74,10 +67,7 @@ const applyRemoteState = (payload: ReturnType<typeof parseSyncPayload>) => {
   state.activePaletteId = payload.activePaletteId;
   applyRemotePreferences(payload.preferences);
   persistPreferences();
-  persistPalettes();
-  renderPaletteList();
-  renderEditor();
-  updateExportAvailability();
+  syncPaletteColorNames(payload.preferences.colorNameFormat);
   cloudState.applyingRemote = false;
 };
 
@@ -89,26 +79,23 @@ const listenToCloudState = () => {
     cloudUnsubscribe();
   }
   let handledEmpty = false;
-  cloudUnsubscribe = onSnapshot(
-    doc(firebaseClient.db, "users", cloudState.user.uid, "state", "app"),
-    (snapshot) => {
-      if (!snapshot.exists()) {
-        if (!handledEmpty) {
-          handledEmpty = true;
-          void syncToCloud();
-        }
-        return;
+  cloudUnsubscribe = onSnapshot(doc(firebaseClient.db, "users", cloudState.user.uid, "state", "app"), (snapshot) => {
+    if (!snapshot.exists()) {
+      if (!handledEmpty) {
+        handledEmpty = true;
+        void syncToCloud();
       }
-      handledEmpty = true;
-      const payload = parseSyncPayload(snapshot.data());
-      if (!payload || payload.revision === cloudState.lastRevision) {
-        return;
-      }
-      applyRemoteState(payload);
-      cloudState.lastSyncedAt = new Date().toLocaleTimeString();
-      updateCloudControls();
+      return;
     }
-  );
+    handledEmpty = true;
+    const payload = parseSyncPayload(snapshot.data());
+    if (!payload || payload.revision === cloudState.lastRevision) {
+      return;
+    }
+    applyRemoteState(payload);
+    cloudState.lastSyncedAt = new Date().toLocaleTimeString();
+    updateCloudControls();
+  });
 };
 
 export const syncToCloud = async () => {
@@ -117,31 +104,27 @@ export const syncToCloud = async () => {
   }
   cloudState.isSyncing = true;
   updateCloudControls();
-  const payload = buildSyncPayload(
-    state.palettes,
-    state.activePaletteId,
-    getPreferencesPayload()
-  );
+  const payload = buildSyncPayload(state.palettes, state.activePaletteId, getPreferencesPayload());
   cloudState.lastRevision = payload.revision;
   try {
     await setDoc(
       doc(firebaseClient.db, "users", cloudState.user.uid, "state", "app"),
       { ...payload, updatedAt: serverTimestamp() },
-      { merge: true }
+      { merge: true },
     );
-    await Promise.all(
-      payload.palettes
-        .filter((palette) => palette.isPublic)
-        .map((palette) => upsertPublicPalette(palette))
-    );
+    await Promise.all(state.palettes.filter((palette) => palette.isPublic).map((palette) => upsertPublicPalette(palette)));
     cloudState.lastSyncedAt = new Date().toLocaleTimeString();
   } catch (error) {
     console.error(error);
-    showToast("Cloud sync failed. Check your connection.", "error");
+    showToast(t("toast.cloudSyncFailed"), "error");
   } finally {
     cloudState.isSyncing = false;
     updateCloudControls();
   }
+};
+
+export const refreshCloudControls = () => {
+  updateCloudControls();
 };
 
 export const scheduleCloudSync = () => {
@@ -166,7 +149,7 @@ export const setupCloudAuth = () => {
     cloudState.user = user
       ? ({
           uid: user.uid,
-          name: user.displayName ?? "Palette Studio user",
+          name: user.displayName ?? t("cloud.profile.name.placeholder"),
           email: user.email,
           photoUrl: user.photoURL,
         } as CloudUser)

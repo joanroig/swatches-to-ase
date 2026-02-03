@@ -98,9 +98,8 @@ Add the same `VITE_FIREBASE_*` keys as repository secrets to ensure builds
 deploy with Firebase enabled (for Pages and releases).
 
 **Recommended Firestore rules**
-Use rules that only allow authenticated users to read/write their own sync
-document, and allow public palettes to be read by anyone while restricting
-writes to their owners. For example:
+Use rules that only allow authenticated users to read/write their own sync document, and allow public palettes to be read by anyone while restricting writes to their owners. For example:
+
 ```
 rules_version = '2';
 service cloud.firestore {
@@ -139,8 +138,7 @@ To ensure only this app can talk to Firebase:
 - **Restrict API keys** in Google Cloud Console → APIs & Services → Credentials.
   - For web: restrict HTTP referrers to your production domains.
   - For Android: restrict by package name and SHA-1 certificate fingerprints.
-- **Enable App Check** with reCAPTCHA v3 (web) and Play Integrity (Android) to
-  stop unauthorized clients.
+- **Enable App Check** with reCAPTCHA v3 (web) and Play Integrity (Android) to stop unauthorized clients.
 - **Lock down Firestore rules** (see above) and avoid public write access.
 - **Rotate keys** if you suspect leakage and keep `.env` out of version control.
 

@@ -1,0 +1,70 @@
+<div class="page">
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" src="/favicon.svg" alt="Palette Studio" />
+      <div class="brand-text">
+        <span class="brand-title">Palette</span>
+        <span class="brand-subtitle">Studio</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="ghost" id="open-discover" aria-label="Discover">
+        <svg class="icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+          <use href="/icons/globe.svg#icon"></use>
+        </svg>
+        <span class="topbar-label" data-i18n="action.discover">Discover</span>
+      </button>
+      <button class="ghost" id="open-cloud" aria-label="Cloud">
+        <svg class="icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+          <use href="/icons/cloud.svg#icon"></use>
+        </svg>
+        <span class="topbar-label" data-i18n="action.cloud">Cloud</span>
+      </button>
+      <button class="ghost" id="open-settings" aria-label="Settings">
+        <svg class="icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+          <use href="/icons/settings.svg#icon"></use>
+        </svg>
+        <span class="topbar-label" data-i18n="action.settings">Settings</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="layout layout-single">
+    <section class="panel panel-palettes" style="--delay: 0.15s">
+      <div class="panel-header">
+        <div class="panel-heading">
+          <h2 data-i18n="panel.palettes.title">Palettes</h2>
+          <p class="hint" data-i18n="panel.palettes.hint">Select a palette to preview or edit.</p>
+        </div>
+        <div class="panel-actions">
+          <button class="ghost" id="open-import" data-i18n="action.import">Import</button>
+          <button class="ghost" id="open-generate" data-i18n="action.generate">Generate</button>
+          <button class="ghost" id="remove-all-palettes" data-i18n="action.removeAll">Remove all</button>
+          <button class="primary export-trigger" id="open-export" disabled data-i18n="action.exportAll">Export all</button>
+        </div>
+      </div>
+      <div class="palette-list" id="palette-list"></div>
+    </section>
+  </main>
+
+  <div data-slot="modals"></div>
+
+  <footer class="footer">
+    <div class="footer-actions">
+      <a
+        class="footer-button version-button"
+        id="app-version"
+        href="https://github.com/joanroig/palette-studio/releases"
+        target="_blank"
+        rel="noreferrer"
+      ></a>
+      <a class="footer-button github-button" href="https://github.com/joanroig/palette-studio" target="_blank" rel="noreferrer">
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+          <use href="/icons/github.svg#icon"></use>
+        </svg>
+        <span data-i18n="footer.github">GitHub</span>
+      </a>
+      <button class="footer-button" id="open-legal" type="button" data-i18n="footer.legal">Legal</button>
+    </div>
+  </footer>
+</div>

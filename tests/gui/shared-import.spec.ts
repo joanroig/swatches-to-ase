@@ -21,10 +21,7 @@ test("shared palette URL imports after confirmation", async ({ page }) => {
       { name: "Citrus", hex: "f2c94c" },
     ],
   };
-  const encoded = Buffer.from(
-    encodeURIComponent(JSON.stringify(payload)),
-    "utf8"
-  ).toString("base64");
+  const encoded = Buffer.from(encodeURIComponent(JSON.stringify(payload)), "utf8").toString("base64");
 
   await page.goto(`/?import=${encodeURIComponent(encoded)}`);
 

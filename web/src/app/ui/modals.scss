@@ -4,6 +4,14 @@
   display: grid;
   place-items: center;
   z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .modal-backdrop {
@@ -11,6 +19,8 @@
   inset: 0;
   background: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.18s ease;
 }
 
 .modal-card {
@@ -26,6 +36,21 @@
   max-height: 86vh;
   overflow: hidden;
   grid-template-rows: auto minmax(0, 1fr);
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+  will-change: opacity, transform;
+}
+
+.modal.is-open .modal-backdrop {
+  opacity: 1;
+}
+
+.modal.is-open .modal-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .modal-card.modal-wide {
@@ -40,11 +65,19 @@
   width: min(680px, 92vw);
 }
 
+.modal-card.modal-view .modal-header {
+  align-items: flex-start;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+}
+
+.modal-header--top {
+  align-items: flex-start;
 }
 
 .modal-header > div {
@@ -80,4 +113,18 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) .modal,
+  body:not([data-motion="on"]) .modal-backdrop,
+  body:not([data-motion="on"]) .modal-card {
+    transition: none;
+  }
+}
+
+body[data-motion="off"] .modal,
+body[data-motion="off"] .modal-backdrop,
+body[data-motion="off"] .modal-card {
+  transition: none;
 }

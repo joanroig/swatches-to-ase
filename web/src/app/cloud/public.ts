@@ -1,9 +1,9 @@
 import { deleteDoc, doc, serverTimestamp, setDoc } from "firebase/firestore";
 
+import { persistPalettes } from "../persistence";
 import { cloudState } from "../state";
 import type { Palette } from "../types";
 import { createId } from "../utils/id";
-import { persistPalettes } from "../persistence";
 import { firebaseClient } from "./context";
 
 export const upsertPublicPalette = async (palette: Palette) => {
@@ -18,14 +18,12 @@ export const upsertPublicPalette = async (palette: Palette) => {
   }
   const payload = {
     name: palette.name,
-    colors: palette.colors,
+    colors: palette.colors.map((color) => ({ rgb: color.rgb })),
     ownerId: cloudState.user.uid,
     ownerName: cloudState.user.name,
     ownerPhoto: cloudState.user.photoUrl ?? null,
     updatedAt: serverTimestamp(),
-    ...(isNew
-      ? { createdAt: serverTimestamp(), likesCount: 0, savesCount: 0 }
-      : {}),
+    ...(isNew ? { createdAt: serverTimestamp(), likesCount: 0, savesCount: 0 } : {}),
   };
   await setDoc(doc(firebaseClient.db, "publicPalettes", publicId), payload, {
     merge: true,

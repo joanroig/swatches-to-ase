@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { PaletteColor } from "../../web/src/app/types.js";
 import {
   formatColorValue,
   getColorMetrics,
@@ -12,10 +13,9 @@ import {
   normalizeHex,
   rgbToHex,
 } from "../../web/src/app/utils/color.js";
-import { clamp, normalizeHue, randomBetween } from "../../web/src/app/utils/math.js";
 import { createId } from "../../web/src/app/utils/id.js";
+import { clamp, normalizeHue, randomBetween } from "../../web/src/app/utils/math.js";
 import { sanitizeFileName, toCssVarName, toTitleCase } from "../../web/src/app/utils/text.js";
-import type { PaletteColor } from "../../web/src/app/types.js";
 
 test("color helpers normalize and convert hex/rgb values", () => {
   assert.equal(normalizeHex("00ff00"), "#00ff00");

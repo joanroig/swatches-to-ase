@@ -12,20 +12,29 @@ import {
   updateDoc,
 } from "firebase/firestore";
 
-import {
-  discoverEmpty,
-  discoverList,
-} from "../dom";
+import { discoverEmpty, discoverList, formatSelect } from "../dom";
+import { syncActivePalette } from "../palette/ui";
 import { cloudState, discoveryState, state } from "../state";
-import type { Palette, PublicPalette } from "../types";
-import { createId } from "../utils/id";
-import { rgbToHex } from "../utils/color";
+import type { Palette, PublicPalette, PublicPaletteColor } from "../types";
+import { t } from "../i18n";
 import { setButtonContent } from "../ui/icons";
 import { showToast } from "../ui/notifications";
+import { rgbToHex } from "../utils/color";
+import { createId } from "../utils/id";
+import { nameColor, resolveNameFormat } from "../palette/naming";
 import { firebaseClient } from "./context";
-import { syncActivePalette } from "../palette/ui";
 
 let discoveryUnsubscribe: (() => void) | null = null;
+
+const isRgbTuple = (value: unknown): value is [number, number, number] =>
+  Array.isArray(value) && value.length === 3 && value.every((channel) => typeof channel === "number");
+
+const isPublicPaletteColor = (value: unknown): value is PublicPaletteColor => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  return isRgbTuple((value as PublicPaletteColor).rgb);
+};
 
 export const fetchUserInteractions = async () => {
   if (!firebaseClient || !cloudState.user) {
@@ -33,13 +42,9 @@ export const fetchUserInteractions = async () => {
     discoveryState.savedIds.clear();
     return;
   }
-  const likesSnapshot = await getDocs(
-    collection(firebaseClient.db, "users", cloudState.user.uid, "likes")
-  );
+  const likesSnapshot = await getDocs(collection(firebaseClient.db, "users", cloudState.user.uid, "likes"));
   discoveryState.likedIds = new Set(likesSnapshot.docs.map((doc) => doc.id));
-  const savesSnapshot = await getDocs(
-    collection(firebaseClient.db, "users", cloudState.user.uid, "saves")
-  );
+  const savesSnapshot = await getDocs(collection(firebaseClient.db, "users", cloudState.user.uid, "saves"));
   discoveryState.savedIds = new Set(savesSnapshot.docs.map((doc) => doc.id));
 };
 
@@ -66,9 +71,7 @@ export const renderDiscovery = () => {
     title.textContent = palette.name;
     const author = document.createElement("div");
     author.className = "discover-author";
-    author.textContent = palette.ownerName
-      ? `by ${palette.ownerName}`
-      : "Shared palette";
+    author.textContent = palette.ownerName ? t("discover.by", { name: palette.ownerName }) : t("discover.shared");
     header.append(title, author);
 
     const strip = document.createElement("div");
@@ -83,83 +86,64 @@ export const renderDiscovery = () => {
     stats.className = "discover-stats";
     const likes = document.createElement("span");
     likes.className = "discover-stat";
-    likes.textContent = `${palette.likesCount ?? 0} likes`;
+    likes.textContent = t("discover.likes", { count: palette.likesCount ?? 0 });
     const saves = document.createElement("span");
     saves.className = "discover-stat";
-    saves.textContent = `${palette.savesCount ?? 0} saves`;
+    saves.textContent = t("discover.saves", { count: palette.savesCount ?? 0 });
     stats.append(likes, saves);
 
     const actions = document.createElement("div");
     actions.className = "discover-actions";
     const saveButton = document.createElement("button");
     saveButton.className = "ghost";
-    setButtonContent(
-      saveButton,
-      "bookmark",
-      discoveryState.savedIds.has(palette.id) ? "Saved" : "Save"
-    );
+    setButtonContent(saveButton, "bookmark", discoveryState.savedIds.has(palette.id) ? t("action.saved") : t("action.save"));
     if (discoveryState.savedIds.has(palette.id)) {
       saveButton.classList.add("is-active");
     }
     saveButton.addEventListener("click", async () => {
+      const nameFormat = resolveNameFormat(formatSelect?.value ?? "pantone");
       const copy: Palette = {
         id: createId(),
         name: palette.name,
-        colors: palette.colors.map((color) => ({ ...color, id: createId() })),
+        colors: palette.colors.map((color, index) => ({
+          id: createId(),
+          name: nameColor(rgbToHex(color.rgb).toUpperCase(), nameFormat, index),
+          rgb: [...color.rgb] as [number, number, number],
+        })),
       };
       state.palettes.unshift(copy);
       syncActivePalette(copy.id);
-      showToast("Palette saved to your library.", "success");
+      showToast(t("toast.paletteSaved"), "success");
       if (!firebaseClient || !cloudState.user) {
         return;
       }
-      await setDoc(
-        doc(firebaseClient.db, "users", cloudState.user.uid, "saves", palette.id),
-        { savedAt: serverTimestamp() }
-      );
-      await updateDoc(
-        doc(firebaseClient.db, "publicPalettes", palette.id),
-        { savesCount: increment(1) }
-      );
+      await setDoc(doc(firebaseClient.db, "users", cloudState.user.uid, "saves", palette.id), {
+        savedAt: serverTimestamp(),
+      });
+      await updateDoc(doc(firebaseClient.db, "publicPalettes", palette.id), { savesCount: increment(1) });
       discoveryState.savedIds.add(palette.id);
       renderDiscovery();
     });
 
     const likeButton = document.createElement("button");
     likeButton.className = "ghost";
-    setButtonContent(
-      likeButton,
-      "heart",
-      discoveryState.likedIds.has(palette.id) ? "Liked" : "Like"
-    );
+    setButtonContent(likeButton, "heart", discoveryState.likedIds.has(palette.id) ? t("action.liked") : t("action.like"));
     if (discoveryState.likedIds.has(palette.id)) {
       likeButton.classList.add("is-active");
     }
     likeButton.addEventListener("click", async () => {
       if (!firebaseClient || !cloudState.user) {
-        showToast("Sign in to like palettes.", "info");
+        showToast(t("toast.signInToLike"), "info");
         return;
       }
-      const likeDoc = doc(
-        firebaseClient.db,
-        "users",
-        cloudState.user.uid,
-        "likes",
-        palette.id
-      );
+      const likeDoc = doc(firebaseClient.db, "users", cloudState.user.uid, "likes", palette.id);
       if (discoveryState.likedIds.has(palette.id)) {
         await deleteDoc(likeDoc);
-        await updateDoc(
-          doc(firebaseClient.db, "publicPalettes", palette.id),
-          { likesCount: increment(-1) }
-        );
+        await updateDoc(doc(firebaseClient.db, "publicPalettes", palette.id), { likesCount: increment(-1) });
         discoveryState.likedIds.delete(palette.id);
       } else {
         await setDoc(likeDoc, { likedAt: serverTimestamp() });
-        await updateDoc(
-          doc(firebaseClient.db, "publicPalettes", palette.id),
-          { likesCount: increment(1) }
-        );
+        await updateDoc(doc(firebaseClient.db, "publicPalettes", palette.id), { likesCount: increment(1) });
         discoveryState.likedIds.add(palette.id);
       }
       renderDiscovery();
@@ -180,17 +164,14 @@ export const listenToDiscovery = () => {
     discoveryUnsubscribe();
   }
   discoveryState.loading = true;
-  const discoverQuery = query(
-    collection(firebaseClient.db, "publicPalettes"),
-    orderBy("updatedAt", "desc")
-  );
+  const discoverQuery = query(collection(firebaseClient.db, "publicPalettes"), orderBy("updatedAt", "desc"));
   discoveryUnsubscribe = onSnapshot(discoverQuery, (snapshot) => {
     discoveryState.palettes = snapshot.docs.map((docSnap) => {
       const data = docSnap.data() as PublicPalette;
       return {
         id: docSnap.id,
-        name: data.name ?? "Untitled palette",
-        colors: Array.isArray(data.colors) ? data.colors : [],
+        name: data.name ?? t("palette.untitled"),
+        colors: Array.isArray(data.colors) ? data.colors.filter(isPublicPaletteColor) : [],
         ownerId: data.ownerId ?? "",
         ownerName: data.ownerName ?? null,
         ownerPhoto: data.ownerPhoto ?? null,

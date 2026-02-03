@@ -1,6 +1,7 @@
 import namer from "color-namer/dist/color-namer.js";
 
 import { VALID_NAME_FORMATS } from "../config";
+import { t } from "../i18n";
 import { getStyleLabel } from "./style";
 
 export const resolveNameFormat = (format: string | null | undefined) => {
@@ -16,13 +17,10 @@ export const nameColor = (hex: string, format: string, fallbackIndex: number) =>
   const named = namer(hex) as Record<string, Array<{ name: string }>>;
   const list = named?.[normalized];
   if (!list?.length) {
-    return `Color ${fallbackIndex + 1}`;
+    return t("color.defaultName", { index: fallbackIndex + 1 });
   }
   return list[0].name;
 };
 
-export const createGeneratedPaletteName = (
-  style: string,
-  mainHex: string,
-  nameFormat: string
-) => `${getStyleLabel(style)} ${nameColor(mainHex, nameFormat, 0)}`;
+export const createGeneratedPaletteName = (style: string, mainHex: string, nameFormat: string) =>
+  `${getStyleLabel(style)} ${nameColor(mainHex, nameFormat, 0)}`;

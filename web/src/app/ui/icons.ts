@@ -31,6 +31,9 @@ const ICONS = {
   login: "/icons/login.svg#icon",
   logout: "/icons/logout.svg#icon",
   cloud: "/icons/cloud.svg#icon",
+  more: "/icons/more.svg#icon",
+  undo: "/icons/undo.svg#icon",
+  redo: "/icons/redo.svg#icon",
 } as const;
 
 export type IconName = keyof typeof ICONS;
@@ -54,12 +57,7 @@ export const createIcon = (name: IconName) => {
   return svg;
 };
 
-export const setButtonContent = (
-  button: HTMLButtonElement | null,
-  iconName: IconName,
-  label: string,
-  iconOnly = false,
-) => {
+export const setButtonContent = (button: HTMLButtonElement | null, iconName: IconName, label: string, iconOnly = false) => {
   if (!button) {
     return;
   }

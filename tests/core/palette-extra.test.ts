@@ -1,27 +1,17 @@
+import convert from "color-convert";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
-import convert from "color-convert";
 
-import {
-  exportPaletteToGpl,
-  getSupportedPaletteFormats,
-  getValidFormats,
-  readPaletteFile,
-} from "../../src/core/palette.js";
+import { exportPaletteToGpl, getSupportedPaletteFormats, getValidFormats, readPaletteFile } from "../../src/core/palette.js";
 
 const writeUint16BE = (bytes: number[], value: number) => {
   bytes.push((value >> 8) & 0xff, value & 0xff);
 };
 
 const writeUint32BE = (bytes: number[], value: number) => {
-  bytes.push(
-    (value >> 24) & 0xff,
-    (value >> 16) & 0xff,
-    (value >> 8) & 0xff,
-    value & 0xff
-  );
+  bytes.push((value >> 24) & 0xff, (value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff);
 };
 
 const writeFloat32BE = (bytes: number[], value: number) => {
@@ -47,12 +37,7 @@ const encodeUtf16be = (text: string) => {
   return bytes;
 };
 
-const makeColorBlock = (
-  name: string,
-  model: string,
-  channels: number[],
-  type = 0
-) => {
+const makeColorBlock = (name: string, model: string, channels: number[], type = 0) => {
   const block: number[] = [];
   const nameLength = name.length + 1;
   writeUint16BE(block, nameLength);
@@ -85,15 +70,9 @@ const buildAse = (blocks: number[][]) => {
 const normalizeRgb = (rgb: number[]): [number, number, number] => {
   const max = Math.max(...rgb);
   if (max > 1.5) {
-    return [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255].map((value) =>
-      Math.min(Math.max(value, 0), 1)
-    ) as [number, number, number];
+    return [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255].map((value) => Math.min(Math.max(value, 0), 1)) as [number, number, number];
   }
-  return rgb.map((value) => Math.min(Math.max(value, 0), 1)) as [
-    number,
-    number,
-    number,
-  ];
+  return rgb.map((value) => Math.min(Math.max(value, 0), 1)) as [number, number, number];
 };
 
 const options = {
@@ -102,15 +81,7 @@ const options = {
 };
 
 test("readPaletteFile parses GPL files and preserves names", async () => {
-  const gpl = [
-    "GIMP Palette",
-    "Name: Sample",
-    "Columns: 4",
-    "#",
-    "0 0 0 Black",
-    "255 255 255",
-    "128 64 32 Warm Brown",
-  ].join("\n");
+  const gpl = ["GIMP Palette", "Name: Sample", "Columns: 4", "#", "0 0 0 Black", "255 255 255", "128 64 32 Warm Brown"].join("\n");
 
   const palette = await readPaletteFile(gpl, "sample.gpl", options);
   assert.equal(palette.name, "Sample");
@@ -121,12 +92,7 @@ test("readPaletteFile parses GPL files and preserves names", async () => {
 });
 
 test("addBlackWhite does not duplicate existing black/white colors", async () => {
-  const gpl = [
-    "GIMP Palette",
-    "Name: Minimal",
-    "0 0 0 Black",
-    "255 255 255 White",
-  ].join("\n");
+  const gpl = ["GIMP Palette", "Name: Minimal", "0 0 0 Black", "255 255 255 White"].join("\n");
 
   const palette = await readPaletteFile(gpl, "minimal.gpl", {
     colorNameFormat: "pantone",
@@ -158,10 +124,7 @@ test("readPaletteFile converts ASE models to RGB", async () => {
 });
 
 test("readPaletteFile rejects unsupported formats", async () => {
-  await assert.rejects(
-    () => readPaletteFile("data", "palette.txt", options),
-    /Unsupported palette format/
-  );
+  await assert.rejects(() => readPaletteFile("data", "palette.txt", options), /Unsupported palette format/);
 });
 
 test("readPaletteFile validates name formats for swatches", async () => {
@@ -173,7 +136,7 @@ test("readPaletteFile validates name formats for swatches", async () => {
         colorNameFormat: "invalid-format",
         addBlackWhite: false,
       }),
-    /Invalid color name format/
+    /Invalid color name format/,
   );
 });
 

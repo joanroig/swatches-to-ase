@@ -1,15 +1,11 @@
 import { updateProfile } from "firebase/auth";
 
-import {
-  cloudProfileAvatar,
-  cloudProfileNameInput,
-  cloudProfilePhotoInput,
-  cloudProfileSaveButton,
-} from "../dom";
+import { cloudProfileAvatar, cloudProfileNameInput, cloudProfilePhotoInput, cloudProfileSaveButton } from "../dom";
 import { cloudState } from "../state";
+import { t } from "../i18n";
 import { showToast } from "../ui/notifications";
-import { firebaseClient } from "./context";
 import { getCloudAvatarSrc } from "./avatars";
+import { firebaseClient } from "./context";
 import { renderCloudUserCard } from "./user-card";
 
 let pendingPhotoUrl: string | null = null;
@@ -41,12 +37,7 @@ const setProfileDisabled = (disabled: boolean) => {
 };
 
 export const syncCloudProfileForm = () => {
-  if (
-    !cloudProfileAvatar ||
-    !cloudProfileNameInput ||
-    !cloudProfilePhotoInput ||
-    !cloudProfileSaveButton
-  ) {
+  if (!cloudProfileAvatar || !cloudProfileNameInput || !cloudProfilePhotoInput || !cloudProfileSaveButton) {
     return;
   }
 
@@ -54,18 +45,18 @@ export const syncCloudProfileForm = () => {
   if (!user) {
     pendingPhotoUrl = null;
     cloudProfileAvatar.src = getCloudAvatarSrc(null);
-    cloudProfileAvatar.alt = "Default profile placeholder";
+    cloudProfileAvatar.alt = t("cloud.profile.defaultAlt");
     cloudProfileNameInput.value = "";
-    cloudProfileNameInput.placeholder = "Sign in to edit your profile";
+    cloudProfileNameInput.placeholder = t("cloud.profile.signInPlaceholder");
     cloudProfilePhotoInput.value = "";
     setProfileDisabled(true);
     return;
   }
 
   cloudProfileNameInput.value = user.name ?? "";
-  cloudProfileNameInput.placeholder = "Palette Studio user";
+  cloudProfileNameInput.placeholder = t("cloud.profile.name.placeholder");
   cloudProfileAvatar.src = pendingPhotoUrl ?? getCloudAvatarSrc(user.photoUrl);
-  cloudProfileAvatar.alt = user.name ?? "Cloud profile";
+  cloudProfileAvatar.alt = user.name ?? t("cloud.profile.cloudAlt");
   cloudProfilePhotoInput.value = "";
   setProfileDisabled(false);
 };
@@ -91,7 +82,7 @@ export const setupCloudProfileControls = () => {
       return;
     }
     if (!file.type.startsWith("image/")) {
-      showToast("Choose an image file for your avatar.", "error");
+      showToast(t("toast.profileImageType"), "error");
       cloudProfilePhotoInput.value = "";
       return;
     }
@@ -102,7 +93,7 @@ export const setupCloudProfileControls = () => {
       }
     } catch (error) {
       console.error(error);
-      showToast("Unable to read that image.", "error");
+      showToast(t("toast.profileImageReadFailed"), "error");
       pendingPhotoUrl = null;
       cloudProfilePhotoInput.value = "";
       syncCloudProfileForm();
@@ -111,12 +102,12 @@ export const setupCloudProfileControls = () => {
 
   cloudProfileSaveButton.addEventListener("click", async () => {
     if (!firebaseClient) {
-      showToast("Firebase is not configured yet.", "error");
+      showToast(t("toast.firebaseMissing"), "error");
       return;
     }
     const currentUser = firebaseClient.auth.currentUser;
     if (!currentUser || !cloudState.user) {
-      showToast("Sign in to update your profile.", "info");
+      showToast(t("toast.profileSignInToUpdate"), "info");
       return;
     }
     if (!cloudProfileNameInput) {
@@ -124,12 +115,11 @@ export const setupCloudProfileControls = () => {
     }
     const name = cloudProfileNameInput.value.trim();
     if (!name) {
-      showToast("Add a display name to continue.", "error");
+      showToast(t("toast.profileAddName"), "error");
       return;
     }
 
-    const updates: { displayName?: string | null; photoURL?: string | null } =
-      {};
+    const updates: { displayName?: string | null; photoURL?: string | null } = {};
     if (name !== cloudState.user.name) {
       updates.displayName = name;
     }
@@ -138,7 +128,7 @@ export const setupCloudProfileControls = () => {
     }
 
     if (Object.keys(updates).length === 0) {
-      showToast("No profile changes to save.", "info");
+      showToast(t("toast.profileNoChanges"), "info");
       return;
     }
 
@@ -153,10 +143,10 @@ export const setupCloudProfileControls = () => {
       pendingPhotoUrl = null;
       renderCloudUserCard();
       syncCloudProfileForm();
-      showToast("Profile updated.", "success");
+      showToast(t("toast.profileUpdated"), "success");
     } catch (error) {
       console.error(error);
-      showToast("Unable to update your profile.", "error");
+      showToast(t("toast.profileUpdateFailed"), "error");
     } finally {
       cloudProfileSaveButton.disabled = !cloudState.user;
     }

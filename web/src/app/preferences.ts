@@ -1,32 +1,33 @@
+import { COLOR_NOTATIONS, STORAGE_KEY, VALID_NAME_FORMATS } from "./config";
 import {
   addBwToggle,
-  autoRenameToggle,
   colorNotationEditorSelect,
   colorNotationSelect,
   formatSelect,
   generateFormatSelect,
+  languageSelect,
+  motionSelect,
   themeSelect,
 } from "./dom";
-import { COLOR_NOTATIONS, STORAGE_KEY, VALID_NAME_FORMATS } from "./config";
-import type { Preferences } from "./types";
+import { getColorNotationLabel, normalizeLanguagePreference, setLanguagePreference } from "./i18n";
 import { getSelectedExportFormat, setSelectedExportFormat } from "./export/manager";
 import { persistPreferences } from "./persistence";
+import type { Preferences } from "./types";
 
 let onNotationChange: (() => void) | null = null;
 
-export const setColorNotationChangeHandler = (
-  handler: (() => void) | null
-) => {
+export const setColorNotationChangeHandler = (handler: (() => void) | null) => {
   onNotationChange = handler;
 };
 
 export const getPreferencesPayload = (): Preferences => ({
-  theme: themeSelect?.value ?? "studio",
+  theme: themeSelect?.value ?? "system",
+  motion: normalizeMotionPreference(motionSelect?.value),
   colorNameFormat: formatSelect?.value ?? generateFormatSelect?.value ?? "pantone",
   addBlackWhite: addBwToggle?.checked ?? false,
   exportFormat: getSelectedExportFormat(),
   colorNotation: getColorNotation(),
-  autoRenameColors: autoRenameToggle?.checked ?? false,
+  language: normalizeLanguagePreference(languageSelect?.value),
 });
 
 export const getOptions = () => ({
@@ -34,14 +35,31 @@ export const getOptions = () => ({
   addBlackWhite: addBwToggle?.checked ?? false,
 });
 
-export const getColorNotation = () =>
-  colorNotationSelect?.value ??
-  colorNotationEditorSelect?.value ??
-  "hex";
+export const getColorNotation = () => colorNotationSelect?.value ?? colorNotationEditorSelect?.value ?? "hex";
+
+const normalizeMotionPreference = (value?: string) => {
+  if (value === "on" || value === "off" || value === "system") {
+    return value;
+  }
+  return "system";
+};
 
 export const applyTheme = (theme: string) => {
-  document.body.dataset.theme = theme;
-  document.documentElement.dataset.theme = theme;
+  const resolved = theme || "system";
+  document.body.dataset.theme = resolved;
+  document.documentElement.dataset.theme = resolved;
+};
+
+export const applyMotionPreference = (value: string, persist = true) => {
+  const resolved = normalizeMotionPreference(value);
+  if (motionSelect) {
+    motionSelect.value = resolved;
+  }
+  document.body.dataset.motion = resolved;
+  document.documentElement.dataset.motion = resolved;
+  if (persist) {
+    persistPreferences();
+  }
 };
 
 export const applyColorNotation = (value: string, persist = true) => {
@@ -58,9 +76,23 @@ export const applyColorNotation = (value: string, persist = true) => {
   onNotationChange?.();
 };
 
+export const applyLanguagePreference = (value: string | null | undefined, persist = true) => {
+  const normalized = normalizeLanguagePreference(value);
+  if (languageSelect) {
+    languageSelect.value = normalized;
+  }
+  setLanguagePreference(normalized, { notify: true });
+  if (persist) {
+    persistPreferences();
+  }
+};
+
 export const applyRemotePreferences = (prefs: Preferences) => {
   if (themeSelect && prefs.theme) {
     themeSelect.value = prefs.theme;
+  }
+  if (motionSelect) {
+    motionSelect.value = normalizeMotionPreference(prefs.motion);
   }
   if (formatSelect && prefs.colorNameFormat) {
     formatSelect.value = prefs.colorNameFormat;
@@ -71,16 +103,15 @@ export const applyRemotePreferences = (prefs: Preferences) => {
   if (addBwToggle) {
     addBwToggle.checked = prefs.addBlackWhite ?? false;
   }
-  if (autoRenameToggle) {
-    autoRenameToggle.checked = prefs.autoRenameColors ?? false;
-  }
+  applyLanguagePreference(prefs.language ?? languageSelect?.value ?? "system", false);
   if (prefs.exportFormat) {
     setSelectedExportFormat(prefs.exportFormat);
   }
   if (prefs.colorNotation) {
     applyColorNotation(prefs.colorNotation, false);
   }
-  applyTheme(themeSelect?.value ?? prefs.theme ?? "studio");
+  applyTheme(themeSelect?.value ?? prefs.theme ?? "system");
+  applyMotionPreference(motionSelect?.value ?? prefs.motion ?? "system", false);
 };
 
 export const syncNameFormat = (value: string) => {
@@ -118,38 +149,57 @@ export const setupFormatSelects = () => {
 };
 
 export const setupColorNotationSelects = () => {
-  const populate = (select: HTMLSelectElement | null) => {
+  const populate = (select: HTMLSelectElement | null, preserveSelection: boolean) => {
     if (!select) {
       return;
     }
+    const selected = preserveSelection ? select.value : "hex";
     select.innerHTML = "";
     for (const notation of COLOR_NOTATIONS) {
       const option = document.createElement("option");
       option.value = notation.value;
-      option.textContent = notation.label;
+      option.textContent = getColorNotationLabel(notation.value);
       select.appendChild(option);
     }
+    select.value = selected || "hex";
+  };
+  populate(colorNotationSelect, false);
+  populate(colorNotationEditorSelect, false);
+};
+
+export const refreshColorNotationSelects = () => {
+  const populate = (select: HTMLSelectElement | null) => {
+    if (!select) {
+      return;
+    }
+    const selected = select.value;
+    select.innerHTML = "";
+    for (const notation of COLOR_NOTATIONS) {
+      const option = document.createElement("option");
+      option.value = notation.value;
+      option.textContent = getColorNotationLabel(notation.value);
+      select.appendChild(option);
+    }
+    select.value = selected || "hex";
   };
   populate(colorNotationSelect);
   populate(colorNotationEditorSelect);
-  if (colorNotationSelect) {
-    colorNotationSelect.value = "hex";
-  }
-  if (colorNotationEditorSelect) {
-    colorNotationEditorSelect.value = "hex";
-  }
 };
 
 export const hydratePreferences = () => {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
-    applyTheme(themeSelect?.value ?? "studio");
+    applyTheme(themeSelect?.value ?? "system");
+    applyMotionPreference(motionSelect?.value ?? "system", false);
+    applyLanguagePreference(languageSelect?.value ?? "system", false);
     return;
   }
   try {
     const prefs = JSON.parse(raw) as Preferences;
     applyRemotePreferences(prefs);
   } catch {
-    applyTheme(themeSelect?.value ?? "studio");
+    applyTheme(themeSelect?.value ?? "system");
+    applyMotionPreference(motionSelect?.value ?? "system", false);
+    applyLanguagePreference(languageSelect?.value ?? "system", false);
   }
 };

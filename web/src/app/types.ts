@@ -6,6 +6,15 @@ export type PaletteColor = {
   rgb: [number, number, number];
 };
 
+export type StoredPaletteColor = {
+  id: string;
+  rgb: [number, number, number];
+};
+
+export type PublicPaletteColor = {
+  rgb: [number, number, number];
+};
+
 export type Palette = {
   id: string;
   name: string;
@@ -14,13 +23,18 @@ export type Palette = {
   publicId?: string | null;
 };
 
+export type StoredPalette = Omit<Palette, "colors"> & {
+  colors: StoredPaletteColor[];
+};
+
 export type Preferences = {
   theme: string;
   colorNameFormat: string;
   addBlackWhite: boolean;
   exportFormat: string;
   colorNotation: string;
-  autoRenameColors: boolean;
+  motion?: "system" | "on" | "off";
+  language?: "system" | "en" | "es";
 };
 
 export type ExportMode = "single" | "batch";
@@ -35,13 +49,20 @@ export type CloudUser = {
 export type PublicPalette = {
   id: string;
   name: string;
-  colors: PaletteColor[];
+  colors: PublicPaletteColor[];
   ownerId: string;
   ownerName?: string | null;
   ownerPhoto?: string | null;
   createdAt?: number | null;
   likesCount?: number;
   savesCount?: number;
+};
+
+export type StoredSyncPayload = {
+  palettes: StoredPalette[];
+  activePaletteId: string | null;
+  preferences: Preferences;
+  revision: string;
 };
 
 export type SyncPayload = {
@@ -57,6 +78,22 @@ export type SharedPalettePayload = {
     name?: string;
     hex: string;
   }>;
+};
+
+export type SharedWorkspacePayload = {
+  version?: number;
+  user?: {
+    name?: string | null;
+  };
+  palettes?: Array<{
+    name?: string;
+    colors?: Array<{
+      name?: string;
+      hex: string;
+    }>;
+  }>;
+  preferences?: Preferences;
+  activePaletteIndex?: number | null;
 };
 
 export type StyleRanges = {

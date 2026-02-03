@@ -19,12 +19,7 @@ const writeUint16BE = (bytes: number[], value: number) => {
 };
 
 const writeUint32BE = (bytes: number[], value: number) => {
-  bytes.push(
-    (value >> 24) & 0xff,
-    (value >> 16) & 0xff,
-    (value >> 8) & 0xff,
-    value & 0xff
-  );
+  bytes.push((value >> 24) & 0xff, (value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff);
 };
 
 const writeFloat32BE = (bytes: number[], value: number) => {
@@ -50,8 +45,7 @@ const encodeUtf16be = (text: string) => {
   return bytes;
 };
 
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(Math.max(value, min), max);
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 export const encodeAse = (colors: AseColor[]) => {
   const bytes: number[] = [];
@@ -83,12 +77,9 @@ export const encodeAse = (colors: AseColor[]) => {
   return new Uint8Array(bytes);
 };
 
-const readUint16BE = (view: DataView, offset: number) =>
-  view.getUint16(offset, false);
-const readUint32BE = (view: DataView, offset: number) =>
-  view.getUint32(offset, false);
-const readFloat32BE = (view: DataView, offset: number) =>
-  view.getFloat32(offset, false);
+const readUint16BE = (view: DataView, offset: number) => view.getUint16(offset, false);
+const readUint32BE = (view: DataView, offset: number) => view.getUint32(offset, false);
+const readFloat32BE = (view: DataView, offset: number) => view.getFloat32(offset, false);
 
 const readAscii = (view: DataView, offset: number, length: number) => {
   let text = "";
@@ -111,10 +102,7 @@ const readUtf16be = (view: DataView, offset: number, length: number) => {
 };
 
 export const decodeAse = (data: ArrayBuffer | Uint8Array) => {
-  const view =
-    data instanceof Uint8Array
-      ? new DataView(data.buffer, data.byteOffset, data.byteLength)
-      : new DataView(data);
+  const view = data instanceof Uint8Array ? new DataView(data.buffer, data.byteOffset, data.byteLength) : new DataView(data);
   const byteLength = view.byteLength;
   const signature = readAscii(view, 0, 4);
   if (signature !== "ASEF") {
@@ -178,8 +166,7 @@ export const decodeAse = (data: ArrayBuffer | Uint8Array) => {
     const model = readAscii(view, cursor, 4).trim();
     cursor += 4;
     const modelKey = model.toUpperCase();
-    const channelCount =
-      modelKey === "CMYK" ? 4 : modelKey === "GRAY" ? 1 : 3;
+    const channelCount = modelKey === "CMYK" ? 4 : modelKey === "GRAY" ? 1 : 3;
     const color: number[] = [];
     const channelBytes = channelCount * 4;
     if (cursor + channelBytes > blockEnd) {

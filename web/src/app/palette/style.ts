@@ -1,5 +1,7 @@
-import { STYLE_LABELS } from "../config";
+import { getStyleLabel as getTranslatedStyleLabel } from "../i18n";
 import { toTitleCase } from "../utils/text";
 
-export const getStyleLabel = (style: string) =>
-  STYLE_LABELS[style] ?? toTitleCase(style);
+export const getStyleLabel = (style: string) => {
+  const label = getTranslatedStyleLabel(style);
+  return label.startsWith("style.") ? toTitleCase(style) : label;
+};

@@ -1,11 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  getPaletteHexes,
-  selectExportTargets,
-  selectPrimaryExportPalette,
-} from "../../web/src/app/export/helpers.js";
+import { getPaletteHexes, selectExportTargets, selectPrimaryExportPalette } from "../../web/src/app/export/helpers.js";
 import type { Palette } from "../../web/src/app/types.js";
 
 const paletteA: Palette = {

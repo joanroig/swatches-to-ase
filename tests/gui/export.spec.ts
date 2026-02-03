@@ -14,9 +14,7 @@ test("export modal shows quick actions and download button", async ({ page }) =>
   await expect(card).toHaveCount(1);
   await card.getByRole("button", { name: "Export" }).click();
 
-  await expect(
-    page.getByRole("heading", { name: "Export palettes" })
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Export palettes" })).toBeVisible();
   await expect(page.locator("#export-all")).toBeEnabled();
   await expect(page.locator("[data-export-action='coolors']")).toBeEnabled();
   await expect(page.locator("[data-export-action='css'] svg")).toBeVisible();

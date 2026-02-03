@@ -1,12 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  createGeneratedPaletteName,
-  nameColor,
-  resolveNameFormat,
-} from "../../web/src/app/palette/naming.js";
 import { generatePaletteColors } from "../../web/src/app/palette/generation.js";
+import { createGeneratedPaletteName, nameColor, resolveNameFormat } from "../../web/src/app/palette/naming.js";
 import { getStyleLabel } from "../../web/src/app/palette/style.js";
 
 test("resolveNameFormat falls back to pantone", () => {

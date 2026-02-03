@@ -3,26 +3,24 @@ import convert from "color-convert";
 import type { PaletteColor } from "../types";
 import { clamp, normalizeHue } from "./math";
 
-export const normalizeHex = (hex: string) =>
-  hex.startsWith("#") ? hex : `#${hex}`;
+export const normalizeHex = (hex: string) => (hex.startsWith("#") ? hex : `#${hex}`);
 
 export const rgbToHex = (rgb: [number, number, number]) =>
   `#${rgb
-    .map((channel) => Math.round(channel * 255).toString(16).padStart(2, "0"))
+    .map((channel) =>
+      Math.round(channel * 255)
+        .toString(16)
+        .padStart(2, "0"),
+    )
     .join("")}`;
 
 export const hexToRgb = (hex: string): [number, number, number] => {
   const normalized = normalizeHex(hex).replace("#", "");
-  const parsed = [
-    parseInt(normalized.slice(0, 2), 16),
-    parseInt(normalized.slice(2, 4), 16),
-    parseInt(normalized.slice(4, 6), 16),
-  ];
+  const parsed = [parseInt(normalized.slice(0, 2), 16), parseInt(normalized.slice(2, 4), 16), parseInt(normalized.slice(4, 6), 16)];
   return [parsed[0] / 255, parsed[1] / 255, parsed[2] / 255];
 };
 
-export const getRgb255 = (rgb: [number, number, number]) =>
-  rgb.map((channel) => Math.round(channel * 255)) as [number, number, number];
+export const getRgb255 = (rgb: [number, number, number]) => rgb.map((channel) => Math.round(channel * 255)) as [number, number, number];
 
 export const formatColorValue = (color: PaletteColor, notation: string) => {
   const [r, g, b] = getRgb255(color.rgb);
@@ -39,9 +37,7 @@ export const formatColorValue = (color: PaletteColor, notation: string) => {
     }
     case "cmyk": {
       const [c, m, y, k] = convert.rgb.cmyk(r, g, b);
-      return `${Math.round(c)}%, ${Math.round(m)}%, ${Math.round(y)}%, ${Math.round(
-        k
-      )}%`;
+      return `${Math.round(c)}%, ${Math.round(m)}%, ${Math.round(y)}%, ${Math.round(k)}%`;
     }
     case "lab": {
       const [l, a, labB] = convert.rgb.lab(r, g, b);

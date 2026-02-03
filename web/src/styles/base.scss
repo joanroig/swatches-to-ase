@@ -8,6 +8,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   user-select: none;
+  overflow-x: hidden;
 }
 
 input,
@@ -30,60 +31,67 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(
-      800px 400px at 70% -10%,
-      rgba(79, 70, 229, 0.18),
-      transparent 60%
-    ),
-    radial-gradient(
-      600px 500px at -10% 40%,
-      rgba(14, 165, 233, 0.2),
-      transparent 60%
-    ),
+    radial-gradient(800px 400px at 70% -10%, rgba(79, 70, 229, 0.18), transparent 60%),
+    radial-gradient(600px 500px at -10% 40%, rgba(14, 165, 233, 0.2), transparent 60%),
     linear-gradient(140deg, #f6f7fb 0%, #f7f7ff 55%, #f2f4ff 100%);
   z-index: -2;
+}
+
+body[data-theme="dawn"]::before,
+:root[data-theme="dawn"] body::before {
+  background:
+    radial-gradient(820px 420px at 80% -10%, rgba(249, 115, 22, 0.2), transparent 60%),
+    radial-gradient(520px 420px at -10% 50%, rgba(236, 72, 153, 0.18), transparent 60%),
+    linear-gradient(140deg, #f7f0ea 0%, #fff4ee 55%, #fbeee7 100%);
+}
+
+body[data-theme="flora"]::before,
+:root[data-theme="flora"] body::before {
+  background:
+    radial-gradient(760px 420px at 80% -10%, rgba(16, 185, 129, 0.2), transparent 60%),
+    radial-gradient(520px 420px at -10% 50%, rgba(96, 165, 250, 0.18), transparent 60%),
+    linear-gradient(140deg, #edf7f1 0%, #f4fbf6 55%, #e6f3ec 100%);
 }
 
 body[data-theme="noir"]::before,
 :root[data-theme="noir"] body::before {
   background:
-    radial-gradient(
-      700px 380px at 85% -10%,
-      rgba(139, 92, 246, 0.2),
-      transparent 60%
-    ),
-    radial-gradient(
-      500px 420px at 0% 50%,
-      rgba(45, 212, 191, 0.18),
-      transparent 60%
-    ),
+    radial-gradient(700px 380px at 85% -10%, rgba(139, 92, 246, 0.2), transparent 60%),
+    radial-gradient(500px 420px at 0% 50%, rgba(45, 212, 191, 0.18), transparent 60%),
     linear-gradient(140deg, #0b0e18 0%, #131826 55%, #0d111d 100%);
 }
 
 body[data-theme="graphite"]::before,
 :root[data-theme="graphite"] body::before {
   background:
-    radial-gradient(
-      700px 380px at 85% -10%,
-      rgba(56, 189, 248, 0.2),
-      transparent 60%
-    ),
-    radial-gradient(
-      500px 420px at 0% 50%,
-      rgba(163, 230, 53, 0.18),
-      transparent 60%
-    ),
+    radial-gradient(700px 380px at 85% -10%, rgba(56, 189, 248, 0.2), transparent 60%),
+    radial-gradient(500px 420px at 0% 50%, rgba(163, 230, 53, 0.18), transparent 60%),
     linear-gradient(140deg, #121624 0%, #1b2233 55%, #121624 100%);
+}
+
+body[data-theme="aurora"]::before,
+:root[data-theme="aurora"] body::before {
+  background:
+    radial-gradient(720px 380px at 85% -10%, rgba(56, 189, 248, 0.22), transparent 60%),
+    radial-gradient(520px 420px at 0% 55%, rgba(244, 114, 182, 0.18), transparent 60%),
+    linear-gradient(140deg, #0a111e 0%, #131c2d 55%, #0a1222 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  body[data-theme="system"]::before,
+  :root[data-theme="system"] body::before {
+    background:
+      radial-gradient(700px 380px at 85% -10%, rgba(139, 92, 246, 0.2), transparent 60%),
+      radial-gradient(500px 420px at 0% 50%, rgba(45, 212, 191, 0.18), transparent 60%),
+      linear-gradient(140deg, #0b0e18 0%, #131826 55%, #0d111d 100%);
+  }
 }
 
 body::after {
   content: "";
   position: fixed;
   inset: 0;
-  background-image: radial-gradient(
-    rgba(28, 26, 22, 0.05) 0.5px,
-    transparent 0.5px
-  );
+  background-image: radial-gradient(rgba(28, 26, 22, 0.05) 0.5px, transparent 0.5px);
   background-size: 12px 12px;
   opacity: 0.3;
   z-index: -1;

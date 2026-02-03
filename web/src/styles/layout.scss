@@ -10,6 +10,35 @@
   justify-content: space-between;
   gap: 18px;
   margin-bottom: 32px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 12px 16px;
+  border-radius: 0;
+  background: transparent;
+  isolation: isolate;
+}
+
+.topbar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  width: 100dvw;
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: none;
+  transition: box-shadow 0.2s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.topbar.is-scrolled::before {
+  box-shadow: 0 12px 20px -16px rgba(15, 23, 42, 0.6);
 }
 
 .topbar-actions {
@@ -44,14 +73,14 @@
 }
 
 .brand-title {
-  font-size: clamp(2.2rem, 3vw, 3.1rem);
+  font-size: clamp(2.2rem, 3vw, 3rem);
   line-height: 1;
 }
 
 .brand-subtitle {
   font-size: 1rem;
   text-transform: uppercase;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.18em;
   color: var(--accent);
   line-height: 1;
 }

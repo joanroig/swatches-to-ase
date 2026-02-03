@@ -27,8 +27,7 @@ const parseVersion = (version) => {
   };
 };
 
-const formatVersion = ({ major, minor, patch }) =>
-  `${major}.${minor}.${patch}`;
+const formatVersion = ({ major, minor, patch }) => `${major}.${minor}.${patch}`;
 
 let next = current;
 

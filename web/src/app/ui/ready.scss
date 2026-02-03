@@ -22,13 +22,16 @@ body.is-ready .page {
   color: var(--ink);
   z-index: 1000;
   font-family: "Segoe UI", system-ui, sans-serif;
+  opacity: 1;
+  transition:
+    opacity 0.45s ease,
+    visibility 0s linear 0.45s;
 }
 
 body.is-ready .loading-screen {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.35s ease, visibility 0s linear 0.35s;
 }
 
 .loading-card {
@@ -43,6 +46,16 @@ body.is-ready .loading-screen {
   border: 1px solid var(--stroke);
   box-shadow: var(--shadow-soft);
   min-width: min(320px, 90vw);
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease;
+}
+
+body.is-ready .loading-card {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
 }
 
 .loading-brand {
@@ -93,12 +106,23 @@ body.is-ready .loading-screen {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.is-ready .page,
-  body.is-ready .loading-screen {
+  body:not([data-motion="on"]).is-ready .page,
+  body:not([data-motion="on"]).is-ready .loading-screen,
+  body:not([data-motion="on"]).is-ready .loading-card {
     transition: none;
   }
 
-  .loading-spinner {
+  body:not([data-motion="on"]) .loading-spinner {
     animation: none;
   }
+}
+
+body[data-motion="off"].is-ready .page,
+body[data-motion="off"].is-ready .loading-screen,
+body[data-motion="off"].is-ready .loading-card {
+  transition: none;
+}
+
+body[data-motion="off"] .loading-spinner {
+  animation: none;
 }

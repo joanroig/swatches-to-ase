@@ -5,10 +5,8 @@ declare global {
 
   interface Window {
     desktopApi?: {
-      saveZip: (options: {
-        fileName: string;
-        data: Uint8Array;
-      }) => Promise<{ saved: boolean; path?: string }>;
+      saveZip: (options: { fileName: string; data: Uint8Array }) => Promise<{ saved: boolean; path?: string }>;
+      onOpenLegal?: (handler: () => void) => void;
     };
   }
 }

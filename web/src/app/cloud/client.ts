@@ -26,12 +26,7 @@ const firebaseConfig: FirebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
 };
 
-const requiredKeys = [
-  "apiKey",
-  "authDomain",
-  "projectId",
-  "appId",
-] as const;
+const requiredKeys = ["apiKey", "authDomain", "projectId", "appId"] as const;
 
 export const getFirebaseConfigStatus = () => {
   const missing = requiredKeys.filter((key) => !firebaseConfig[key]);
