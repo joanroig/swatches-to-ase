@@ -40,6 +40,11 @@
       "label": "npm: open:ios",
       "type": "shell",
       "command": "npm run open:ios"
+    },
+    {
+      "label": "npm: build:web",
+      "type": "shell",
+      "command": "npm run build:web"
     }
   ]
 }

@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -47,6 +48,20 @@ export const getFirebaseClient = (): FirebaseClient | null => {
     return cachedClient;
   }
   const app = initializeApp(firebaseConfig);
+  const appCheckKey = import.meta.env.VITE_FIREBASE_APP_CHECK_KEY ?? "";
+  if (appCheckKey && typeof window !== "undefined") {
+    const isWebOrigin = window.location.protocol === "https:" || window.location.hostname === "localhost";
+    if (isWebOrigin) {
+      try {
+        initializeAppCheck(app, {
+          provider: new ReCaptchaV3Provider(appCheckKey),
+          isTokenAutoRefreshEnabled: true,
+        });
+      } catch (error) {
+        console.warn("App Check initialization failed", error);
+      }
+    }
+  }
   const auth = getAuth(app);
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();

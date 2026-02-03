@@ -1,4 +1,4 @@
-import { signInWithPopup, signOut } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
 import { firebaseClient } from "./cloud/context";
 import { fetchUserInteractions, listenToDiscovery, renderDiscovery } from "./cloud/discovery";
 import { resetCloudProfileDraft, setupCloudProfileControls } from "./cloud/profile";
@@ -7,6 +7,10 @@ import {
   addBwToggle,
   addColorButton,
   cloudModal,
+  cloudEmailInput,
+  cloudEmailSignInButton,
+  cloudEmailSignUpButton,
+  cloudPasswordInput,
   cloudSignInButton,
   cloudSignOutButton,
   cloudSyncButton,
@@ -102,6 +106,8 @@ export const applyActionLabels = () => {
   setButtonContent(viewEditButton, "edit", t("action.edit"));
   setButtonContent(refreshDiscoverButton, "refresh", t("action.refresh"));
   setButtonContent(cloudSignInButton, "login", t("action.signInGoogle"));
+  setButtonContent(cloudEmailSignInButton, "login", t("action.signInEmail"));
+  setButtonContent(cloudEmailSignUpButton, "plus", t("action.signUpEmail"));
   setButtonContent(cloudSignOutButton, "logout", t("action.signOut"));
   setButtonContent(cloudSyncButton, "cloud", t("action.syncNow"));
 };
@@ -305,6 +311,56 @@ export const setupActions = () => {
     } catch (error) {
       console.error(error);
       showToast(t("toast.signInFailed"), "error");
+    }
+  });
+
+  const resolveEmailAuthPayload = () => {
+    const email = cloudEmailInput?.value.trim() ?? "";
+    const password = cloudPasswordInput?.value ?? "";
+    if (!email || !password) {
+      showToast(t("toast.emailAuthMissing"), "info");
+      return null;
+    }
+    return { email, password };
+  };
+
+  cloudEmailSignInButton?.addEventListener("click", async () => {
+    if (!firebaseClient) {
+      showToast(t("toast.firebaseMissing"), "error");
+      return;
+    }
+    const payload = resolveEmailAuthPayload();
+    if (!payload) {
+      return;
+    }
+    try {
+      await signInWithEmailAndPassword(firebaseClient.auth, payload.email, payload.password);
+      if (cloudPasswordInput) {
+        cloudPasswordInput.value = "";
+      }
+    } catch (error) {
+      console.error(error);
+      showToast(t("toast.signInFailed"), "error");
+    }
+  });
+
+  cloudEmailSignUpButton?.addEventListener("click", async () => {
+    if (!firebaseClient) {
+      showToast(t("toast.firebaseMissing"), "error");
+      return;
+    }
+    const payload = resolveEmailAuthPayload();
+    if (!payload) {
+      return;
+    }
+    try {
+      await createUserWithEmailAndPassword(firebaseClient.auth, payload.email, payload.password);
+      if (cloudPasswordInput) {
+        cloudPasswordInput.value = "";
+      }
+    } catch (error) {
+      console.error(error);
+      showToast(t("toast.signUpFailed"), "error");
     }
   });
 

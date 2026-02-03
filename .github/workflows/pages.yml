@@ -1,4 +1,4 @@
-name: Deploy Pages
+name: Deploy Firebase Hosting
 
 on:
   workflow_run:
@@ -8,15 +8,13 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: "pages"
+  group: "firebase-hosting"
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
@@ -26,6 +24,7 @@ jobs:
       VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
       VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
       VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_FIREBASE_APP_CHECK_KEY: ${{ secrets.VITE_FIREBASE_APP_CHECK_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,8 +36,9 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run build:web
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          path: dist-web
-      - uses: actions/deploy-pages@v4
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+          projectId: "${{ secrets.VITE_FIREBASE_PROJECT_ID }}"
+          channelId: live

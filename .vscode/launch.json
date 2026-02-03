@@ -65,6 +65,28 @@
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Deploy: Web (PRODUCTION)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "firebase",
+      "runtimeArgs": ["deploy", "--only", "firestore,hosting:production,hosting:mirror-1,hosting:mirror-2"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "npm: build:web",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Deploy: Web (Prelive)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "firebase",
+      "runtimeArgs": ["deploy", "--only", "firestore,hosting:pre"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "npm: build:web",
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }

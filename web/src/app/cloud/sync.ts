@@ -1,7 +1,19 @@
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 
-import { cloudSignInButton, cloudSignOutButton, cloudStatus, cloudSyncButton } from "../dom";
+import {
+  cloudEmailInput,
+  cloudEmailSignInButton,
+  cloudEmailSignUpButton,
+  cloudPasswordInput,
+  cloudAuthSection,
+  cloudProfileSection,
+  cloudSessionActions,
+  cloudSignInButton,
+  cloudSignOutButton,
+  cloudStatus,
+  cloudSyncButton,
+} from "../dom";
 import { t } from "../i18n";
 import { renderPaletteList, syncPaletteColorNames } from "../palette/ui";
 import { persistPreferences } from "../persistence";
@@ -46,6 +58,28 @@ const updateCloudControls = () => {
 
   if (cloudSignInButton) {
     cloudSignInButton.disabled = !cloudState.isConfigured || !!cloudState.user;
+  }
+  if (cloudAuthSection) {
+    cloudAuthSection.classList.toggle("is-hidden", Boolean(cloudState.user));
+  }
+  if (cloudSessionActions) {
+    cloudSessionActions.classList.toggle("is-hidden", !cloudState.user);
+  }
+  if (cloudProfileSection) {
+    cloudProfileSection.classList.toggle("is-hidden", !cloudState.user);
+  }
+  const disableEmailAuth = !cloudState.isConfigured || !!cloudState.user;
+  if (cloudEmailInput) {
+    cloudEmailInput.disabled = disableEmailAuth;
+  }
+  if (cloudPasswordInput) {
+    cloudPasswordInput.disabled = disableEmailAuth;
+  }
+  if (cloudEmailSignInButton) {
+    cloudEmailSignInButton.disabled = disableEmailAuth;
+  }
+  if (cloudEmailSignUpButton) {
+    cloudEmailSignUpButton.disabled = disableEmailAuth;
   }
   if (cloudSignOutButton) {
     cloudSignOutButton.disabled = !cloudState.user;
@@ -137,7 +171,7 @@ export const scheduleCloudSync = () => {
   syncTimer = setTimeout(() => {
     syncTimer = null;
     void syncToCloud();
-  }, 700);
+  }, 1200);
 };
 
 export const setupCloudAuth = () => {

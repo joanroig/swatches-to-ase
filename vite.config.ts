@@ -15,6 +15,31 @@ export default defineConfig({
   build: {
     outDir: "../dist-web",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (!id.includes("node_modules")) {
+            return;
+          }
+          if (id.includes("firebase")) {
+            return "firebase";
+          }
+          if (id.includes("jszip")) {
+            return "jszip";
+          }
+          if (id.includes("color-namer")) {
+            return "color-namer";
+          }
+          if (id.includes("color-convert")) {
+            return "color-convert";
+          }
+          if (id.includes("procreate-swatches")) {
+            return "procreate-swatches";
+          }
+          return "vendor";
+        },
+      },
+    },
   },
   server: {
     port: 5173,

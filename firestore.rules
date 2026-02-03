@@ -1,0 +1,151 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function hasKey(map, key) {
+      return map.keys().hasAny([key]);
+    }
+
+    function isValidPreferences(pref) {
+      return pref is map
+        && pref.keys().hasOnly([
+          'theme',
+          'colorNameFormat',
+          'addBlackWhite',
+          'exportFormat',
+          'colorNotation',
+          'motion',
+          'language'
+        ])
+        && pref.theme is string
+        && pref.colorNameFormat is string
+        && pref.addBlackWhite is bool
+        && pref.exportFormat is string
+        && pref.colorNotation is string
+        && (!hasKey(pref, 'motion') || (pref.motion is string && pref.motion in ['system', 'on', 'off']))
+        && (!hasKey(pref, 'language') || (pref.language is string && pref.language in ['system', 'en', 'es']));
+    }
+
+    function isValidSyncDoc(data) {
+      return data.keys().hasOnly(['palettes', 'activePaletteId', 'preferences', 'revision', 'updatedAt'])
+        && data.palettes is list
+        && data.palettes.size() <= 200
+        && (data.activePaletteId == null || data.activePaletteId is string)
+        && data.preferences is map
+        && isValidPreferences(data.preferences)
+        && data.revision is string
+        && data.updatedAt is timestamp;
+    }
+
+    function isSyncRateOk() {
+      return resource.data == null
+        || !(resource.data.updatedAt is timestamp)
+        || request.time > resource.data.updatedAt + duration.value(1, 's');
+    }
+
+    function isValidPublicPalette(data) {
+      return data.keys().hasOnly([
+          'name',
+          'colors',
+          'ownerId',
+          'ownerName',
+          'ownerPhoto',
+          'createdAt',
+          'updatedAt',
+          'likesCount',
+          'savesCount'
+        ])
+        && data.name is string
+        && data.name.size() <= 80
+        && data.colors is list
+        && data.colors.size() <= 16
+        && data.ownerId is string
+        && (data.ownerName == null || data.ownerName is string)
+        && (data.ownerPhoto == null || data.ownerPhoto is string)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && data.likesCount is int
+        && data.savesCount is int
+        && data.likesCount >= 0
+        && data.savesCount >= 0;
+    }
+
+    function isPublicUpdateRateOk() {
+      return resource.data == null
+        || !(resource.data.updatedAt is timestamp)
+        || request.time > resource.data.updatedAt + duration.value(2, 's');
+    }
+
+    function isCountDelta(current, next) {
+      return (next == current + 1 || next == current - 1) && next >= 0;
+    }
+
+    function isCountUpdate() {
+      let changed = request.resource.data.diff(resource.data).changedKeys();
+      return (changed.hasOnly(['likesCount'])
+          && isCountDelta(resource.data.likesCount, request.resource.data.likesCount))
+        || (changed.hasOnly(['savesCount'])
+          && isCountDelta(resource.data.savesCount, request.resource.data.savesCount));
+    }
+
+    match /users/{userId}/state/{docId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId)
+        && docId == 'app'
+        && isValidSyncDoc(request.resource.data)
+        && request.resource.data.updatedAt == request.time
+        && isSyncRateOk();
+    }
+
+    match /users/{userId}/likes/{paletteId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(['likedAt'])
+        && request.resource.data.likedAt is timestamp
+        && request.resource.data.likedAt == request.time;
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/saves/{paletteId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(['savedAt'])
+        && request.resource.data.savedAt is timestamp
+        && request.resource.data.savedAt == request.time;
+      allow delete: if isOwner(userId);
+    }
+
+    match /publicPalettes/{paletteId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && isValidPublicPalette(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.likesCount == 0
+        && request.resource.data.savesCount == 0;
+      allow update: if signedIn()
+        && request.resource.data.ownerId == resource.data.ownerId
+        && (
+          (
+            request.auth.uid == resource.data.ownerId
+            && isValidPublicPalette(request.resource.data)
+            && request.resource.data.createdAt == resource.data.createdAt
+            && request.resource.data.likesCount == resource.data.likesCount
+            && request.resource.data.savesCount == resource.data.savesCount
+            && request.resource.data.updatedAt == request.time
+            && isPublicUpdateRateOk()
+          )
+          || isCountUpdate()
+        );
+      allow delete: if signedIn() && request.auth.uid == resource.data.ownerId;
+    }
+  }
+}

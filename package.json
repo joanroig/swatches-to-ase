@@ -83,6 +83,7 @@
     "files": [
       "dist-electron/**",
       "dist-web/**",
+      "assets/**",
       "package.json"
     ],
     "publish": [

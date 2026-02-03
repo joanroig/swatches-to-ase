@@ -1,0 +1,47 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "hosting": [
+    {
+      "target": "production",
+      "public": "dist-web",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
+      "target": "mirror-1",
+      "public": "dist-web",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "redirects": [
+        { "source": "/", "destination": "https://palettestudio.web.app", "type": 301 },
+        { "source": "/**", "destination": "https://palettestudio.web.app", "type": 301 }
+      ]
+    },
+    {
+      "target": "mirror-2",
+      "public": "dist-web",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "redirects": [
+        { "source": "/", "destination": "https://palettestudio.web.app", "type": 301 },
+        { "source": "/**", "destination": "https://palettestudio.web.app", "type": 301 }
+      ]
+    },
+    {
+      "target": "pre",
+      "public": "dist-web",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ]
+}

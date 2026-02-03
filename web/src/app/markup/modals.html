@@ -88,10 +88,25 @@
             </p>
           </div>
         </div>
-        <div class="cloud-actions">
-          <button class="primary" id="cloud-signin" type="button" data-i18n="action.signInGoogle">Sign in with Google</button>
-          <button class="ghost" id="cloud-sync" type="button" disabled data-i18n="action.syncNow">Sync now</button>
-          <button class="ghost" id="cloud-signout" type="button" disabled data-i18n="action.signOut">Sign out</button>
+        <div class="cloud-auth" id="cloud-auth">
+          <div class="cloud-actions">
+            <button class="primary" id="cloud-signin" type="button" data-i18n="action.signInGoogle">Sign in with Google</button>
+          </div>
+          <p class="hint cloud-email-hint" data-i18n="cloud.email.hint">Or use email and password.</p>
+          <div class="cloud-email-form">
+            <div class="field">
+              <label for="cloud-email-input" data-i18n="cloud.email.label">Email</label>
+              <input type="email" id="cloud-email-input" autocomplete="email" placeholder="you@example.com" />
+            </div>
+            <div class="field">
+              <label for="cloud-password-input" data-i18n="cloud.password.label">Password</label>
+              <input type="password" id="cloud-password-input" autocomplete="current-password" placeholder="••••••••" />
+            </div>
+            <div class="cloud-email-actions">
+              <button class="ghost" id="cloud-email-signin" type="button" data-i18n="action.signInEmail">Sign in</button>
+              <button class="ghost" id="cloud-email-signup" type="button" data-i18n="action.signUpEmail">Create account</button>
+            </div>
+          </div>
         </div>
         <div class="cloud-user is-hidden" id="cloud-user">
           <img class="cloud-avatar" id="cloud-avatar" alt="" />
@@ -100,31 +115,37 @@
             <span class="cloud-email" id="cloud-email"></span>
           </div>
         </div>
+        <div class="cloud-session-actions is-hidden" id="cloud-session-actions">
+          <button class="ghost" id="cloud-sync" type="button" disabled data-i18n="action.syncNow">Sync now</button>
+          <button class="ghost" id="cloud-signout" type="button" disabled data-i18n="action.signOut">Sign out</button>
+        </div>
       </div>
-      <div class="divider"></div>
-      <div class="section">
-        <div class="section-header">
-          <div>
-            <h4 data-i18n="cloud.profile.title">Profile</h4>
-            <p class="hint" data-i18n="cloud.profile.hint">Update your name and photo for shared palettes.</p>
-          </div>
-        </div>
-        <div class="cloud-profile">
-          <img class="cloud-avatar cloud-profile-avatar" id="cloud-profile-avatar" alt="" />
-          <div class="cloud-profile-fields">
-            <div class="field">
-              <label for="cloud-profile-name" data-i18n="cloud.profile.name.label">Display name</label>
-              <input type="text" id="cloud-profile-name" placeholder="Palette Studio user" data-i18n-placeholder="cloud.profile.name.placeholder" />
-            </div>
-            <div class="field">
-              <label for="cloud-profile-photo" data-i18n="cloud.profile.photo.label">Profile photo</label>
-              <input type="file" id="cloud-profile-photo" accept="image/*" />
-              <p class="hint" data-i18n="cloud.profile.photo.hint">PNG or JPG works best.</p>
+      <div class="cloud-profile-section" id="cloud-profile-section">
+        <div class="divider"></div>
+        <div class="section">
+          <div class="section-header">
+            <div>
+              <h4 data-i18n="cloud.profile.title">Profile</h4>
+              <p class="hint" data-i18n="cloud.profile.hint">Update your name and photo for shared palettes.</p>
             </div>
           </div>
-        </div>
-        <div class="cloud-profile-actions">
-          <button class="primary" id="cloud-profile-save" type="button" data-i18n="cloud.profile.save">Save profile</button>
+          <div class="cloud-profile">
+            <img class="cloud-avatar cloud-profile-avatar" id="cloud-profile-avatar" alt="" />
+            <div class="cloud-profile-fields">
+              <div class="field">
+                <label for="cloud-profile-name" data-i18n="cloud.profile.name.label">Display name</label>
+                <input type="text" id="cloud-profile-name" placeholder="Palette Studio user" data-i18n-placeholder="cloud.profile.name.placeholder" />
+              </div>
+              <div class="field">
+                <label for="cloud-profile-photo" data-i18n="cloud.profile.photo.label">Profile photo</label>
+                <input type="file" id="cloud-profile-photo" accept="image/*" />
+                <p class="hint" data-i18n="cloud.profile.photo.hint">PNG or JPG works best.</p>
+              </div>
+            </div>
+          </div>
+          <div class="cloud-profile-actions">
+            <button class="primary" id="cloud-profile-save" type="button" data-i18n="cloud.profile.save">Save profile</button>
+          </div>
         </div>
       </div>
     </div>
