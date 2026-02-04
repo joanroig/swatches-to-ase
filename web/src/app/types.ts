@@ -39,11 +39,16 @@ export type Preferences = {
 
 export type ExportMode = "single" | "batch";
 
+export type AvatarColors = {
+  background: string;
+  foreground: string;
+};
+
 export type CloudUser = {
   uid: string;
   name: string;
   email?: string | null;
-  photoUrl?: string | null;
+  avatar?: AvatarColors | null;
 };
 
 export type PublicPalette = {
@@ -52,7 +57,7 @@ export type PublicPalette = {
   colors: PublicPaletteColor[];
   ownerId: string;
   ownerName?: string | null;
-  ownerPhoto?: string | null;
+  ownerAvatar?: AvatarColors | null;
   createdAt?: number | null;
   likesCount?: number;
   savesCount?: number;

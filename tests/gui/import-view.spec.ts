@@ -26,7 +26,7 @@ test("importing a swatches file populates the palette list and view", async ({ p
 
   await page.locator('#import-modal button[data-close="true"]').click();
 
-  await card.getByRole("button", { name: "View" }).click();
+  await card.click();
   await expect(page.locator("#view-modal")).toHaveAttribute("aria-hidden", "false");
   await expect(page.locator("#view-subtitle")).toContainText("colors");
 });

@@ -13,6 +13,19 @@ service cloud.firestore {
       return map.keys().hasAny([key]);
     }
 
+    function isValidAvatar(avatar) {
+      return avatar is map
+        && avatar.keys().hasOnly(['background', 'foreground'])
+        && avatar.background is string
+        && avatar.foreground is string;
+    }
+
+    function isValidAvatarProfile(data) {
+      return data.keys().hasOnly(['avatar', 'updatedAt'])
+        && isValidAvatar(data.avatar)
+        && data.updatedAt is timestamp;
+    }
+
     function isValidPreferences(pref) {
       return pref is map
         && pref.keys().hasOnly([
@@ -45,9 +58,9 @@ service cloud.firestore {
     }
 
     function isSyncRateOk() {
-      return resource.data == null
+      return resource == null
         || !(resource.data.updatedAt is timestamp)
-        || request.time > resource.data.updatedAt + duration.value(1, 's');
+        || request.time >= resource.data.updatedAt + duration.value(1, 's');
     }
 
     function isValidPublicPalette(data) {
@@ -56,7 +69,7 @@ service cloud.firestore {
           'colors',
           'ownerId',
           'ownerName',
-          'ownerPhoto',
+          'ownerAvatar',
           'createdAt',
           'updatedAt',
           'likesCount',
@@ -67,8 +80,7 @@ service cloud.firestore {
         && data.colors is list
         && data.colors.size() <= 16
         && data.ownerId is string
-        && (data.ownerName == null || data.ownerName is string)
-        && (data.ownerPhoto == null || data.ownerPhoto is string)
+        && (data.ownerAvatar == null || isValidAvatar(data.ownerAvatar))
         && data.createdAt is timestamp
         && data.updatedAt is timestamp
         && data.likesCount is int
@@ -78,9 +90,9 @@ service cloud.firestore {
     }
 
     function isPublicUpdateRateOk() {
-      return resource.data == null
+      return resource == null
         || !(resource.data.updatedAt is timestamp)
-        || request.time > resource.data.updatedAt + duration.value(2, 's');
+        || request.time >= resource.data.updatedAt + duration.value(2, 's');
     }
 
     function isCountDelta(current, next) {
@@ -102,6 +114,14 @@ service cloud.firestore {
         && isValidSyncDoc(request.resource.data)
         && request.resource.data.updatedAt == request.time
         && isSyncRateOk();
+    }
+
+    match /users/{userId}/profile/{docId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId)
+        && docId == 'avatar'
+        && isValidAvatarProfile(request.resource.data)
+        && request.resource.data.updatedAt == request.time;
     }
 
     match /users/{userId}/likes/{paletteId} {

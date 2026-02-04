@@ -1,35 +1,42 @@
 import { updateProfile } from "firebase/auth";
 
-import { cloudProfileAvatar, cloudProfileNameInput, cloudProfilePhotoInput, cloudProfileSaveButton } from "../dom";
+import type { AvatarColors } from "../types";
+import {
+  cloudProfileAvatar,
+  cloudProfileAvatarBackgroundInput,
+  cloudProfileAvatarForegroundInput,
+  cloudProfileNameInput,
+  cloudProfileSaveButton,
+} from "../dom";
 import { cloudState } from "../state";
 import { t } from "../i18n";
 import { showToast } from "../ui/notifications";
-import { getCloudAvatarSrc } from "./avatars";
+import { areAvatarColorsEqual, DEFAULT_AVATAR_COLORS, getCloudAvatarSrc, normalizeAvatarColors } from "./avatars";
 import { firebaseClient } from "./context";
+import { saveUserAvatar } from "./profile-store";
 import { renderCloudUserCard } from "./user-card";
 
-let pendingPhotoUrl: string | null = null;
+let pendingAvatar: AvatarColors | null = null;
 
-const readFileAsDataUrl = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Unable to read image data."));
-      }
-    };
-    reader.onerror = () => reject(reader.error ?? new Error("File read failed."));
-    reader.readAsDataURL(file);
+const readAvatarInputs = (): AvatarColors | null => {
+  if (!cloudProfileAvatarBackgroundInput || !cloudProfileAvatarForegroundInput) {
+    return null;
+  }
+  return normalizeAvatarColors({
+    background: cloudProfileAvatarBackgroundInput.value,
+    foreground: cloudProfileAvatarForegroundInput.value,
   });
+};
 
 const setProfileDisabled = (disabled: boolean) => {
   if (cloudProfileNameInput) {
     cloudProfileNameInput.disabled = disabled;
   }
-  if (cloudProfilePhotoInput) {
-    cloudProfilePhotoInput.disabled = disabled;
+  if (cloudProfileAvatarBackgroundInput) {
+    cloudProfileAvatarBackgroundInput.disabled = disabled;
+  }
+  if (cloudProfileAvatarForegroundInput) {
+    cloudProfileAvatarForegroundInput.disabled = disabled;
   }
   if (cloudProfileSaveButton) {
     cloudProfileSaveButton.disabled = disabled;
@@ -37,68 +44,62 @@ const setProfileDisabled = (disabled: boolean) => {
 };
 
 export const syncCloudProfileForm = () => {
-  if (!cloudProfileAvatar || !cloudProfileNameInput || !cloudProfilePhotoInput || !cloudProfileSaveButton) {
+  if (
+    !cloudProfileAvatar ||
+    !cloudProfileNameInput ||
+    !cloudProfileAvatarBackgroundInput ||
+    !cloudProfileAvatarForegroundInput ||
+    !cloudProfileSaveButton
+  ) {
     return;
   }
 
   const user = cloudState.user;
   if (!user) {
-    pendingPhotoUrl = null;
+    pendingAvatar = null;
     cloudProfileAvatar.src = getCloudAvatarSrc(null);
     cloudProfileAvatar.alt = t("cloud.profile.defaultAlt");
     cloudProfileNameInput.value = "";
     cloudProfileNameInput.placeholder = t("cloud.profile.signInPlaceholder");
-    cloudProfilePhotoInput.value = "";
+    cloudProfileAvatarBackgroundInput.value = DEFAULT_AVATAR_COLORS.background;
+    cloudProfileAvatarForegroundInput.value = DEFAULT_AVATAR_COLORS.foreground;
     setProfileDisabled(true);
     return;
   }
 
   cloudProfileNameInput.value = user.name ?? "";
   cloudProfileNameInput.placeholder = t("cloud.profile.name.placeholder");
-  cloudProfileAvatar.src = pendingPhotoUrl ?? getCloudAvatarSrc(user.photoUrl);
+  const currentAvatar = normalizeAvatarColors(pendingAvatar ?? user.avatar ?? DEFAULT_AVATAR_COLORS);
+  cloudProfileAvatar.src = getCloudAvatarSrc(currentAvatar);
   cloudProfileAvatar.alt = user.name ?? t("cloud.profile.cloudAlt");
-  cloudProfilePhotoInput.value = "";
+  cloudProfileAvatarBackgroundInput.value = currentAvatar.background;
+  cloudProfileAvatarForegroundInput.value = currentAvatar.foreground;
   setProfileDisabled(false);
 };
 
 export const resetCloudProfileDraft = () => {
-  pendingPhotoUrl = null;
-  if (cloudProfilePhotoInput) {
-    cloudProfilePhotoInput.value = "";
-  }
+  pendingAvatar = null;
   syncCloudProfileForm();
 };
 
 export const setupCloudProfileControls = () => {
-  if (!cloudProfilePhotoInput || !cloudProfileSaveButton) {
+  if (!cloudProfileAvatarBackgroundInput || !cloudProfileAvatarForegroundInput || !cloudProfileSaveButton) {
     return;
   }
 
-  cloudProfilePhotoInput.addEventListener("change", async () => {
-    const file = cloudProfilePhotoInput.files?.[0];
-    if (!file) {
-      pendingPhotoUrl = null;
-      syncCloudProfileForm();
+  const handleAvatarInput = () => {
+    const draft = readAvatarInputs();
+    if (!draft) {
       return;
     }
-    if (!file.type.startsWith("image/")) {
-      showToast(t("toast.profileImageType"), "error");
-      cloudProfilePhotoInput.value = "";
-      return;
+    pendingAvatar = draft;
+    if (cloudProfileAvatar) {
+      cloudProfileAvatar.src = getCloudAvatarSrc(draft);
     }
-    try {
-      pendingPhotoUrl = await readFileAsDataUrl(file);
-      if (cloudProfileAvatar) {
-        cloudProfileAvatar.src = pendingPhotoUrl;
-      }
-    } catch (error) {
-      console.error(error);
-      showToast(t("toast.profileImageReadFailed"), "error");
-      pendingPhotoUrl = null;
-      cloudProfilePhotoInput.value = "";
-      syncCloudProfileForm();
-    }
-  });
+  };
+
+  cloudProfileAvatarBackgroundInput.addEventListener("input", handleAvatarInput);
+  cloudProfileAvatarForegroundInput.addEventListener("input", handleAvatarInput);
 
   cloudProfileSaveButton.addEventListener("click", async () => {
     if (!firebaseClient) {
@@ -118,29 +119,31 @@ export const setupCloudProfileControls = () => {
       showToast(t("toast.profileAddName"), "error");
       return;
     }
+    const nextAvatar = readAvatarInputs() ?? normalizeAvatarColors(cloudState.user.avatar ?? DEFAULT_AVATAR_COLORS);
+    const nameChanged = name !== cloudState.user.name;
+    const avatarChanged = !areAvatarColorsEqual(nextAvatar, cloudState.user.avatar ?? null);
 
-    const updates: { displayName?: string | null; photoURL?: string | null } = {};
-    if (name !== cloudState.user.name) {
-      updates.displayName = name;
-    }
-    if (pendingPhotoUrl) {
-      updates.photoURL = pendingPhotoUrl;
-    }
-
-    if (Object.keys(updates).length === 0) {
+    if (!nameChanged && !avatarChanged) {
       showToast(t("toast.profileNoChanges"), "info");
       return;
     }
 
     cloudProfileSaveButton.disabled = true;
     try {
-      await updateProfile(currentUser, updates);
+      const tasks: Array<Promise<void>> = [];
+      if (nameChanged) {
+        tasks.push(updateProfile(currentUser, { displayName: name }));
+      }
+      if (avatarChanged) {
+        tasks.push(saveUserAvatar(currentUser.uid, nextAvatar));
+      }
+      await Promise.all(tasks);
       cloudState.user = {
         ...cloudState.user,
         name,
-        photoUrl: pendingPhotoUrl ?? cloudState.user.photoUrl ?? null,
+        avatar: avatarChanged ? nextAvatar : cloudState.user.avatar ?? nextAvatar,
       };
-      pendingPhotoUrl = null;
+      pendingAvatar = null;
       renderCloudUserCard();
       syncCloudProfileForm();
       showToast(t("toast.profileUpdated"), "success");

@@ -167,7 +167,7 @@ export const getPaletteById = (paletteId: string | null) => state.palettes.find(
 const isEditorSessionActive = (paletteId?: string | null) =>
   Boolean(editorSession.paletteId) && (paletteId ?? editorSession.paletteId) === editorSession.paletteId;
 
-const getEditorPalette = () => (editorSession.paletteId ? getPaletteById(editorSession.paletteId) ?? null : null);
+const getEditorPalette = () => (editorSession.paletteId ? (getPaletteById(editorSession.paletteId) ?? null) : null);
 
 const updateEditorActions = () => {
   const palette = getEditorPalette();
@@ -613,10 +613,11 @@ const togglePaletteVisibility = async (paletteId: string) => {
     }
   } else {
     palette.isPublic = true;
-    palette.publicId = palette.publicId ?? createId();
     persistPalettes();
+    cloudState.recentPublicUpserts.set(palette.id, Date.now());
     try {
       await upsertPublicPalette(palette);
+      cloudState.recentPublicUpserts.set(palette.id, Date.now());
       showToast(t("toast.palettePublished"), "success");
     } catch (error) {
       console.error(error);

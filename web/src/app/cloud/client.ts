@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { getToken, initializeAppCheck, ReCaptchaV3Provider, type AppCheck } from "firebase/app-check";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -7,6 +7,7 @@ export type FirebaseClient = {
   auth: ReturnType<typeof getAuth>;
   db: ReturnType<typeof getFirestore>;
   provider: GoogleAuthProvider;
+  appCheck?: AppCheck | null;
 };
 
 type FirebaseConfig = {
@@ -26,6 +27,8 @@ const firebaseConfig: FirebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
 };
+const appCheckDisabled =
+  import.meta.env.VITE_DISABLE_APP_CHECK === "true" || import.meta.env.VITE_DISABLE_APP_CHECK === "1";
 
 const requiredKeys = ["apiKey", "authDomain", "projectId", "appId"] as const;
 
@@ -48,12 +51,20 @@ export const getFirebaseClient = (): FirebaseClient | null => {
     return cachedClient;
   }
   const app = initializeApp(firebaseConfig);
+  let appCheck: AppCheck | null = null;
   const appCheckKey = import.meta.env.VITE_FIREBASE_APP_CHECK_KEY ?? "";
   if (appCheckKey && typeof window !== "undefined") {
-    const isWebOrigin = window.location.protocol === "https:" || window.location.hostname === "localhost";
-    if (isWebOrigin) {
+    const hostname = window.location.hostname;
+    const isWebOrigin =
+      window.location.protocol === "https:" || hostname === "localhost" || hostname === "127.0.0.1";
+    if (isWebOrigin && !appCheckDisabled) {
       try {
-        initializeAppCheck(app, {
+        const debugToken = import.meta.env.VITE_APPCHECK_DEBUG_TOKEN;
+        if (debugToken) {
+          const value = debugToken === "true" || debugToken === "1" ? true : debugToken;
+          (window as Window & { FIREBASE_APPCHECK_DEBUG_TOKEN?: string | boolean }).FIREBASE_APPCHECK_DEBUG_TOKEN = value;
+        }
+        appCheck = initializeAppCheck(app, {
           provider: new ReCaptchaV3Provider(appCheckKey),
           isTokenAutoRefreshEnabled: true,
         });
@@ -66,6 +77,19 @@ export const getFirebaseClient = (): FirebaseClient | null => {
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
-  cachedClient = { auth, db, provider };
+  cachedClient = { auth, db, provider, appCheck };
   return cachedClient;
+};
+
+export const ensureAppCheckToken = async (client: FirebaseClient | null, forceRefresh = false) => {
+  if (!client?.appCheck) {
+    return true;
+  }
+  try {
+    await getToken(client.appCheck, forceRefresh);
+    return true;
+  } catch (error) {
+    console.warn("[cloud] App Check token unavailable.", error);
+    return false;
+  }
 };

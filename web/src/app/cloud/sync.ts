@@ -1,12 +1,12 @@
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, type User } from "firebase/auth";
 import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 
 import {
+  cloudAuthSection,
   cloudEmailInput,
   cloudEmailSignInButton,
   cloudEmailSignUpButton,
   cloudPasswordInput,
-  cloudAuthSection,
   cloudProfileSection,
   cloudSessionActions,
   cloudSignInButton,
@@ -19,17 +19,125 @@ import { renderPaletteList, syncPaletteColorNames } from "../palette/ui";
 import { persistPreferences } from "../persistence";
 import { applyRemotePreferences, getPreferencesPayload } from "../preferences";
 import { cloudState, discoveryState, state } from "../state";
-import type { CloudUser } from "../types";
+import type { CloudUser, Palette } from "../types";
 import { showToast } from "../ui/notifications";
-import { firebaseClient, firebaseConfigStatus } from "./context";
+import { ensureAppCheckToken, firebaseClient, firebaseConfigStatus } from "./context";
 import { fetchUserInteractions, renderDiscovery } from "./discovery";
 import { syncCloudProfileForm } from "./profile";
+import { ensureUserAvatar } from "./profile-store";
 import { upsertPublicPalette } from "./public";
 import { buildSyncPayload, parseSyncPayload } from "./serializer";
 import { renderCloudUserCard } from "./user-card";
 
 let cloudUnsubscribe: (() => void) | null = null;
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
+let manualSyncCooldownTimer: ReturnType<typeof setTimeout> | null = null;
+let syncCooldownTimer: ReturnType<typeof setTimeout> | null = null;
+let manualSyncCooldownUntil = 0;
+const MANUAL_SYNC_COOLDOWN_MS = 3000;
+const PUBLIC_UPSERT_COOLDOWN_MS = 2500;
+let initialSyncTimer: ReturnType<typeof setTimeout> | null = null;
+let initialSyncAttempts = 0;
+const INITIAL_SYNC_BASE_DELAY_MS = 1200;
+const INITIAL_SYNC_MAX_ATTEMPTS = 2;
+
+const wasRecentlyUpserted = (paletteId: string) => {
+  const lastUpsert = cloudState.recentPublicUpserts.get(paletteId);
+  if (!lastUpsert) {
+    return false;
+  }
+  if (Date.now() - lastUpsert > PUBLIC_UPSERT_COOLDOWN_MS) {
+    cloudState.recentPublicUpserts.delete(paletteId);
+    return false;
+  }
+  return true;
+};
+
+const getErrorInfo = (error: unknown) => {
+  if (error && typeof error === "object") {
+    const candidate = error as { code?: string; message?: string; name?: string };
+    return { code: candidate.code, message: candidate.message, name: candidate.name };
+  }
+  return { code: undefined, message: String(error), name: undefined };
+};
+
+const isManualSyncCoolingDown = () => Date.now() < manualSyncCooldownUntil;
+const isPublicSyncCoolingDown = () => Date.now() < cloudState.publicSyncCooldownUntil;
+const isSyncCoolingDown = () => isManualSyncCoolingDown() || isPublicSyncCoolingDown();
+
+const scheduleSyncCooldownRefresh = () => {
+  if (syncCooldownTimer) {
+    clearTimeout(syncCooldownTimer);
+  }
+  const nextCooldown = Math.min(
+    manualSyncCooldownUntil || Number.POSITIVE_INFINITY,
+    cloudState.publicSyncCooldownUntil || Number.POSITIVE_INFINITY,
+  );
+  if (!Number.isFinite(nextCooldown)) {
+    return;
+  }
+  const delay = Math.max(0, nextCooldown - Date.now());
+  syncCooldownTimer = setTimeout(() => {
+    syncCooldownTimer = null;
+    updateCloudControls();
+  }, delay);
+};
+
+const logCloudError = (context: string, error: unknown, meta: Record<string, unknown> = {}) => {
+  const info = getErrorInfo(error);
+  console.error(`[cloud] ${context} failed`, { ...info, ...meta }, error);
+  if (info.code === "permission-denied") {
+    console.warn(
+      "[cloud] permission-denied hints: check Firestore rules for /users/{uid}/state/app and /publicPalettes, App Check enforcement, palette limits (sync palettes <= 200, public palette colors <= 16, name <= 80), and legacy fields when using merge writes.",
+    );
+  }
+};
+
+const clearInitialSyncRetry = () => {
+  if (initialSyncTimer) {
+    clearTimeout(initialSyncTimer);
+    initialSyncTimer = null;
+  }
+  initialSyncAttempts = 0;
+};
+
+const queueInitialSyncRetry = () => {
+  if (!firebaseClient || !cloudState.user) {
+    return;
+  }
+  if (initialSyncTimer) {
+    return;
+  }
+  const attempt = async () => {
+    initialSyncTimer = null;
+    if (!firebaseClient || !cloudState.user) {
+      return;
+    }
+    const synced = await syncToCloud("init");
+    if (synced) {
+      clearInitialSyncRetry();
+      return;
+    }
+    initialSyncAttempts += 1;
+    if (initialSyncAttempts >= INITIAL_SYNC_MAX_ATTEMPTS) {
+      return;
+    }
+    const delay = INITIAL_SYNC_BASE_DELAY_MS * Math.pow(2, initialSyncAttempts);
+    initialSyncTimer = setTimeout(attempt, delay);
+  };
+  initialSyncTimer = setTimeout(attempt, INITIAL_SYNC_BASE_DELAY_MS);
+};
+
+const getPublicPaletteIssues = (palette: Palette) => {
+  const issues: string[] = [];
+  if (palette.colors.length > 16) {
+    issues.push(`colors:${palette.colors.length} > 16`);
+  }
+  if (palette.name.length > 80) {
+    issues.push(`nameLength:${palette.name.length} > 80`);
+  }
+  return issues;
+};
 
 const formatSyncTimestamp = (value: string | null) => {
   if (!value) {
@@ -85,10 +193,33 @@ const updateCloudControls = () => {
     cloudSignOutButton.disabled = !cloudState.user;
   }
   if (cloudSyncButton) {
-    cloudSyncButton.disabled = !cloudState.user || cloudState.isSyncing;
+    cloudSyncButton.disabled = !cloudState.user || cloudState.isSyncing || isSyncCoolingDown();
   }
 
   renderCloudUserCard();
+  scheduleSyncCooldownRefresh();
+};
+
+const startManualSyncCooldown = () => {
+  manualSyncCooldownUntil = Date.now() + MANUAL_SYNC_COOLDOWN_MS;
+  if (manualSyncCooldownTimer) {
+    clearTimeout(manualSyncCooldownTimer);
+  }
+  manualSyncCooldownTimer = setTimeout(() => {
+    manualSyncCooldownTimer = null;
+    updateCloudControls();
+  }, MANUAL_SYNC_COOLDOWN_MS);
+  scheduleSyncCooldownRefresh();
+};
+
+const resolveCloudUser = async (user: User): Promise<CloudUser> => {
+  const avatar = await ensureUserAvatar(user.uid);
+  return {
+    uid: user.uid,
+    name: user.displayName ?? t("cloud.profile.name.placeholder"),
+    email: user.email,
+    avatar,
+  };
 };
 
 const applyRemoteState = (payload: ReturnType<typeof parseSyncPayload>) => {
@@ -112,16 +243,13 @@ const listenToCloudState = () => {
   if (cloudUnsubscribe) {
     cloudUnsubscribe();
   }
-  let handledEmpty = false;
+  clearInitialSyncRetry();
   cloudUnsubscribe = onSnapshot(doc(firebaseClient.db, "users", cloudState.user.uid, "state", "app"), (snapshot) => {
     if (!snapshot.exists()) {
-      if (!handledEmpty) {
-        handledEmpty = true;
-        void syncToCloud();
-      }
+      queueInitialSyncRetry();
       return;
     }
-    handledEmpty = true;
+    clearInitialSyncRetry();
     const payload = parseSyncPayload(snapshot.data());
     if (!payload || payload.revision === cloudState.lastRevision) {
       return;
@@ -132,29 +260,92 @@ const listenToCloudState = () => {
   });
 };
 
-export const syncToCloud = async () => {
+export const syncToCloud = async (source: "manual" | "auto" | "init" = "auto"): Promise<boolean> => {
+  console.log("[cloud] Starting sync to cloud...");
   if (!firebaseClient || !cloudState.user) {
-    return;
+    return false;
+  }
+  if (source === "manual") {
+    if (syncTimer) {
+      clearTimeout(syncTimer);
+      syncTimer = null;
+    }
+    if (isSyncCoolingDown()) {
+      scheduleSyncCooldownRefresh();
+      return false;
+    }
+    startManualSyncCooldown();
+    updateCloudControls();
+  }
+  if (cloudState.isSyncing) {
+    return false;
   }
   cloudState.isSyncing = true;
   updateCloudControls();
+  const appCheckReady = await ensureAppCheckToken(firebaseClient, source === "init");
+  if (!appCheckReady) {
+    if (source !== "init") {
+      showToast(t("toast.cloudSyncFailed"), "error");
+    }
+    cloudState.isSyncing = false;
+    updateCloudControls();
+    return false;
+  }
   const payload = buildSyncPayload(state.palettes, state.activePaletteId, getPreferencesPayload());
   cloudState.lastRevision = payload.revision;
+  const publicPalettes = state.palettes.filter((palette) => palette.isPublic);
+  const publicPalettesToSync = publicPalettes.filter((palette) => !wasRecentlyUpserted(palette.id));
+  if (payload.palettes.length > 200) {
+    console.warn("[cloud] Sync payload exceeds palette limit (200).", { paletteCount: payload.palettes.length });
+  }
+  const paletteIssues = publicPalettes
+    .map((palette) => ({
+      id: palette.id,
+      publicId: palette.publicId ?? null,
+      issues: getPublicPaletteIssues(palette),
+    }))
+    .filter((entry) => entry.issues.length > 0);
+  if (paletteIssues.length > 0) {
+    console.warn("[cloud] Public palettes may violate publish rules.", paletteIssues);
+  }
+  let stage: "state" | "public" = "state";
+  let stateWriteOk = false;
   try {
-    await setDoc(
-      doc(firebaseClient.db, "users", cloudState.user.uid, "state", "app"),
-      { ...payload, updatedAt: serverTimestamp() },
-      { merge: true },
-    );
-    await Promise.all(state.palettes.filter((palette) => palette.isPublic).map((palette) => upsertPublicPalette(palette)));
+    await setDoc(doc(firebaseClient.db, "users", cloudState.user.uid, "state", "app"), { ...payload, updatedAt: serverTimestamp() });
+    stateWriteOk = true;
+    stage = "public";
+    const results = await Promise.allSettled(publicPalettesToSync.map((palette) => upsertPublicPalette(palette)));
+    const failures = results
+      .map((result, index) =>
+        result.status === "rejected" ? { palette: publicPalettesToSync[index], error: result.reason as unknown } : null,
+      )
+      .filter((entry): entry is { palette: Palette; error: unknown } => !!entry);
+    if (failures.length > 0) {
+      failures.forEach(({ palette, error }) => {
+        logCloudError("Public palette sync", error, {
+          paletteId: palette.id,
+          publicId: palette.publicId ?? null,
+          nameLength: palette.name.length,
+          colorCount: palette.colors.length,
+          issues: getPublicPaletteIssues(palette),
+        });
+      });
+      throw new Error(`Public palette sync failed (${failures.length})`);
+    }
     cloudState.lastSyncedAt = new Date().toLocaleTimeString();
   } catch (error) {
-    console.error(error);
-    showToast(t("toast.cloudSyncFailed"), "error");
+    logCloudError(`Cloud sync (${stage})`, error, {
+      paletteCount: payload.palettes.length,
+      publicPaletteCount: publicPalettes.length,
+    });
+    if (source !== "init") {
+      showToast(t("toast.cloudSyncFailed"), "error");
+    }
   } finally {
     cloudState.isSyncing = false;
     updateCloudControls();
   }
+  return stateWriteOk;
 };
 
 export const refreshCloudControls = () => {
@@ -180,18 +371,17 @@ export const setupCloudAuth = () => {
     return;
   }
   onAuthStateChanged(firebaseClient.auth, async (user) => {
-    cloudState.user = user
-      ? ({
-          uid: user.uid,
-          name: user.displayName ?? t("cloud.profile.name.placeholder"),
-          email: user.email,
-          photoUrl: user.photoURL,
-        } as CloudUser)
-      : null;
+    const authUid = user?.uid ?? null;
+    const resolvedUser = user ? await resolveCloudUser(user) : null;
+    if (authUid && firebaseClient.auth.currentUser?.uid !== authUid) {
+      return;
+    }
+    cloudState.user = resolvedUser;
     cloudState.lastSyncedAt = null;
     updateCloudControls();
     syncCloudProfileForm();
     renderPaletteList();
+    clearInitialSyncRetry();
     if (cloudUnsubscribe) {
       cloudUnsubscribe();
       cloudUnsubscribe = null;
@@ -202,7 +392,11 @@ export const setupCloudAuth = () => {
       renderDiscovery();
       return;
     }
-    await fetchUserInteractions();
+    try {
+      await fetchUserInteractions();
+    } catch (error) {
+      console.warn("[cloud] Failed to load user interactions.", error);
+    }
     listenToCloudState();
   });
 };

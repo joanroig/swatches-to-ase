@@ -17,6 +17,20 @@
       "skipFiles": ["<node_internals>/**"]
     },
     {
+      "name": "Debug: Web (Chrome)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5173/",
+      "webRoot": "${workspaceFolder}/web",
+      "sourceMaps": true,
+      "resolveSourceMapLocations": ["${workspaceFolder}/web/**", "!**/node_modules/**"],
+      "sourceMapPathOverrides": {
+        "vite:///*": "${webRoot}/*",
+        "webpack:///*": "${webRoot}/*",
+        "webpack:///./*": "${webRoot}/*"
+      }
+    },
+    {
       "name": "Run: Desktop (Electron)",
       "type": "node",
       "request": "launch",
@@ -87,6 +101,13 @@
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "npm: build:web",
       "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Dev: Web (Vite + Chrome)",
+      "configurations": ["Run: Web (Vite)", "Debug: Web (Chrome)"],
+      "stopAll": true
     }
   ]
 }

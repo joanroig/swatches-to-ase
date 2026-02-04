@@ -2,7 +2,14 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithP
 import { firebaseClient } from "./cloud/context";
 import { fetchUserInteractions, listenToDiscovery, renderDiscovery } from "./cloud/discovery";
 import { resetCloudProfileDraft, setupCloudProfileControls } from "./cloud/profile";
-import { syncToCloud } from "./cloud/sync";
+import {
+  getRecaptchaToken,
+  hasRecaptchaLoadFailed,
+  isRecaptchaEnabled,
+  resetRecaptcha,
+  setupRecaptcha,
+} from "./cloud/recaptcha";
+import { refreshCloudControls, syncToCloud } from "./cloud/sync";
 import {
   addBwToggle,
   addColorButton,
@@ -11,6 +18,7 @@ import {
   cloudEmailSignInButton,
   cloudEmailSignUpButton,
   cloudPasswordInput,
+  cloudRecaptcha,
   cloudSignInButton,
   cloudSignOutButton,
   cloudSyncButton,
@@ -116,6 +124,22 @@ export const setupActions = () => {
   applyActionLabels();
   hydrateExportActionIcons(exportActionIcons);
 
+  const requireRecaptchaToken = () => {
+    if (!isRecaptchaEnabled()) {
+      return true;
+    }
+    if (hasRecaptchaLoadFailed()) {
+      showToast(t("toast.recaptchaLoadFailed"), "error");
+      return false;
+    }
+    const recaptchaToken = getRecaptchaToken();
+    if (recaptchaToken) {
+      return true;
+    }
+    showToast(t("toast.recaptchaRequired"), "info");
+    return false;
+  };
+
   openDiscoverButton?.addEventListener("click", () => {
     if (!cloudState.isConfigured) {
       showToast(t("toast.firebaseDiscoveryMissing"), "info");
@@ -130,7 +154,10 @@ export const setupActions = () => {
 
   openCloudButton?.addEventListener("click", () => {
     resetCloudProfileDraft();
+    refreshCloudControls();
     setModalOpen(cloudModal, true);
+    void setupRecaptcha(cloudRecaptcha);
+    resetRecaptcha();
   });
 
   openSettingsButton?.addEventListener("click", () => {
@@ -333,6 +360,9 @@ export const setupActions = () => {
     if (!payload) {
       return;
     }
+    if (!requireRecaptchaToken()) {
+      return;
+    }
     try {
       await signInWithEmailAndPassword(firebaseClient.auth, payload.email, payload.password);
       if (cloudPasswordInput) {
@@ -341,6 +371,8 @@ export const setupActions = () => {
     } catch (error) {
       console.error(error);
       showToast(t("toast.signInFailed"), "error");
+    } finally {
+      resetRecaptcha();
     }
   });
 
@@ -353,6 +385,9 @@ export const setupActions = () => {
     if (!payload) {
       return;
     }
+    if (!requireRecaptchaToken()) {
+      return;
+    }
     try {
       await createUserWithEmailAndPassword(firebaseClient.auth, payload.email, payload.password);
       if (cloudPasswordInput) {
@@ -361,6 +396,8 @@ export const setupActions = () => {
     } catch (error) {
       console.error(error);
       showToast(t("toast.signUpFailed"), "error");
+    } finally {
+      resetRecaptcha();
     }
   });
 
@@ -377,7 +414,7 @@ export const setupActions = () => {
   });
 
   cloudSyncButton?.addEventListener("click", () => {
-    void syncToCloud();
+    void syncToCloud("manual");
   });
 
   formatSelect?.addEventListener("change", () => {

@@ -5,12 +5,15 @@ import { defineConfig } from "vite";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const packageJson = JSON.parse(fs.readFileSync(path.resolve(rootDir, "package.json"), "utf-8")) as { version?: string };
+const deployTime =
+  process.env.FIREBASE_DEPLOY_TIME ?? process.env.DEPLOY_TIME ?? new Date().toISOString();
 
 export default defineConfig({
   root: "web",
   base: "./",
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version ?? "0.0.0"),
+    __DEPLOY_TIME__: JSON.stringify(deployTime),
   },
   build: {
     outDir: "../dist-web",

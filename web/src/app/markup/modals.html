@@ -102,6 +102,7 @@
               <label for="cloud-password-input" data-i18n="cloud.password.label">Password</label>
               <input type="password" id="cloud-password-input" autocomplete="current-password" placeholder="••••••••" />
             </div>
+            <div class="cloud-recaptcha is-hidden" id="cloud-recaptcha"></div>
             <div class="cloud-email-actions">
               <button class="ghost" id="cloud-email-signin" type="button" data-i18n="action.signInEmail">Sign in</button>
               <button class="ghost" id="cloud-email-signup" type="button" data-i18n="action.signUpEmail">Create account</button>
@@ -126,7 +127,7 @@
           <div class="section-header">
             <div>
               <h4 data-i18n="cloud.profile.title">Profile</h4>
-              <p class="hint" data-i18n="cloud.profile.hint">Update your name and photo for shared palettes.</p>
+              <p class="hint" data-i18n="cloud.profile.hint">Update your name and avatar colors for shared palettes.</p>
             </div>
           </div>
           <div class="cloud-profile">
@@ -136,11 +137,17 @@
                 <label for="cloud-profile-name" data-i18n="cloud.profile.name.label">Display name</label>
                 <input type="text" id="cloud-profile-name" placeholder="Palette Studio user" data-i18n-placeholder="cloud.profile.name.placeholder" />
               </div>
-              <div class="field">
-                <label for="cloud-profile-photo" data-i18n="cloud.profile.photo.label">Profile photo</label>
-                <input type="file" id="cloud-profile-photo" accept="image/*" />
-                <p class="hint" data-i18n="cloud.profile.photo.hint">PNG or JPG works best.</p>
+              <div class="form-grid cloud-profile-colors">
+                <div class="field">
+                  <label for="cloud-profile-avatar-bg" data-i18n="cloud.profile.avatar.background">Avatar background</label>
+                  <input type="color" id="cloud-profile-avatar-bg" value="#e2e8f0" />
+                </div>
+                <div class="field">
+                  <label for="cloud-profile-avatar-fg" data-i18n="cloud.profile.avatar.foreground">Avatar foreground</label>
+                  <input type="color" id="cloud-profile-avatar-fg" value="#a5b4fc" />
+                </div>
               </div>
+              <p class="hint" data-i18n="cloud.profile.avatar.hint">Choose two colors to paint your avatar.</p>
             </div>
           </div>
           <div class="cloud-profile-actions">

@@ -27,6 +27,8 @@ export const cloudState = {
   isSyncing: false,
   lastRevision: null as string | null,
   applyingRemote: false,
+  recentPublicUpserts: new Map<string, number>(),
+  publicSyncCooldownUntil: 0,
 };
 
 export const discoveryState = {

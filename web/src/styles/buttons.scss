@@ -44,6 +44,15 @@
   fill: currentColor;
 }
 
+.deploy-stamp {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 80%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
 button {
   border: none;
   border-radius: 999px;

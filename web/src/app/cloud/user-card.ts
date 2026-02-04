@@ -15,7 +15,7 @@ export const renderCloudUserCard = () => {
     return;
   }
   cloudUserCard.classList.remove("is-hidden");
-  cloudAvatar.src = getCloudAvatarSrc(cloudState.user.photoUrl);
+  cloudAvatar.src = getCloudAvatarSrc(cloudState.user.avatar ?? null);
   cloudAvatar.alt = cloudState.user.name;
   cloudName.textContent = cloudState.user.name;
   cloudEmail.textContent = cloudState.user.email ?? "";

@@ -23,6 +23,7 @@ import { rgbToHex } from "../utils/color";
 import { createId } from "../utils/id";
 import { nameColor, resolveNameFormat } from "../palette/naming";
 import { firebaseClient } from "./context";
+import { isAvatarColors, normalizeAvatarColors } from "./avatars";
 
 let discoveryUnsubscribe: (() => void) | null = null;
 
@@ -174,7 +175,7 @@ export const listenToDiscovery = () => {
         colors: Array.isArray(data.colors) ? data.colors.filter(isPublicPaletteColor) : [],
         ownerId: data.ownerId ?? "",
         ownerName: data.ownerName ?? null,
-        ownerPhoto: data.ownerPhoto ?? null,
+        ownerAvatar: isAvatarColors(data.ownerAvatar) ? normalizeAvatarColors(data.ownerAvatar) : null,
         createdAt: data.createdAt ?? null,
         likesCount: data.likesCount ?? 0,
         savesCount: data.savesCount ?? 0,
