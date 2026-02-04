@@ -111,6 +111,7 @@ export const renderDiscovery = () => {
           name: nameColor(rgbToHex(color.rgb).toUpperCase(), nameFormat, index),
           rgb: [...color.rgb] as [number, number, number],
         })),
+        lastModified: Date.now(),
       };
       state.palettes.unshift(copy);
       syncActivePalette(copy.id);

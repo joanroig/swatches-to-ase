@@ -160,13 +160,30 @@
     display: none;
   }
 
-  .footer-actions {
+  .footer-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .footer-links {
     justify-content: center;
     align-items: center;
     gap: 10px;
   }
 
-  .footer-actions .footer-button {
+  .footer-links--meta {
+    align-items: center;
+  }
+
+  .footer-meta-row {
+    justify-content: center;
+  }
+
+  .footer-deploy {
+    justify-content: center;
+  }
+
+  .footer-links .footer-button {
     width: auto;
   }
 

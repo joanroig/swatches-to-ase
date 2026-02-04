@@ -1,4 +1,5 @@
 import { applyActionLabels, setupActions } from "./app/actions";
+import { setupCookieBanner } from "./app/cookies";
 import { renderDiscovery } from "./app/cloud/discovery";
 import { syncCloudProfileForm } from "./app/cloud/profile";
 import { refreshCloudControls, scheduleCloudSync, setupCloudAuth } from "./app/cloud/sync";
@@ -29,6 +30,7 @@ setupColorNotationSelects();
 setupDropzone();
 setupVersionBadge();
 setupTopbarShadow();
+setupCookieBanner();
 onLanguageChange(() => {
   applyActionLabels();
   refreshColorNotationSelects();

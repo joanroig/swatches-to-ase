@@ -9,10 +9,12 @@ import {
   resetRecaptcha,
   setupRecaptcha,
 } from "./cloud/recaptcha";
+import { unpublishPalette } from "./cloud/public";
 import { refreshCloudControls, syncToCloud } from "./cloud/sync";
 import {
   addBwToggle,
   addColorButton,
+  aboutModal,
   cloudModal,
   cloudEmailInput,
   cloudEmailSignInButton,
@@ -51,17 +53,27 @@ import {
   openCloudButton,
   openDiscoverButton,
   openExportButton,
+  openAboutButton,
+  openFooterLicenseButton,
   openGenerateButton,
   openImportButton,
   openLegalButton,
   openLicenseButton,
   openLicensesButton,
+  openCookiesButton,
+  openContactButton,
+  openPrivacyButton,
   openSettingsButton,
+  openTermsButton,
   openViewButton,
   paletteNameInput,
+  privacyModal,
   refreshDiscoverButton,
   removeAllButton,
+  cookiesModal,
+  contactModal,
   settingsModal,
+  termsModal,
   themeSelect,
   viewEditButton,
   viewModal,
@@ -168,6 +180,31 @@ export const setupActions = () => {
     setModalOpen(legalModal, true);
   });
 
+  openTermsButton?.addEventListener("click", () => {
+    setModalOpen(termsModal, true);
+  });
+
+  openPrivacyButton?.addEventListener("click", () => {
+    setModalOpen(privacyModal, true);
+  });
+
+  openCookiesButton?.addEventListener("click", () => {
+    setModalOpen(cookiesModal, true);
+  });
+
+  openFooterLicenseButton?.addEventListener("click", () => {
+    setModalOpen(licenseModal, true);
+    void ensureLicenseLoaded();
+  });
+
+  openContactButton?.addEventListener("click", () => {
+    setModalOpen(contactModal, true);
+  });
+
+  openAboutButton?.addEventListener("click", () => {
+    setModalOpen(aboutModal, true);
+  });
+
   openLicenseButton?.addEventListener("click", () => {
     setModalOpen(legalModal, false);
     setModalOpen(licenseModal, true);
@@ -176,6 +213,7 @@ export const setupActions = () => {
 
   openLicensesButton?.addEventListener("click", () => {
     setModalOpen(legalModal, false);
+    setModalOpen(licenseModal, false);
     setModalOpen(licensesModal, true);
     void ensureLicensesLoaded();
   });
@@ -189,13 +227,20 @@ export const setupActions = () => {
     setModalOpen(generateModal, true);
   });
 
-  removeAllButton?.addEventListener("click", () => {
+  removeAllButton?.addEventListener("click", async () => {
     if (state.palettes.length === 0) {
       return;
     }
     const confirmed = window.confirm(t("palette.removeAllConfirm"));
     if (!confirmed) {
       return;
+    }
+    const publicPalettes = state.palettes.filter((palette) => palette.isPublic);
+    if (publicPalettes.length > 0) {
+      const results = await Promise.allSettled(publicPalettes.map((palette) => unpublishPalette(palette, { persist: false })));
+      if (results.some((result) => result.status === "rejected")) {
+        showToast(t("toast.paletteUnpublishFailed"), "error");
+      }
     }
     state.palettes = [];
     syncActivePalette(null);
@@ -227,7 +272,7 @@ export const setupActions = () => {
   });
 
   editorSaveButton?.addEventListener("click", () => {
-    saveEditorChanges();
+    void saveEditorChanges();
   });
 
   editorCancelButton?.addEventListener("click", () => {
@@ -406,6 +451,23 @@ export const setupActions = () => {
       return;
     }
     try {
+      if (state.palettes.length > 0) {
+        const keepLocal = window.confirm(t("cloud.signOutKeepLocalConfirm", { count: state.palettes.length }));
+        if (keepLocal) {
+          state.palettes.forEach((palette) => {
+            palette.isPublic = false;
+            palette.publicId = null;
+          });
+          cloudState.applyingRemote = true;
+          syncActivePalette(state.activePaletteId);
+          cloudState.applyingRemote = false;
+        } else {
+          state.palettes = [];
+          cloudState.applyingRemote = true;
+          syncActivePalette(null);
+          cloudState.applyingRemote = false;
+        }
+      }
       await signOut(firebaseClient.auth);
     } catch (error) {
       console.error(error);
@@ -440,6 +502,11 @@ export const setupActions = () => {
   setupModal(importModal);
   setupModal(settingsModal);
   setupModal(legalModal);
+  setupModal(termsModal);
+  setupModal(privacyModal);
+  setupModal(cookiesModal);
+  setupModal(contactModal);
+  setupModal(aboutModal);
   setupModal(licenseModal);
   setupModal(licensesModal);
   setupModal(cloudModal);
@@ -473,6 +540,11 @@ export const setupActions = () => {
         importModal,
         settingsModal,
         legalModal,
+        termsModal,
+        privacyModal,
+        cookiesModal,
+        contactModal,
+        aboutModal,
         licenseModal,
         licensesModal,
         cloudModal,

@@ -50,24 +50,62 @@
   <div data-slot="modals"></div>
 
   <footer class="footer">
-    <div class="footer-actions">
-      <a
-        class="footer-button version-button"
-        id="app-version"
-        href="https://github.com/joanroig/palette-studio/releases"
-        target="_blank"
-        rel="noreferrer"
-      ></a>
-      <a class="footer-button github-button" href="https://github.com/joanroig/palette-studio" target="_blank" rel="noreferrer">
-        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-          <use href="/icons/github.svg#icon"></use>
-        </svg>
-        <span data-i18n="footer.github">GitHub</span>
-      </a>
-      <button class="footer-button" id="open-legal" type="button" data-i18n="footer.legal">Legal</button>
-    </div>
-    <div class="footer-deploy">
-      <span class="deploy-stamp" id="deploy-stamp" aria-hidden="true"></span>
+    <div class="footer-row">
+      <div class="footer-links">
+        <button class="footer-link" id="open-terms" type="button" data-i18n="footer.terms">Terms</button>
+        <button class="footer-link" id="open-privacy" type="button" data-i18n="footer.privacy">Privacy</button>
+        <button class="footer-link" id="open-cookies" type="button" data-i18n="footer.cookies">Cookies</button>
+        <button class="footer-link" id="open-license-footer" type="button" data-i18n="footer.license">License</button>
+        <button class="footer-link" id="open-contact" type="button" data-i18n="footer.contact">Contact</button>
+        <button class="footer-link" id="open-about" type="button" data-i18n="footer.about">About</button>
+      </div>
+      <div class="footer-links footer-links--meta">
+        <div class="footer-meta-row">
+          <a class="footer-button github-button" href="https://github.com/joanroig/palette-studio" target="_blank" rel="noreferrer">
+            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+              <use href="/icons/github.svg#icon"></use>
+            </svg>
+            <span data-i18n="footer.github">GitHub</span>
+          </a>
+          <a
+            class="footer-button version-button"
+            id="app-version"
+            href="https://github.com/joanroig/palette-studio/releases"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <span class="version-label" data-i18n="footer.version">Version</span>
+            <span class="version-number" id="app-version-number"></span>
+          </a>
+        </div>
+        <div class="footer-deploy">
+          <span class="deploy-stamp" id="deploy-stamp" aria-hidden="true"></span>
+        </div>
+      </div>
     </div>
   </footer>
+
+  <div
+    class="cookie-banner"
+    id="cookie-banner"
+    role="dialog"
+    aria-live="polite"
+    aria-label="Cookie preferences"
+    data-i18n-aria-label="cookies.banner.aria"
+    hidden
+  >
+    <div class="cookie-banner-content">
+      <div class="cookie-banner-text">
+        <h3 data-i18n="cookies.banner.title">Cookies &amp; analytics</h3>
+        <p data-i18n="cookies.banner.body">
+          We use cookies to keep Palette Studio running and Google Analytics to understand usage.
+        </p>
+      </div>
+      <div class="cookie-banner-actions">
+        <button class="ghost" id="cookie-manage" type="button" data-i18n="cookies.banner.manage">Manage</button>
+        <button class="ghost" id="cookie-decline" type="button" data-i18n="cookies.banner.decline">Reject analytics</button>
+        <button class="primary" id="cookie-accept" type="button" data-i18n="cookies.banner.accept">Accept analytics</button>
+      </div>
+    </div>
+  </div>
 </div>

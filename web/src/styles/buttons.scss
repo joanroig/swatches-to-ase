@@ -29,13 +29,42 @@
   }
 }
 
-.version-button {
-  font-family: "Space Grotesk", "Segoe UI", sans-serif;
-  font-size: 0.75rem;
+button.footer-link {
+  border: none;
+  background: transparent;
+  padding: 6px 2px;
+  border-radius: 8px;
+  font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent-2);
+  color: var(--muted);
+  box-shadow: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--ink);
+    transform: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.version-button {
+  gap: 6px;
+}
+
+.version-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.version-number {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .github-button svg {
@@ -45,11 +74,11 @@
 }
 
 .deploy-stamp {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--muted) 80%, transparent);
+  color: color-mix(in srgb, var(--muted) 60%, transparent);
   font-variant-numeric: tabular-nums;
 }
 

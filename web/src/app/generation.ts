@@ -35,5 +35,6 @@ export const createGeneratedPalette = (isEmpty: boolean) => {
     id: createId(),
     name: generateNameInput?.value.trim() || generatedName,
     colors,
+    lastModified: Date.now(),
   } as Palette;
 };

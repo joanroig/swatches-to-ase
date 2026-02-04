@@ -13,7 +13,10 @@ export const hydratePalettes = () => {
       activePaletteId?: string | null;
     };
     if (Array.isArray(parsed.palettes)) {
-      state.palettes = parsed.palettes;
+      state.palettes = parsed.palettes.map((palette) => ({
+        ...palette,
+        lastModified: typeof palette.lastModified === "number" ? palette.lastModified : 0,
+      }));
     }
     state.activePaletteId = parsed.activePaletteId ?? state.activePaletteId;
   } catch {

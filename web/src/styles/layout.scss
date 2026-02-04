@@ -94,23 +94,45 @@
 .footer {
   margin-top: 36px;
   display: flex;
-  justify-content: center;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  gap: 12px;
 }
 
-.footer-actions {
+.footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: 100%;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+.footer-links--meta {
+  justify-content: flex-end;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-meta-row {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .footer-deploy {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   min-height: 16px;
+  width: 100%;
 }
 
 .grid {

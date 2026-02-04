@@ -50,6 +50,7 @@ export const duplicatePalette = (
       name: color.name,
       rgb: [...color.rgb] as [number, number, number],
     })),
+    lastModified: Date.now(),
     isPublic: false,
   };
 };

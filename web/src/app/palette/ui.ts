@@ -1,5 +1,5 @@
 import { firebaseClient } from "../cloud/context";
-import { removePublicPalette, upsertPublicPalette } from "../cloud/public";
+import { unpublishPalette, upsertPublicPalette } from "../cloud/public";
 import {
   addColorButton,
   editorCancelButton,
@@ -270,10 +270,25 @@ export const redoEditorChange = () => {
   updateEditorDirtyState(palette);
 };
 
-export const saveEditorChanges = () => {
+export const saveEditorChanges = async () => {
   const palette = getEditorPalette();
   if (!palette) {
     return;
+  }
+  if (palette.isPublic && editorSession.isDirty) {
+    const confirmed = window.confirm(t("palette.editUnpublishConfirm"));
+    if (!confirmed) {
+      return;
+    }
+    try {
+      await unpublishPalette(palette, { persist: false });
+      showToast(t("toast.paletteUnpublished"), "success");
+      renderPaletteList();
+      renderViewModal();
+    } catch (error) {
+      console.error(error);
+      showToast(t("toast.paletteUnpublishFailed"), "error");
+    }
   }
   const snapshot = createSnapshot(palette);
   editorSession.original = cloneSnapshot(snapshot);
@@ -541,11 +556,20 @@ export const renderPaletteList = () => {
     setButtonContent(removeButton, "trash", removeLabel);
     removeButton.setAttribute("aria-label", removeLabel);
     removeButton.title = removeLabel;
-    removeButton.addEventListener("click", (event) => {
+    removeButton.addEventListener("click", async (event) => {
       event.stopPropagation();
       const confirmed = window.confirm(t("palette.removeConfirm", { name: palette.name }));
       if (!confirmed) {
         return;
+      }
+      if (palette.isPublic) {
+        try {
+          await unpublishPalette(palette, { persist: false });
+          showToast(t("toast.paletteUnpublished"), "success");
+        } catch (error) {
+          console.error(error);
+          showToast(t("toast.paletteUnpublishFailed"), "error");
+        }
       }
       state.palettes = state.palettes.filter((item) => item.id !== palette.id);
       syncActivePalette(state.palettes[0]?.id ?? null);
@@ -602,10 +626,8 @@ const togglePaletteVisibility = async (paletteId: string) => {
     return;
   }
   if (palette.isPublic) {
-    palette.isPublic = false;
-    persistPalettes();
     try {
-      await removePublicPalette(palette);
+      await unpublishPalette(palette);
       showToast(t("toast.paletteUnpublished"), "success");
     } catch (error) {
       console.error(error);
@@ -633,6 +655,7 @@ export const updatePalette = (paletteId: string, updater: (palette: Palette) => 
     return;
   }
   updater(palette);
+  palette.lastModified = Date.now();
   renderPaletteList();
   renderEditor();
   updateExportAvailability();
@@ -649,6 +672,7 @@ export const updatePaletteName = (paletteId: string, nextName: string) => {
     return;
   }
   palette.name = nextName;
+  palette.lastModified = Date.now();
   renderPaletteList();
   if (editorSubtitle) {
     editorSubtitle.textContent = t("view.subtitle", {

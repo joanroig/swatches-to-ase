@@ -47,8 +47,26 @@ export const upsertPublicPalette = async (palette: Palette) => {
 };
 
 export const removePublicPalette = async (palette: Palette) => {
-  if (!firebaseClient || !cloudState.user || !palette.publicId) {
+  const publicId = palette.publicId ?? null;
+  if (!firebaseClient || !cloudState.user || !publicId) {
     return;
   }
-  await deleteDoc(doc(firebaseClient.db, "publicPalettes", palette.publicId));
+  await deleteDoc(doc(firebaseClient.db, "publicPalettes", publicId));
+};
+
+export const unlinkPublicPalette = (palette: Palette) => {
+  palette.isPublic = false;
+  palette.publicId = null;
+};
+
+export const unpublishPalette = async (palette: Palette, options: { persist?: boolean } = {}) => {
+  const publicId = palette.publicId ?? null;
+  unlinkPublicPalette(palette);
+  if (options.persist !== false) {
+    persistPalettes();
+  }
+  if (!firebaseClient || !cloudState.user || !publicId) {
+    return;
+  }
+  await deleteDoc(doc(firebaseClient.db, "publicPalettes", publicId));
 };

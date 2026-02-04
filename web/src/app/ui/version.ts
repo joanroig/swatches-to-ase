@@ -1,4 +1,4 @@
-import { deployStamp, versionBadge } from "../dom";
+import { deployStamp, versionBadge, versionNumber } from "../dom";
 
 const padNumber = (value: number) => value.toString().padStart(2, "0");
 
@@ -23,7 +23,9 @@ const formatDeployStamp = (raw: string) => {
 };
 
 export const setupVersionBadge = () => {
-  if (versionBadge) {
+  if (versionNumber) {
+    versionNumber.textContent = `v${__APP_VERSION__}`;
+  } else if (versionBadge) {
     versionBadge.textContent = `v${__APP_VERSION__}`;
   }
 

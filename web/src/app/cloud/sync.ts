@@ -21,11 +21,12 @@ import { applyRemotePreferences, getPreferencesPayload } from "../preferences";
 import { cloudState, discoveryState, state } from "../state";
 import type { CloudUser, Palette } from "../types";
 import { showToast } from "../ui/notifications";
+import { createId } from "../utils/id";
 import { ensureAppCheckToken, firebaseClient, firebaseConfigStatus } from "./context";
 import { fetchUserInteractions, renderDiscovery } from "./discovery";
 import { syncCloudProfileForm } from "./profile";
 import { ensureUserAvatar } from "./profile-store";
-import { upsertPublicPalette } from "./public";
+import { unpublishPalette, upsertPublicPalette } from "./public";
 import { buildSyncPayload, parseSyncPayload } from "./serializer";
 import { renderCloudUserCard } from "./user-card";
 
@@ -222,18 +223,114 @@ const resolveCloudUser = async (user: User): Promise<CloudUser> => {
   };
 };
 
-const applyRemoteState = (payload: ReturnType<typeof parseSyncPayload>) => {
+const clonePalette = (palette: Palette): Palette => ({
+  id: palette.id,
+  name: palette.name,
+  colors: palette.colors.map((color) => ({
+    id: color.id,
+    name: color.name,
+    rgb: [...color.rgb] as [number, number, number],
+  })),
+  lastModified: typeof palette.lastModified === "number" ? palette.lastModified : 0,
+  isPublic: palette.isPublic ?? false,
+  publicId: palette.publicId ?? null,
+});
+
+const buildPaletteFingerprint = (palette: Palette) => {
+  const colors = palette.colors.map((color) => color.rgb.join(",")).join("|");
+  return `${palette.name}::${colors}`;
+};
+
+const createBackupPalette = (palette: Palette): Palette => {
+  const backup = clonePalette(palette);
+  backup.id = createId();
+  backup.name = `(BACKUP) ${backup.name}`;
+  backup.isPublic = false;
+  backup.publicId = null;
+  return backup;
+};
+
+const palettesEquivalent = (left: Palette[], right: Palette[]) => {
+  if (left.length !== right.length) {
+    return false;
+  }
+  const rightById = new Map(right.map((palette) => [palette.id, palette]));
+  return left.every((palette) => {
+    const other = rightById.get(palette.id);
+    if (!other) {
+      return false;
+    }
+    const leftModified = typeof palette.lastModified === "number" ? palette.lastModified : 0;
+    const rightModified = typeof other.lastModified === "number" ? other.lastModified : 0;
+    return leftModified === rightModified;
+  });
+};
+
+const mergePalettes = (localPalettes: Palette[], remotePalettes: Palette[]) => {
+  const merged = [...remotePalettes];
+  const remoteById = new Map(remotePalettes.map((palette) => [palette.id, palette]));
+  const seenFingerprints = new Set(remotePalettes.map(buildPaletteFingerprint));
+
+  localPalettes.forEach((palette) => {
+    const fingerprint = buildPaletteFingerprint(palette);
+    const remoteMatch = remoteById.get(palette.id);
+    if (remoteMatch) {
+      const localModified = typeof palette.lastModified === "number" ? palette.lastModified : 0;
+      const remoteModified = typeof remoteMatch.lastModified === "number" ? remoteMatch.lastModified : 0;
+      if (localModified !== remoteModified) {
+        const backup = createBackupPalette(palette);
+        merged.push(backup);
+        seenFingerprints.add(buildPaletteFingerprint(backup));
+      }
+      return;
+    }
+    if (seenFingerprints.has(fingerprint)) {
+      return;
+    }
+    merged.push(palette);
+    seenFingerprints.add(fingerprint);
+  });
+
+  return merged;
+};
+
+const resolveMergedActivePaletteId = (
+  remoteActiveId: string | null,
+  localActiveId: string | null,
+  palettes: Palette[],
+) => {
+  if (remoteActiveId && palettes.some((palette) => palette.id === remoteActiveId)) {
+    return remoteActiveId;
+  }
+  if (localActiveId && palettes.some((palette) => palette.id === localActiveId)) {
+    return localActiveId;
+  }
+  return palettes[0]?.id ?? null;
+};
+
+const applyRemoteStateWithPalettes = (
+  payload: ReturnType<typeof parseSyncPayload>,
+  palettes: Palette[],
+  activePaletteId: string | null,
+) => {
   if (!payload) {
     return;
   }
   cloudState.applyingRemote = true;
   cloudState.lastRevision = payload.revision;
-  state.palettes = payload.palettes;
-  state.activePaletteId = payload.activePaletteId;
+  state.palettes = palettes;
+  state.activePaletteId = activePaletteId;
   applyRemotePreferences(payload.preferences);
   persistPreferences();
   syncPaletteColorNames(payload.preferences.colorNameFormat);
   cloudState.applyingRemote = false;
+};
+
+const applyRemoteState = (payload: ReturnType<typeof parseSyncPayload>) => {
+  if (!payload) {
+    return;
+  }
+  applyRemoteStateWithPalettes(payload, payload.palettes, payload.activePaletteId ?? null);
 };
 
 const listenToCloudState = () => {
@@ -244,7 +341,7 @@ const listenToCloudState = () => {
     cloudUnsubscribe();
   }
   clearInitialSyncRetry();
-  cloudUnsubscribe = onSnapshot(doc(firebaseClient.db, "users", cloudState.user.uid, "state", "app"), (snapshot) => {
+  cloudUnsubscribe = onSnapshot(doc(firebaseClient.db, "users", cloudState.user.uid, "state", "app"), async (snapshot) => {
     if (!snapshot.exists()) {
       queueInitialSyncRetry();
       return;
@@ -254,6 +351,43 @@ const listenToCloudState = () => {
     if (!payload || payload.revision === cloudState.lastRevision) {
       return;
     }
+    const hasLocalPalettes = state.palettes.length > 0;
+    if (!cloudState.hasResolvedInitialSync && hasLocalPalettes) {
+      cloudState.hasResolvedInitialSync = true;
+      if (palettesEquivalent(state.palettes, payload.palettes)) {
+        applyRemoteState(payload);
+        cloudState.lastSyncedAt = new Date().toLocaleTimeString();
+        updateCloudControls();
+        return;
+      }
+      const shouldMerge = window.confirm(
+        t("cloud.sync.mergeConfirm", { localCount: state.palettes.length, cloudCount: payload.palettes.length }),
+      );
+      if (shouldMerge) {
+        const merged = mergePalettes(state.palettes, payload.palettes);
+        const activePaletteId = resolveMergedActivePaletteId(payload.activePaletteId ?? null, state.activePaletteId, merged);
+        applyRemoteStateWithPalettes(payload, merged, activePaletteId);
+        cloudState.lastSyncedAt = new Date().toLocaleTimeString();
+        updateCloudControls();
+        void syncToCloud();
+        return;
+      }
+      const remoteIds = new Set(payload.palettes.map((palette) => palette.id));
+      const removedPublic = state.palettes.filter((palette) => palette.isPublic && !remoteIds.has(palette.id));
+      if (removedPublic.length > 0) {
+        const results = await Promise.allSettled(
+          removedPublic.map((palette) => unpublishPalette(palette, { persist: false })),
+        );
+        if (results.some((result) => result.status === "rejected")) {
+          showToast(t("toast.paletteUnpublishFailed"), "error");
+        }
+      }
+      applyRemoteState(payload);
+      cloudState.lastSyncedAt = new Date().toLocaleTimeString();
+      updateCloudControls();
+      return;
+    }
+    cloudState.hasResolvedInitialSync = true;
     applyRemoteState(payload);
     cloudState.lastSyncedAt = new Date().toLocaleTimeString();
     updateCloudControls();
@@ -377,6 +511,8 @@ export const setupCloudAuth = () => {
       return;
     }
     cloudState.user = resolvedUser;
+    cloudState.hasResolvedInitialSync = false;
+    cloudState.lastRevision = null;
     cloudState.lastSyncedAt = null;
     updateCloudControls();
     syncCloudProfileForm();

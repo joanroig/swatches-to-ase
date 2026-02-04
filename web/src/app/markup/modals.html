@@ -267,25 +267,176 @@
       <div>
         <h3 data-i18n="legal.title">Legal</h3>
         <p class="hint">© Joan Roig</p>
-        <p class="hint" data-i18n="legal.warranty">
-          Palette Studio is free software licensed under the GNU AGPL v3 and comes with NO WARRANTY.
-        </p>
       </div>
       <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
     </div>
-    <div class="modal-body">
-      <div class="section">
-        <div class="section-header">
-          <h4 data-i18n="legal.resources">Resources</h4>
-        </div>
-        <div class="license-links">
-          <button class="text-link" id="open-license" type="button" data-i18n="legal.viewLicense">View the AGPL license</button>
-          <button class="text-link" id="open-licenses" type="button" data-i18n="legal.viewLicenses">See all licenses</button>
-          <a class="text-link" href="https://github.com/joanroig/palette-studio" target="_blank" rel="noreferrer" data-i18n="legal.source">
-            Source code
-          </a>
-        </div>
+    <div class="modal-body legal-body">
+      <p class="legal-copy" data-i18n="legal.warranty">
+        Palette Studio is free software licensed under the GNU AGPL v3 and comes with NO WARRANTY.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="terms-modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-card modal-wide" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <h3 data-i18n="terms.title">Terms of Service</h3>
+        <p class="hint" data-i18n="terms.updated">Last updated: February 4, 2026</p>
       </div>
+      <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+    </div>
+    <div class="modal-body legal-body">
+      <p class="legal-copy" data-i18n="terms.intro">By using Palette Studio, you agree to the terms below.</p>
+      <div class="legal-section">
+        <h4 data-i18n="terms.use.title">Using the app</h4>
+        <ul class="legal-list">
+          <li data-i18n="terms.use.item1">Use the app for lawful purposes and respect other users.</li>
+          <li data-i18n="terms.use.item2">Do not attempt to disrupt, reverse engineer, or abuse the service.</li>
+          <li data-i18n="terms.use.item3">Keep your sign-in credentials secure if you enable cloud sync.</li>
+        </ul>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="terms.content.title">Your content</h4>
+        <ul class="legal-list">
+          <li data-i18n="terms.content.item1">You own the palettes you create.</li>
+          <li data-i18n="terms.content.item2">If you publish palettes, you grant us permission to display them to others.</li>
+        </ul>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="terms.changes.title">Changes</h4>
+        <p class="legal-copy" data-i18n="terms.changes.body">
+          We may update the app and these terms over time. Continued use means you accept the latest version.
+        </p>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="terms.openSource.title">Open source license</h4>
+        <p class="legal-copy" data-i18n="terms.openSource.body">
+          Palette Studio is open source under the GNU AGPL v3. The license governs how the software is used and distributed.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="privacy-modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-card modal-wide" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <h3 data-i18n="privacy.title">Privacy Policy</h3>
+        <p class="hint" data-i18n="privacy.updated">Last updated: February 4, 2026</p>
+      </div>
+      <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+    </div>
+    <div class="modal-body legal-body">
+      <p class="legal-copy" data-i18n="privacy.intro">We collect the minimum data needed to run Palette Studio.</p>
+      <div class="legal-section">
+        <h4 data-i18n="privacy.local.title">Local data</h4>
+        <p class="legal-copy" data-i18n="privacy.local.body">
+          Preferences and palettes are stored locally in your browser or device so the app works offline.
+        </p>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="privacy.cloud.title">Cloud sync data</h4>
+        <p class="legal-copy" data-i18n="privacy.cloud.body">
+          If you enable cloud sync, we store your account email, display name, avatar colors, and palette data.
+        </p>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="privacy.public.title">Public palettes</h4>
+        <p class="legal-copy" data-i18n="privacy.public.body">
+          Palettes you publish, along with your display name, are visible to others in Discover.
+        </p>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="privacy.thirdParty.title">Third-party services</h4>
+        <p class="legal-copy" data-i18n="privacy.thirdParty.body">
+          Cloud sync relies on Firebase services, which process your data to provide authentication and storage.
+        </p>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="privacy.choices.title">Your choices</h4>
+        <p class="legal-copy" data-i18n="privacy.choices.body">
+          You can sign out to stop syncing and clear local data at any time by removing palettes and preferences.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="cookies-modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-card modal-wide" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <h3 data-i18n="cookies.title">Cookies</h3>
+        <p class="hint" data-i18n="cookies.updated">Last updated: February 4, 2026</p>
+      </div>
+      <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+    </div>
+    <div class="modal-body legal-body">
+      <p class="legal-copy" data-i18n="cookies.intro">We use cookies and similar storage to keep Palette Studio running.</p>
+      <div class="legal-section">
+        <h4 data-i18n="cookies.essential.title">Essential storage</h4>
+        <p class="legal-copy" data-i18n="cookies.essential.body">
+          Needed for core features like preferences, session state, and cloud sync.
+        </p>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="cookies.analytics.title">Analytics (Google Analytics)</h4>
+        <p class="legal-copy" data-i18n="cookies.analytics.body">
+          Helps us understand usage patterns so we can improve the app. You can reject analytics cookies in the banner.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="contact-modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <h3 data-i18n="contact.title">Contact</h3>
+        <p class="hint" data-i18n="contact.intro">Need help or want to share feedback?</p>
+      </div>
+      <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+    </div>
+    <div class="modal-body legal-body">
+      <div class="legal-section">
+        <h4 data-i18n="contact.issues.title">GitHub issues</h4>
+        <p class="legal-copy" data-i18n="contact.issues.body">
+          The fastest way to reach us is to open an issue with details, screenshots, or steps to reproduce.
+        </p>
+        <a class="text-link" href="https://github.com/joanroig/palette-studio/issues" target="_blank" rel="noreferrer" data-i18n="contact.issues.link">
+          Open a GitHub issue
+        </a>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="contact.response.title">Response time</h4>
+        <p class="legal-copy" data-i18n="contact.response.body">We do our best to respond as quickly as possible.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="about-modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <h3 data-i18n="about.title">About</h3>
+        <p class="hint" data-i18n="about.copyright">© Joan Roig</p>
+      </div>
+      <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+    </div>
+    <div class="modal-body legal-body">
+      <p class="legal-copy" data-i18n="about.body">
+        Palette Studio is a palette tool for designers and developers.
+      </p>
     </div>
   </div>
 </div>
@@ -318,6 +469,18 @@
       <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
     </div>
     <div class="modal-body">
+      <div class="section">
+        <div class="section-header">
+          <h4 data-i18n="license.resources">Resources</h4>
+        </div>
+        <div class="license-links">
+          <button class="text-link" id="open-licenses" type="button" data-i18n="legal.viewLicenses">See all licenses</button>
+          <a class="text-link" href="https://github.com/joanroig/palette-studio" target="_blank" rel="noreferrer" data-i18n="legal.source">
+            Source code
+          </a>
+        </div>
+      </div>
+      <div class="divider"></div>
       <pre class="license-list" id="license-text"></pre>
     </div>
   </div>

@@ -19,6 +19,7 @@ export type Palette = {
   id: string;
   name: string;
   colors: PaletteColor[];
+  lastModified?: number;
   isPublic?: boolean;
   publicId?: string | null;
 };

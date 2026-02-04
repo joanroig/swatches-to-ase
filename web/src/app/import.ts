@@ -42,6 +42,7 @@ export const handleFiles = async (fileList: FileList | null) => {
             name: nameColor(rgbToHex(color.rgb).toUpperCase(), nameFormat, index),
             rgb: color.rgb,
           })),
+          lastModified: Date.now(),
         };
         state.palettes.push(palette);
         appendLog(t("import.loadedFile", { file: file.name }), "success");
@@ -172,6 +173,7 @@ export const importSharedPaletteFromUrl = () => {
           id: createId(),
           name: paletteName,
           colors,
+          lastModified: Date.now(),
         } as Palette;
       })
       .filter((palette): palette is Palette => !!palette);
@@ -222,6 +224,7 @@ export const importSharedPaletteFromUrl = () => {
       id: createId(),
       name,
       colors,
+      lastModified: Date.now(),
     };
     state.palettes.unshift(palette);
     syncActivePalette(palette.id);
@@ -251,6 +254,7 @@ export const importSharedPaletteFromUrl = () => {
     id: createId(),
     name,
     colors,
+    lastModified: Date.now(),
   };
   state.palettes.unshift(palette);
   syncActivePalette(palette.id);

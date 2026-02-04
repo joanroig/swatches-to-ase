@@ -21,6 +21,7 @@ const sanitizePalette = (palette: Palette): StoredPalette => ({
   id: palette.id,
   name: palette.name,
   colors: palette.colors.map(sanitizeColor),
+  lastModified: typeof palette.lastModified === "number" ? palette.lastModified : 0,
   isPublic: palette.isPublic ?? false,
   publicId: palette.publicId ?? null,
 });
@@ -102,6 +103,7 @@ export const parseSyncPayload = (value: unknown): SyncPayload | null => {
         name: "",
         rgb: [...color.rgb] as [number, number, number],
       })),
+      lastModified: typeof palette.lastModified === "number" ? palette.lastModified : 0,
       isPublic: palette.isPublic ?? false,
       publicId: palette.publicId ?? null,
     })),
