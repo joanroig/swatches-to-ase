@@ -18,7 +18,12 @@ import {
   paletteNameInput,
   palettePreview,
   viewDisplay,
+  viewLikeButton,
+  viewLikeCount,
   viewModal,
+  viewPublicMeta,
+  viewSaveButton,
+  viewSaveEditButton,
   viewStrip,
   viewSubtitle,
   viewValues,
@@ -27,8 +32,8 @@ import { setExportMode, updateExportAvailability } from "../export/manager";
 import { t } from "../i18n";
 import { persistPalettes } from "../persistence";
 import { getColorNotation } from "../preferences";
-import { cloudState, dragState, state, viewState } from "../state";
-import type { Palette } from "../types";
+import { cloudState, discoveryState, dragState, state, viewState } from "../state";
+import type { Palette, PublicPalette } from "../types";
 import { setButtonContent } from "../ui/icons";
 import { setModalOpen } from "../ui/modals";
 import { showToast } from "../ui/notifications";
@@ -36,6 +41,7 @@ import { formatColorValue, getColorMetrics, getContrastColor, hexToRgb, rgbToHex
 import { createId } from "../utils/id";
 import { duplicatePalette } from "./duplicate";
 import { nameColor, resolveNameFormat } from "./naming";
+import { isCloudUserVerified, requireVerifiedCloudUser } from "../cloud/verification";
 
 type EditorLayout = "horizontal" | "vertical";
 
@@ -352,6 +358,17 @@ export const openViewForPalette = (paletteId: string) => {
   syncActivePalette(paletteId);
   viewState.paletteId = paletteId;
   viewState.colorId = null;
+  viewState.mode = "local";
+  viewState.publicPaletteId = null;
+  renderViewModal();
+  setModalOpen(viewModal, true);
+};
+
+export const openViewForPublicPalette = (palette: PublicPalette) => {
+  viewState.paletteId = null;
+  viewState.colorId = null;
+  viewState.mode = "discover";
+  viewState.publicPaletteId = palette.id;
   renderViewModal();
   setModalOpen(viewModal, true);
 };
@@ -360,11 +377,81 @@ export const renderViewModal = () => {
   if (!viewDisplay || !viewValues || !viewStrip || !viewSubtitle) {
     return;
   }
-  const palette = getPaletteById(viewState.paletteId ?? state.activePaletteId);
+  const isDiscoverView = viewState.mode === "discover" && Boolean(viewState.publicPaletteId);
+  const publicPalette = isDiscoverView
+    ? discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId)
+    : null;
+  const palette = isDiscoverView ? null : getPaletteById(viewState.paletteId ?? state.activePaletteId);
   viewValues.innerHTML = "";
   viewStrip.innerHTML = "";
 
-  if (!palette) {
+  let isOwner = false;
+  if (viewPublicMeta) {
+    const hasLocalPalette = Boolean(!isDiscoverView && palette);
+    viewPublicMeta.classList.toggle("is-hidden", !(publicPalette || hasLocalPalette));
+  }
+  if (isDiscoverView && publicPalette) {
+    const likeLabel = discoveryState.likedIds.has(publicPalette.id) ? t("action.liked") : t("action.like");
+    const saveLabel = discoveryState.savedIds.has(publicPalette.id) ? t("action.saved") : t("action.save");
+    isOwner = Boolean(cloudState.user && publicPalette.ownerId === cloudState.user.uid);
+
+    if (viewSaveEditButton) {
+      setButtonContent(viewSaveEditButton, "edit", t("action.saveEdit"), true);
+      viewSaveEditButton.disabled = isOwner;
+    }
+    if (viewLikeButton) {
+      setButtonContent(viewLikeButton, "heart", likeLabel, true);
+      viewLikeButton.classList.toggle("is-active", discoveryState.likedIds.has(publicPalette.id));
+      viewLikeButton.disabled = isOwner;
+    }
+    if (viewSaveButton) {
+      setButtonContent(viewSaveButton, "bookmark", saveLabel, true);
+      viewSaveButton.classList.toggle("is-active", discoveryState.savedIds.has(publicPalette.id));
+      viewSaveButton.disabled = isOwner;
+    }
+    if (viewSaveEditButton) {
+      viewSaveEditButton.classList.toggle("is-hidden", false);
+    }
+    if (viewLikeButton) {
+      viewLikeButton.classList.toggle("is-hidden", false);
+    }
+    if (viewSaveButton) {
+      viewSaveButton.classList.toggle("is-hidden", false);
+    }
+    if (viewLikeCount) {
+      viewLikeCount.textContent = new Intl.NumberFormat(undefined, {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(Math.max(0, publicPalette.likesCount ?? 0));
+      viewLikeCount.classList.toggle("is-hidden", false);
+    }
+  } else {
+    if (viewLikeCount) {
+      viewLikeCount.textContent = "";
+      viewLikeCount.classList.toggle("is-hidden", true);
+    }
+    if (viewLikeButton) {
+      viewLikeButton.disabled = false;
+      viewLikeButton.classList.remove("is-active");
+      viewLikeButton.classList.toggle("is-hidden", true);
+    }
+    if (viewSaveEditButton) {
+      setButtonContent(viewSaveEditButton, "edit", t("action.edit"), true);
+      viewSaveEditButton.disabled = !palette;
+      viewSaveEditButton.classList.toggle("is-hidden", !palette);
+    }
+    if (viewSaveButton) {
+      viewSaveButton.disabled = false;
+      viewSaveButton.classList.remove("is-active");
+      viewSaveButton.classList.toggle("is-hidden", true);
+    }
+  }
+
+  if (isDiscoverView && !publicPalette) {
+    viewState.publicPaletteId = null;
+  }
+
+  if (!palette && !publicPalette) {
     viewState.paletteId = null;
     viewState.colorId = null;
     viewDisplay.classList.add("is-empty");
@@ -375,13 +462,25 @@ export const renderViewModal = () => {
     return;
   }
 
-  viewSubtitle.textContent = t("view.subtitle", {
-    name: palette.name,
-    count: palette.colors.length,
-    colors: t("palette.colors", { count: palette.colors.length }),
-  });
+  const viewPaletteName = isDiscoverView && publicPalette ? publicPalette.name : palette?.name ?? "";
+  const viewPaletteColors = isDiscoverView && publicPalette ? publicPalette.colors : palette?.colors ?? [];
+  const colorCountLabel = t("palette.colors", { count: viewPaletteColors.length });
+  if (isDiscoverView && publicPalette) {
+    const authorLabel = publicPalette.ownerName ? t("discover.by", { name: publicPalette.ownerName }) : t("discover.shared");
+    viewSubtitle.textContent = t("view.subtitleAuthor", {
+      name: viewPaletteName,
+      colors: colorCountLabel,
+      author: authorLabel,
+    });
+  } else {
+    viewSubtitle.textContent = t("view.subtitle", {
+      name: viewPaletteName,
+      count: viewPaletteColors.length,
+      colors: colorCountLabel,
+    });
+  }
 
-  if (palette.colors.length === 0) {
+  if (viewPaletteColors.length === 0) {
     viewState.colorId = null;
     viewDisplay.classList.add("is-empty");
     viewDisplay.style.background = "";
@@ -390,7 +489,16 @@ export const renderViewModal = () => {
     return;
   }
 
-  const activeColor = palette.colors.find((color) => color.id === viewState.colorId) ?? palette.colors[0];
+  const resolvedColors =
+    isDiscoverView && publicPalette
+      ? publicPalette.colors.map((color, index) => ({
+          id: `${publicPalette.id}-${index}`,
+          name: nameColor(rgbToHex(color.rgb).toUpperCase(), resolveActiveNameFormat(), index),
+          rgb: [...color.rgb] as [number, number, number],
+        }))
+      : palette?.colors ?? [];
+
+  const activeColor = resolvedColors.find((color) => color.id === viewState.colorId) ?? resolvedColors[0];
   viewState.colorId = activeColor.id;
   const hex = rgbToHex(activeColor.rgb).toUpperCase();
   const { r, g, b, hsb, hsl, cmyk, lab } = getColorMetrics(activeColor.rgb);
@@ -425,7 +533,7 @@ export const renderViewModal = () => {
     viewValues.appendChild(row);
   });
 
-  palette.colors.forEach((color) => {
+  resolvedColors.forEach((color) => {
     const swatch = document.createElement("button");
     swatch.type = "button";
     swatch.className = "view-swatch";
@@ -543,8 +651,12 @@ export const renderPaletteList = () => {
     const publishLabel = palette.isPublic ? t("action.unpublish") : t("action.publish");
     setButtonContent(publishButton, "globe", publishLabel);
     publishButton.setAttribute("aria-label", publishLabel);
-    publishButton.title = cloudState.user ? publishLabel : t("palette.signInToPublish");
-    publishButton.disabled = !cloudState.isConfigured || !cloudState.user;
+    publishButton.title = cloudState.user
+      ? isCloudUserVerified()
+        ? publishLabel
+        : t("palette.verifyToPublish")
+      : t("palette.signInToPublish");
+    publishButton.disabled = !cloudState.isConfigured || !cloudState.user || !isCloudUserVerified();
     publishButton.addEventListener("click", (event) => {
       event.stopPropagation();
       void togglePaletteVisibility(palette.id);
@@ -623,6 +735,9 @@ const togglePaletteVisibility = async (paletteId: string) => {
   }
   if (!firebaseClient || !cloudState.user) {
     showToast(t("palette.signInToPublishToast"), "info");
+    return;
+  }
+  if (!requireVerifiedCloudUser()) {
     return;
   }
   if (palette.isPublic) {

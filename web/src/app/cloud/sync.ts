@@ -3,16 +3,26 @@ import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 
 import {
   cloudAuthSection,
+  cloudChangeEmailButton,
   cloudEmailInput,
   cloudEmailSignInButton,
   cloudEmailSignUpButton,
+  cloudManagementSection,
+  cloudModal,
   cloudPasswordInput,
+  cloudPasswordResetButton,
   cloudProfileSection,
   cloudSessionActions,
+  cloudSessionLinks,
+  cloudDeleteAccountButton,
   cloudSignInButton,
   cloudSignOutButton,
   cloudStatus,
+  cloudSyncStatus,
   cloudSyncButton,
+  cloudVerifyEmailButton,
+  cloudVerificationEmail,
+  cloudVerificationSection,
 } from "../dom";
 import { t } from "../i18n";
 import { renderPaletteList, syncPaletteColorNames } from "../palette/ui";
@@ -29,6 +39,7 @@ import { ensureUserAvatar } from "./profile-store";
 import { unpublishPalette, upsertPublicPalette } from "./public";
 import { buildSyncPayload, parseSyncPayload } from "./serializer";
 import { renderCloudUserCard } from "./user-card";
+import { isCloudUserVerified, requireVerifiedCloudUser } from "./verification";
 
 let cloudUnsubscribe: (() => void) | null = null;
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -41,6 +52,8 @@ let initialSyncTimer: ReturnType<typeof setTimeout> | null = null;
 let initialSyncAttempts = 0;
 const INITIAL_SYNC_BASE_DELAY_MS = 1200;
 const INITIAL_SYNC_MAX_ATTEMPTS = 2;
+let verificationPollTimer: ReturnType<typeof setInterval> | null = null;
+const VERIFICATION_POLL_INTERVAL_MS = 6000;
 
 const wasRecentlyUpserted = (paletteId: string) => {
   const lastUpsert = cloudState.recentPublicUpserts.get(paletteId);
@@ -78,10 +91,33 @@ const scheduleSyncCooldownRefresh = () => {
     return;
   }
   const delay = Math.max(0, nextCooldown - Date.now());
-  syncCooldownTimer = setTimeout(() => {
-    syncCooldownTimer = null;
-    updateCloudControls();
-  }, delay);
+    syncCooldownTimer = setTimeout(() => {
+      syncCooldownTimer = null;
+      updateCloudControls();
+    }, delay);
+  };
+
+const isCloudModalOpen = () => cloudModal?.getAttribute("aria-hidden") !== "true";
+
+const stopVerificationPolling = () => {
+  if (!verificationPollTimer) {
+    return;
+  }
+  clearInterval(verificationPollTimer);
+  verificationPollTimer = null;
+};
+
+const startVerificationPolling = () => {
+  if (verificationPollTimer || !firebaseClient) {
+    return;
+  }
+  verificationPollTimer = setInterval(async () => {
+    if (!isCloudModalOpen() || !cloudState.user || cloudState.user.emailVerified) {
+      stopVerificationPolling();
+      return;
+    }
+    await refreshCloudUser();
+  }, VERIFICATION_POLL_INTERVAL_MS);
 };
 
 const logCloudError = (context: string, error: unknown, meta: Record<string, unknown> = {}) => {
@@ -147,35 +183,67 @@ const formatSyncTimestamp = (value: string | null) => {
   return t("cloud.status.lastSynced", { time: value });
 };
 
-const setCloudStatusMessage = (message: string) => {
-  if (cloudStatus) {
-    cloudStatus.textContent = message;
+const setCloudStatusMessage = (message: string | null) => {
+  if (!cloudStatus) {
+    return;
   }
+  cloudStatus.textContent = message ?? "";
+  cloudStatus.classList.toggle("is-hidden", !message);
+};
+
+const setCloudSyncStatusMessage = (message: string | null) => {
+  if (!cloudSyncStatus) {
+    return;
+  }
+  cloudSyncStatus.textContent = message ?? "";
+  cloudSyncStatus.classList.toggle("is-hidden", !message);
 };
 
 const updateCloudControls = () => {
+  let headerStatus: string | null = null;
+  let syncStatus: string | null = null;
+
   if (!cloudState.isConfigured) {
     const missing = firebaseConfigStatus.missingKeys.join(", ");
-    setCloudStatusMessage(t("cloud.status.missingKeys", { missing }));
+    headerStatus = t("cloud.status.missingKeys", { missing });
   } else if (!cloudState.user) {
-    setCloudStatusMessage(t("cloud.status.signedOut"));
+    headerStatus = t("cloud.status.signedOut");
+  } else if (!isCloudUserVerified()) {
+    headerStatus = t("cloud.status.verifyEmail");
   } else if (cloudState.isSyncing) {
-    setCloudStatusMessage(t("cloud.status.syncing"));
+    syncStatus = t("cloud.status.syncing");
   } else {
-    setCloudStatusMessage(formatSyncTimestamp(cloudState.lastSyncedAt));
+    syncStatus = formatSyncTimestamp(cloudState.lastSyncedAt);
   }
 
+  setCloudStatusMessage(headerStatus);
+  setCloudSyncStatusMessage(syncStatus);
+
+  const hasUser = Boolean(cloudState.user);
+  const isVerified = isCloudUserVerified();
+  const shouldShowVerification = hasUser && !isVerified;
+  const shouldPollVerification = shouldShowVerification && isCloudModalOpen();
+
   if (cloudSignInButton) {
-    cloudSignInButton.disabled = !cloudState.isConfigured || !!cloudState.user;
+    cloudSignInButton.disabled = !cloudState.isConfigured || hasUser;
   }
   if (cloudAuthSection) {
-    cloudAuthSection.classList.toggle("is-hidden", Boolean(cloudState.user));
+    cloudAuthSection.classList.toggle("is-hidden", hasUser);
+  }
+  if (cloudVerificationSection) {
+    cloudVerificationSection.classList.toggle("is-hidden", !shouldShowVerification);
+  }
+  if (cloudManagementSection) {
+    cloudManagementSection.classList.toggle("is-hidden", !hasUser);
   }
   if (cloudSessionActions) {
-    cloudSessionActions.classList.toggle("is-hidden", !cloudState.user);
+    cloudSessionActions.classList.toggle("is-hidden", !hasUser);
+  }
+  if (cloudSessionLinks) {
+    cloudSessionLinks.classList.toggle("is-hidden", !hasUser);
   }
   if (cloudProfileSection) {
-    cloudProfileSection.classList.toggle("is-hidden", !cloudState.user);
+    cloudProfileSection.classList.toggle("is-hidden", !hasUser || !isVerified);
   }
   const disableEmailAuth = !cloudState.isConfigured || !!cloudState.user;
   if (cloudEmailInput) {
@@ -190,14 +258,36 @@ const updateCloudControls = () => {
   if (cloudEmailSignUpButton) {
     cloudEmailSignUpButton.disabled = disableEmailAuth;
   }
+  if (cloudPasswordResetButton) {
+    cloudPasswordResetButton.disabled = disableEmailAuth;
+  }
   if (cloudSignOutButton) {
     cloudSignOutButton.disabled = !cloudState.user;
   }
+  if (cloudDeleteAccountButton) {
+    cloudDeleteAccountButton.disabled = !cloudState.user;
+  }
   if (cloudSyncButton) {
-    cloudSyncButton.disabled = !cloudState.user || cloudState.isSyncing || isSyncCoolingDown();
+    cloudSyncButton.disabled =
+      !cloudState.user || !isCloudUserVerified() || cloudState.isSyncing || isSyncCoolingDown();
+  }
+  if (cloudVerifyEmailButton) {
+    cloudVerifyEmailButton.disabled = !shouldShowVerification;
+  }
+  if (cloudChangeEmailButton) {
+    cloudChangeEmailButton.disabled = !shouldShowVerification;
+  }
+  if (cloudVerificationEmail) {
+    const email = cloudState.user?.email?.trim();
+    cloudVerificationEmail.textContent = email || t("cloud.verification.emailFallback");
   }
 
   renderCloudUserCard();
+  if (shouldPollVerification) {
+    startVerificationPolling();
+  } else {
+    stopVerificationPolling();
+  }
   scheduleSyncCooldownRefresh();
 };
 
@@ -219,8 +309,28 @@ const resolveCloudUser = async (user: User): Promise<CloudUser> => {
     uid: user.uid,
     name: user.displayName ?? t("cloud.profile.name.placeholder"),
     email: user.email,
+    emailVerified: user.emailVerified,
     avatar,
   };
+};
+
+export const refreshCloudUser = async () => {
+  if (!firebaseClient) {
+    return;
+  }
+  const currentUser = firebaseClient.auth.currentUser;
+  if (!currentUser) {
+    return;
+  }
+  try {
+    await currentUser.reload();
+  } catch (error) {
+    console.warn("[cloud] Failed to refresh user session.", error);
+  }
+  cloudState.user = await resolveCloudUser(currentUser);
+  updateCloudControls();
+  syncCloudProfileForm();
+  renderPaletteList();
 };
 
 const clonePalette = (palette: Palette): Palette => ({
@@ -399,6 +509,10 @@ export const syncToCloud = async (source: "manual" | "auto" | "init" = "auto"): 
   if (!firebaseClient || !cloudState.user) {
     return false;
   }
+  if (!requireVerifiedCloudUser({ showToast: source === "manual" })) {
+    updateCloudControls();
+    return false;
+  }
   if (source === "manual") {
     if (syncTimer) {
       clearTimeout(syncTimer);
@@ -488,6 +602,9 @@ export const refreshCloudControls = () => {
 
 export const scheduleCloudSync = () => {
   if (!firebaseClient || !cloudState.user) {
+    return;
+  }
+  if (!isCloudUserVerified()) {
     return;
   }
   if (syncTimer) {

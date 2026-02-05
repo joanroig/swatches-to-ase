@@ -15,6 +15,7 @@ import { areAvatarColorsEqual, DEFAULT_AVATAR_COLORS, getCloudAvatarSrc, normali
 import { firebaseClient } from "./context";
 import { saveUserAvatar } from "./profile-store";
 import { renderCloudUserCard } from "./user-card";
+import { isCloudUserVerified, requireVerifiedCloudUser } from "./verification";
 
 let pendingAvatar: AvatarColors | null = null;
 
@@ -68,13 +69,15 @@ export const syncCloudProfileForm = () => {
   }
 
   cloudProfileNameInput.value = user.name ?? "";
-  cloudProfileNameInput.placeholder = t("cloud.profile.name.placeholder");
+  cloudProfileNameInput.placeholder = isCloudUserVerified()
+    ? t("cloud.profile.name.placeholder")
+    : t("cloud.profile.verifyPlaceholder");
   const currentAvatar = normalizeAvatarColors(pendingAvatar ?? user.avatar ?? DEFAULT_AVATAR_COLORS);
   cloudProfileAvatar.src = getCloudAvatarSrc(currentAvatar);
   cloudProfileAvatar.alt = user.name ?? t("cloud.profile.cloudAlt");
   cloudProfileAvatarBackgroundInput.value = currentAvatar.background;
   cloudProfileAvatarForegroundInput.value = currentAvatar.foreground;
-  setProfileDisabled(false);
+  setProfileDisabled(!isCloudUserVerified());
 };
 
 export const resetCloudProfileDraft = () => {
@@ -109,6 +112,9 @@ export const setupCloudProfileControls = () => {
     const currentUser = firebaseClient.auth.currentUser;
     if (!currentUser || !cloudState.user) {
       showToast(t("toast.profileSignInToUpdate"), "info");
+      return;
+    }
+    if (!requireVerifiedCloudUser()) {
       return;
     }
     if (!cloudProfileNameInput) {
@@ -151,7 +157,7 @@ export const setupCloudProfileControls = () => {
       console.error(error);
       showToast(t("toast.profileUpdateFailed"), "error");
     } finally {
-      cloudProfileSaveButton.disabled = !cloudState.user;
+      cloudProfileSaveButton.disabled = !cloudState.user || !isCloudUserVerified();
     }
   });
 

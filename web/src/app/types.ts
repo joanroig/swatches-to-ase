@@ -40,6 +40,8 @@ export type Preferences = {
 
 export type ExportMode = "single" | "batch";
 
+export type DiscoverySort = "recent" | "likes-desc" | "likes-asc" | "saves-desc" | "saves-asc";
+
 export type AvatarColors = {
   background: string;
   foreground: string;
@@ -49,6 +51,7 @@ export type CloudUser = {
   uid: string;
   name: string;
   email?: string | null;
+  emailVerified?: boolean;
   avatar?: AvatarColors | null;
 };
 

@@ -16,6 +16,27 @@
   }
 }
 
+@media (max-width: 1080px) {
+  .footer-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .footer-links {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .footer-links--meta {
+    width: 100%;
+    align-items: center;
+  }
+
+  .footer-meta-row {
+    justify-content: center;
+  }
+}
+
 @media (max-width: 720px) {
   .page {
     padding: 28px 16px 54px;

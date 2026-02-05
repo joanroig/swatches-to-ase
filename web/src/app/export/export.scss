@@ -143,6 +143,7 @@
   justify-content: flex-end;
   align-items: center;
   margin-top: auto;
+  width: 100%;
 }
 
 #export-modal .export-controls {
@@ -166,5 +167,19 @@
 @media (min-width: 860px) {
   .export-grid--formats {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  #export-modal .export-controls {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 720px) {
+  #export-modal .export-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
   }
 }

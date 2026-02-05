@@ -39,7 +39,6 @@
         <div class="panel-actions">
           <button class="ghost" id="open-import" data-i18n="action.import">Import</button>
           <button class="ghost" id="open-generate" data-i18n="action.generate">Generate</button>
-          <button class="ghost" id="remove-all-palettes" data-i18n="action.removeAll">Remove all</button>
           <button class="primary export-trigger" id="open-export" disabled data-i18n="action.exportAll">Export all</button>
         </div>
       </div>
@@ -67,45 +66,24 @@
             </svg>
             <span data-i18n="footer.github">GitHub</span>
           </a>
-          <a
-            class="footer-button version-button"
-            id="app-version"
-            href="https://github.com/joanroig/palette-studio/releases"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <span class="version-label" data-i18n="footer.version">Version</span>
-            <span class="version-number" id="app-version-number"></span>
-          </a>
-        </div>
-        <div class="footer-deploy">
-          <span class="deploy-stamp" id="deploy-stamp" aria-hidden="true"></span>
+          <div class="footer-version">
+            <a
+              class="footer-button version-button"
+              id="app-version"
+              href="https://github.com/joanroig/palette-studio/releases"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span class="version-label" data-i18n="footer.version">Version</span>
+              <span class="version-number" id="app-version-number"></span>
+            </a>
+            <div class="footer-deploy">
+              <span class="deploy-stamp" id="deploy-stamp" aria-hidden="true"></span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </footer>
 
-  <div
-    class="cookie-banner"
-    id="cookie-banner"
-    role="dialog"
-    aria-live="polite"
-    aria-label="Cookie preferences"
-    data-i18n-aria-label="cookies.banner.aria"
-    hidden
-  >
-    <div class="cookie-banner-content">
-      <div class="cookie-banner-text">
-        <h3 data-i18n="cookies.banner.title">Cookies &amp; analytics</h3>
-        <p data-i18n="cookies.banner.body">
-          We use cookies to keep Palette Studio running and Google Analytics to understand usage.
-        </p>
-      </div>
-      <div class="cookie-banner-actions">
-        <button class="ghost" id="cookie-manage" type="button" data-i18n="cookies.banner.manage">Manage</button>
-        <button class="ghost" id="cookie-decline" type="button" data-i18n="cookies.banner.decline">Reject analytics</button>
-        <button class="primary" id="cookie-accept" type="button" data-i18n="cookies.banner.accept">Accept analytics</button>
-      </div>
-    </div>
-  </div>
 </div>

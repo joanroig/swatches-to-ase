@@ -8,12 +8,26 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 6px;
   justify-content: flex-end;
 }
 
 .cloud-session-actions.is-hidden {
   display: none;
+}
+
+.cloud-session-links {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.cloud-session-links.is-hidden {
+  display: none;
+}
+
+.cloud-delete {
+  color: var(--accent-3);
 }
 
 .cloud-auth {
@@ -22,6 +36,14 @@
 }
 
 .cloud-auth.is-hidden {
+  display: none;
+}
+
+.cloud-auth[data-mode="signin"] [data-auth="signup"] {
+  display: none;
+}
+
+.cloud-auth[data-mode="signup"] [data-auth="signin"] {
   display: none;
 }
 
@@ -56,6 +78,82 @@
   justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.cloud-email-links {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cloud-auth-switch {
+  justify-self: end;
+  text-align: right;
+}
+
+.cloud-verification {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  background: var(--surface-2);
+}
+
+.cloud-verification-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.cloud-verification-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.cloud-verification-copy {
+  display: grid;
+  gap: 6px;
+
+  h5 {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .hint {
+    margin: 0;
+  }
+}
+
+.cloud-verification-email {
+  font-weight: 600;
+  color: var(--ink);
+  margin-left: 4px;
+  word-break: break-word;
+}
+
+.cloud-verification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cloud-management {
+  display: grid;
+  gap: 12px;
 }
 
 .cloud-user {
@@ -95,25 +193,32 @@
   color: var(--muted);
 }
 
+.cloud-sync-status {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .cloud-profile {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 16px;
-  align-items: center;
-  padding: 14px;
-  border-radius: 16px;
+  gap: 18px;
+  align-items: start;
+  padding: 18px;
+  border-radius: 18px;
   border: 1px solid var(--stroke);
-  background: var(--surface);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
 }
 
 .cloud-profile-avatar {
-  width: 72px;
-  height: 72px;
+  width: 76px;
+  height: 76px;
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.18);
 }
 
 .cloud-profile-fields {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .cloud-profile-fields .hint {
@@ -121,16 +226,45 @@
   color: var(--muted);
 }
 
+.cloud-profile-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.cloud-profile-color-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.cloud-profile-colors {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cloud-profile-colors .field {
+  gap: 6px;
+}
+
+.cloud-profile-colors input[type="color"] {
+  width: 80px;
+  height: 60px;
+  align-self: center;
+}
+
 .cloud-profile-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  margin-top: 6px;
 }
 
 @media (max-width: 720px) {
   .cloud-profile {
     grid-template-columns: 1fr;
-    justify-items: start;
+    justify-items: center;
+    text-align: center;
   }
 
   .cloud-profile-avatar {
@@ -140,5 +274,36 @@
 
   .cloud-profile-actions {
     width: 100%;
+    justify-content: center;
+  }
+
+  .cloud-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cloud-profile-fields {
+    justify-items: center;
+  }
+
+  .cloud-profile-grid .field {
+    align-items: center;
+  }
+
+  .cloud-profile-grid input[type="text"] {
+    text-align: center;
+  }
+
+  .cloud-profile-colors {
+    justify-items: center;
+  }
+
+  .cloud-profile-colors .field {
+    align-items: center;
+    text-align: center;
+  }
+
+  .cloud-verification-card {
+    grid-template-columns: 1fr;
+    justify-items: start;
   }
 }

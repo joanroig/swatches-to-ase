@@ -110,6 +110,12 @@ button {
     color: inherit;
   }
 
+  &.danger {
+    background: linear-gradient(130deg, #ef4444, #b91c1c);
+    color: #fff;
+    box-shadow: var(--shadow-soft);
+  }
+
   &:hover {
     transform: translateY(-1px);
   }
@@ -134,6 +140,26 @@ button {
     .icon {
       width: 18px;
       height: 18px;
+    }
+  }
+
+  &.close-button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid var(--stroke);
+    background: transparent;
+    flex: 0 0 auto;
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      background: rgba(148, 163, 184, 0.15);
+      transform: none;
     }
   }
 }

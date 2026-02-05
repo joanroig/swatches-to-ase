@@ -67,6 +67,8 @@
         <span class="toggle-track"></span>
         <span class="toggle-label" data-i18n="settings.toggle.addBw">Add black &amp; white to imports</span>
       </label>
+      <div class="divider"></div>
+      <button class="danger" id="remove-all-palettes" data-i18n="action.removeAll">Remove all palettes</button>
     </div>
   </div>
 </div>
@@ -80,15 +82,14 @@
     </div>
     <div class="modal-body">
       <div class="section">
-        <div class="section-header">
-          <div>
-            <h4 data-i18n="cloud.sync.title">Cloud sync</h4>
-            <p class="hint" id="cloud-status" data-i18n="cloud.status.signedOut">
-              Sign in to sync palettes between devices and publish them.
-            </p>
+          <div class="section-header">
+            <div>
+              <p class="hint" id="cloud-status" data-i18n="cloud.status.signedOut">
+                Sign in to sync palettes between devices and publish them.
+              </p>
+            </div>
           </div>
-        </div>
-        <div class="cloud-auth" id="cloud-auth">
+        <div class="cloud-auth" id="cloud-auth" data-mode="signin">
           <div class="cloud-actions">
             <button class="primary" id="cloud-signin" type="button" data-i18n="action.signInGoogle">Sign in with Google</button>
           </div>
@@ -104,21 +105,63 @@
             </div>
             <div class="cloud-recaptcha is-hidden" id="cloud-recaptcha"></div>
             <div class="cloud-email-actions">
-              <button class="ghost" id="cloud-email-signin" type="button" data-i18n="action.signInEmail">Sign in</button>
-              <button class="ghost" id="cloud-email-signup" type="button" data-i18n="action.signUpEmail">Create account</button>
+              <button class="ghost" id="cloud-email-signin" type="button" data-auth="signin" data-i18n="action.signInEmail">Sign in</button>
+              <button class="ghost" id="cloud-email-signup" type="button" data-auth="signup" data-i18n="action.signUpEmail">Create account</button>
+            </div>
+            <div class="cloud-email-links">
+              <button
+                class="text-link"
+                id="cloud-password-reset"
+                type="button"
+                data-auth="signin"
+                data-i18n="cloud.password.reset"
+              >
+                Reset password
+              </button>
             </div>
           </div>
+          <button class="text-link cloud-auth-switch" id="cloud-auth-switch" type="button" data-i18n="cloud.auth.switch.signup">
+            Don't have an account? Create one
+          </button>
         </div>
-        <div class="cloud-user is-hidden" id="cloud-user">
-          <img class="cloud-avatar" id="cloud-avatar" alt="" />
-          <div class="cloud-meta">
-            <span class="cloud-name" id="cloud-name"></span>
-            <span class="cloud-email" id="cloud-email"></span>
+        <div class="cloud-verification is-hidden" id="cloud-verification">
+          <div class="cloud-verification-card">
+            <div class="cloud-verification-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <use href="/icons/mail.svg#icon"></use>
+              </svg>
+            </div>
+            <div class="cloud-verification-copy">
+              <h5 data-i18n="cloud.verification.title">Check your inbox</h5>
+                <p class="hint">
+                  <span data-i18n="cloud.verification.message">We've sent a verification link to</span>
+                  <span class="cloud-verification-email" id="cloud-verification-email">you@example.com</span>.
+                </p>
+            </div>
+          </div>
+          <div class="cloud-verification-actions">
+            <button class="primary" id="cloud-verify-email" type="button" data-i18n="cloud.verification.resend">Resend email</button>
+            <button class="ghost" id="cloud-change-email" type="button" data-i18n="cloud.verification.changeEmail">Change email</button>
           </div>
         </div>
-        <div class="cloud-session-actions is-hidden" id="cloud-session-actions">
-          <button class="ghost" id="cloud-sync" type="button" disabled data-i18n="action.syncNow">Sync now</button>
-          <button class="ghost" id="cloud-signout" type="button" disabled data-i18n="action.signOut">Sign out</button>
+        <div class="cloud-management is-hidden" id="cloud-management">
+          <div class="cloud-user" id="cloud-user">
+            <img class="cloud-avatar" id="cloud-avatar" alt="" />
+            <div class="cloud-meta">
+              <span class="cloud-name" id="cloud-name"></span>
+              <span class="cloud-email" id="cloud-email"></span>
+              <span class="cloud-sync-status is-hidden" id="cloud-sync-status"></span>
+            </div>
+          </div>
+          <div class="cloud-session-actions" id="cloud-session-actions">
+            <button class="primary" id="cloud-sync" type="button" disabled data-i18n="action.syncNow">Sync now</button>
+            <button class="ghost" id="cloud-signout" type="button" disabled data-i18n="action.signOut">Sign out</button>
+          </div>
+          <div class="cloud-session-links is-hidden" id="cloud-session-links">
+            <button class="text-link cloud-delete" id="cloud-delete-account" type="button" data-i18n="cloud.deleteAccount">
+              Delete my account
+            </button>
+          </div>
         </div>
       </div>
       <div class="cloud-profile-section" id="cloud-profile-section">
@@ -127,31 +170,38 @@
           <div class="section-header">
             <div>
               <h4 data-i18n="cloud.profile.title">Profile</h4>
-              <p class="hint" data-i18n="cloud.profile.hint">Update your name and avatar colors for shared palettes.</p>
             </div>
           </div>
           <div class="cloud-profile">
             <img class="cloud-avatar cloud-profile-avatar" id="cloud-profile-avatar" alt="" />
             <div class="cloud-profile-fields">
-              <div class="field">
-                <label for="cloud-profile-name" data-i18n="cloud.profile.name.label">Display name</label>
-                <input type="text" id="cloud-profile-name" placeholder="Palette Studio user" data-i18n-placeholder="cloud.profile.name.placeholder" />
-              </div>
-              <div class="form-grid cloud-profile-colors">
+              <div class="cloud-profile-grid">
                 <div class="field">
-                  <label for="cloud-profile-avatar-bg" data-i18n="cloud.profile.avatar.background">Avatar background</label>
-                  <input type="color" id="cloud-profile-avatar-bg" value="#e2e8f0" />
+                  <label for="cloud-profile-name" data-i18n="cloud.profile.name.label">Display name</label>
+                  <input
+                    type="text"
+                    id="cloud-profile-name"
+                    placeholder="Palette Studio user"
+                    data-i18n-placeholder="cloud.profile.name.placeholder"
+                  />
                 </div>
-                <div class="field">
-                  <label for="cloud-profile-avatar-fg" data-i18n="cloud.profile.avatar.foreground">Avatar foreground</label>
-                  <input type="color" id="cloud-profile-avatar-fg" value="#a5b4fc" />
+                <div class="cloud-profile-color-stack">
+                  <div class="form-grid cloud-profile-colors">
+                    <div class="field">
+                      <label for="cloud-profile-avatar-bg" data-i18n="cloud.profile.avatar.background">Avatar background</label>
+                      <input type="color" id="cloud-profile-avatar-bg" value="#e2e8f0" />
+                    </div>
+                    <div class="field">
+                      <label for="cloud-profile-avatar-fg" data-i18n="cloud.profile.avatar.foreground">Avatar foreground</label>
+                      <input type="color" id="cloud-profile-avatar-fg" value="#a5b4fc" />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <p class="hint" data-i18n="cloud.profile.avatar.hint">Choose two colors to paint your avatar.</p>
+              <div class="cloud-profile-actions">
+                <button class="primary" id="cloud-profile-save" type="button" data-i18n="cloud.profile.save">Save profile</button>
+              </div>
             </div>
-          </div>
-          <div class="cloud-profile-actions">
-            <button class="primary" id="cloud-profile-save" type="button" data-i18n="cloud.profile.save">Save profile</button>
           </div>
         </div>
       </div>
@@ -227,7 +277,6 @@
         <p class="hint" id="view-subtitle"></p>
       </div>
       <div class="modal-header-actions">
-        <button class="ghost" id="view-edit" type="button" data-i18n="action.edit">Edit</button>
         <button class="ghost" data-close="true" type="button" data-i18n="common.close">Close</button>
       </div>
     </div>
@@ -236,6 +285,20 @@
         <div class="view-values" id="view-values"></div>
       </div>
       <div class="view-strip" id="view-strip"></div>
+      <div class="view-public-meta is-hidden" id="view-public-meta">
+        <div class="view-public-actions">
+          <div class="view-public-left">
+            <div class="view-public-like">
+              <button class="ghost icon-only" id="view-like" type="button"></button>
+              <span class="view-public-like-count" id="view-like-count"></span>
+            </div>
+          </div>
+          <div class="view-public-right">
+            <button class="ghost icon-only" id="view-save-edit" type="button"></button>
+            <button class="ghost icon-only" id="view-save" type="button"></button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -246,16 +309,62 @@
     <div class="modal-header">
       <div>
         <h3 data-i18n="discover.title">Discover palettes</h3>
-        <p class="hint" data-i18n="discover.hint">Browse palettes shared by the community, save them, or leave a like.</p>
       </div>
       <div class="modal-header-actions">
-        <button class="ghost" id="refresh-discover" type="button" data-i18n="action.refresh">Refresh</button>
         <button class="ghost" data-close="true" type="button" data-i18n="common.close">Close</button>
       </div>
     </div>
     <div class="modal-body">
+        <div class="discover-controls">
+          <div class="field compact discover-search">
+            <span data-i18n="discover.search.label">Search</span>
+            <input
+              id="discover-search"
+              type="text"
+              placeholder="Search palettes or authors"
+              data-i18n-placeholder="discover.search.placeholder"
+              aria-label="Search"
+              data-i18n-aria-label="discover.search.label"
+            />
+          </div>
+          <div class="field compact discover-sort">
+            <span data-i18n="discover.sort.label">Sort by</span>
+            <select id="discover-sort" aria-label="Sort by" data-i18n-aria-label="discover.sort.label">
+              <option value="recent" data-i18n="discover.sort.recent">Most recent</option>
+              <option value="likes-desc" data-i18n="discover.sort.likesDesc">Popularity (high to low)</option>
+              <option value="likes-asc" data-i18n="discover.sort.likesAsc">Popularity (low to high)</option>
+              <option value="saves-desc" data-i18n="discover.sort.savesDesc">Saves (high to low)</option>
+              <option value="saves-asc" data-i18n="discover.sort.savesAsc">Saves (low to high)</option>
+            </select>
+          </div>
+        </div>
       <div class="discover-grid" id="discover-list"></div>
       <p class="empty is-hidden" id="discover-empty" data-i18n="discover.empty">No public palettes available yet.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="discover-profile-modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-card modal-wide" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <h3 data-i18n="discover.profile.title">Creator profile</h3>
+      </div>
+      <div class="modal-header-actions">
+        <button class="ghost" data-close="true" type="button" data-i18n="common.close">Close</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="discover-profile-card">
+        <img class="cloud-avatar discover-profile-avatar" id="discover-profile-avatar" alt="" />
+        <div class="discover-profile-meta">
+          <h4 class="discover-profile-name" id="discover-profile-name">Palette Studio user</h4>
+          <p class="hint" id="discover-profile-stats"></p>
+        </div>
+      </div>
+      <div class="discover-grid discover-profile-grid" id="discover-profile-list"></div>
+      <p class="empty is-hidden" id="discover-profile-empty" data-i18n="discover.profile.empty">No public palettes yet.</p>
     </div>
   </div>
 </div>
@@ -327,12 +436,18 @@
     <div class="modal-header">
       <div>
         <h3 data-i18n="privacy.title">Privacy Policy</h3>
-        <p class="hint" data-i18n="privacy.updated">Last updated: February 4, 2026</p>
+        <p class="hint" data-i18n="privacy.updated">Last updated: February 5, 2026</p>
       </div>
       <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
     </div>
     <div class="modal-body legal-body">
       <p class="legal-copy" data-i18n="privacy.intro">We collect the minimum data needed to run Palette Studio.</p>
+      <div class="legal-section">
+        <h4 data-i18n="privacy.controller.title">Data controller</h4>
+        <p class="legal-copy" data-i18n="privacy.controller.body">
+          Palette Studio is operated by Joan Roig. You can contact us athttps://github.com/joanroig/palette-studio/issues.
+        </p>
+      </div>
       <div class="legal-section">
         <h4 data-i18n="privacy.local.title">Local data</h4>
         <p class="legal-copy" data-i18n="privacy.local.body">
@@ -342,7 +457,9 @@
       <div class="legal-section">
         <h4 data-i18n="privacy.cloud.title">Cloud sync data</h4>
         <p class="legal-copy" data-i18n="privacy.cloud.body">
-          If you enable cloud sync, we store your account email, display name, avatar colors, and palette data.
+          If you enable cloud sync, we store your account email, display name, avatar colors, palette data, and
+          likes/saves in Firebase Authentication and Firestore. If you sign in with Google, Google shares your
+          profile information with us.
         </p>
       </div>
       <div class="legal-section">
@@ -352,15 +469,53 @@
         </p>
       </div>
       <div class="legal-section">
-        <h4 data-i18n="privacy.thirdParty.title">Third-party services</h4>
+        <h4 data-i18n="privacy.security.title">Security</h4>
+        <p class="legal-copy" data-i18n="privacy.security.body">
+          We use Firebase App Check and Google reCAPTCHA Enterprise to prevent abuse. These services may process
+          device and network information (such as IP address) and set security cookies.
+        </p>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="privacy.legalBasis.title">Legal basis</h4>
+        <ul class="legal-list">
+          <li data-i18n="privacy.legalBasis.item1">Contract: provide the app and cloud sync you request.</li>
+          <li data-i18n="privacy.legalBasis.item2">Legitimate interests: protect the service from abuse.</li>
+          <li data-i18n="privacy.legalBasis.item3">Consent: publishing palettes to the public.</li>
+        </ul>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="privacy.thirdParty.title">Third-party processors</h4>
         <p class="legal-copy" data-i18n="privacy.thirdParty.body">
-          Cloud sync relies on Firebase services, which process your data to provide authentication and storage.
+          We use Firebase (Google) for authentication, database storage, and app protection. Google processes data
+          as a processor under its data processing terms.
+        </p>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="privacy.transfers.title">International transfers</h4>
+        <p class="legal-copy" data-i18n="privacy.transfers.body">
+          Data may be processed outside your country, including in the United States. Google uses appropriate
+          safeguards such as Standard Contractual Clauses.
+        </p>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="privacy.retention.title">Retention</h4>
+        <p class="legal-copy" data-i18n="privacy.retention.body">
+          Local data stays on your device until you delete it. Cloud data is stored while your account is active.
+          You can delete your account and cloud data from the Cloud settings.
+        </p>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="privacy.rights.title">Your rights</h4>
+        <p class="legal-copy" data-i18n="privacy.rights.body">
+          You have the right to access, correct, delete, restrict or object to processing, and to data portability.
+          You can also lodge a complaint with your supervisory authority.
         </p>
       </div>
       <div class="legal-section">
         <h4 data-i18n="privacy.choices.title">Your choices</h4>
         <p class="legal-copy" data-i18n="privacy.choices.body">
-          You can sign out to stop syncing and clear local data at any time by removing palettes and preferences.
+          You can sign out to stop syncing, delete your account from Cloud settings, and clear local data at any time by
+          removing palettes and preferences.
         </p>
       </div>
     </div>
@@ -373,22 +528,30 @@
     <div class="modal-header">
       <div>
         <h3 data-i18n="cookies.title">Cookies</h3>
-        <p class="hint" data-i18n="cookies.updated">Last updated: February 4, 2026</p>
+        <p class="hint" data-i18n="cookies.updated">Last updated: February 5, 2026</p>
       </div>
       <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
     </div>
     <div class="modal-body legal-body">
-      <p class="legal-copy" data-i18n="cookies.intro">We use cookies and similar storage to keep Palette Studio running.</p>
+      <p class="legal-copy" data-i18n="cookies.intro">
+        We use cookies and similar storage for essential functionality and security.
+      </p>
       <div class="legal-section">
         <h4 data-i18n="cookies.essential.title">Essential storage</h4>
         <p class="legal-copy" data-i18n="cookies.essential.body">
-          Needed for core features like preferences, session state, and cloud sync.
+          Needed for core features like preferences, local palettes, session state, and cloud sync.
         </p>
       </div>
       <div class="legal-section">
-        <h4 data-i18n="cookies.analytics.title">Analytics (Google Analytics)</h4>
-        <p class="legal-copy" data-i18n="cookies.analytics.body">
-          Helps us understand usage patterns so we can improve the app. You can reject analytics cookies in the banner.
+        <h4 data-i18n="cookies.security.title">Security</h4>
+        <p class="legal-copy" data-i18n="cookies.security.body">
+          Firebase App Check and Google reCAPTCHA Enterprise may set cookies or device identifiers to prevent abuse.
+        </p>
+      </div>
+      <div class="legal-section">
+        <h4 data-i18n="cookies.noAnalytics.title">No analytics or ads</h4>
+        <p class="legal-copy" data-i18n="cookies.noAnalytics.body">
+          We do not use analytics, advertising, or cross-site tracking cookies.
         </p>
       </div>
     </div>

@@ -114,6 +114,7 @@ service cloud.firestore {
         && isValidSyncDoc(request.resource.data)
         && request.resource.data.updatedAt == request.time
         && isSyncRateOk();
+      allow delete: if isOwner(userId) && docId == 'app';
     }
 
     match /users/{userId}/profile/{docId} {
@@ -122,6 +123,7 @@ service cloud.firestore {
         && docId == 'avatar'
         && isValidAvatarProfile(request.resource.data)
         && request.resource.data.updatedAt == request.time;
+      allow delete: if isOwner(userId) && docId == 'avatar';
     }
 
     match /users/{userId}/likes/{paletteId} {

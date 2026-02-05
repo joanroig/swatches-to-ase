@@ -1,4 +1,4 @@
-import type { CloudUser, ExportMode, Palette, PublicPalette } from "./types";
+import type { CloudUser, DiscoverySort, ExportMode, Palette, PublicPalette } from "./types";
 
 export const state = {
   processing: false,
@@ -13,6 +13,8 @@ export const exportState = {
 export const viewState = {
   paletteId: null as string | null,
   colorId: null as string | null,
+  mode: "local" as "local" | "discover",
+  publicPaletteId: null as string | null,
 };
 
 export const dragState = {
@@ -37,4 +39,6 @@ export const discoveryState = {
   likedIds: new Set<string>(),
   savedIds: new Set<string>(),
   loading: false,
+  sort: "recent" as DiscoverySort,
+  search: "",
 };

@@ -9,6 +9,14 @@
   transition: opacity 0.2s ease;
 }
 
+#view-modal {
+  z-index: 12;
+}
+
+#discover-profile-modal {
+  z-index: 11;
+}
+
 .modal.is-open {
   opacity: 1;
   pointer-events: auto;
@@ -74,6 +82,8 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  position: relative;
+  padding-right: 48px;
 }
 
 .modal-header--top {
@@ -88,6 +98,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.modal-header > .close-button,
+.modal-header-actions .close-button {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .modal-header.editor-header {
@@ -122,6 +139,7 @@
     transition: none;
   }
 }
+
 
 body[data-motion="off"] .modal,
 body[data-motion="off"] .modal-backdrop,

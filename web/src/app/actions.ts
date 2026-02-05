@@ -1,6 +1,25 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+} from "firebase/auth";
 import { firebaseClient } from "./cloud/context";
-import { fetchUserInteractions, listenToDiscovery, renderDiscovery } from "./cloud/discovery";
+import { deleteCloudAccount } from "./cloud/delete";
+import {
+  fetchUserInteractions,
+  listenToDiscovery,
+  renderDiscovery,
+  savePublicPalette,
+  setDiscoverySearch,
+  setDiscoverySort,
+  toggleLikePublicPalette,
+} from "./cloud/discovery";
 import { resetCloudProfileDraft, setupCloudProfileControls } from "./cloud/profile";
 import {
   getRecaptchaToken,
@@ -10,24 +29,33 @@ import {
   setupRecaptcha,
 } from "./cloud/recaptcha";
 import { unpublishPalette } from "./cloud/public";
-import { refreshCloudControls, syncToCloud } from "./cloud/sync";
+import { refreshCloudControls, refreshCloudUser, syncToCloud } from "./cloud/sync";
 import {
   addBwToggle,
   addColorButton,
   aboutModal,
   cloudModal,
+  cloudAuthSection,
+  cloudAuthSwitchButton,
+  cloudChangeEmailButton,
+  cloudDeleteAccountButton,
   cloudEmailInput,
   cloudEmailSignInButton,
   cloudEmailSignUpButton,
   cloudPasswordInput,
+  cloudPasswordResetButton,
   cloudRecaptcha,
   cloudSignInButton,
   cloudSignOutButton,
   cloudSyncButton,
+  cloudVerifyEmailButton,
   colorNotationEditorSelect,
   colorNotationSelect,
   confirmGenerateButton,
   discoverModal,
+  discoverProfileModal,
+  discoverSearchInput,
+  discoverSortSelect,
   editorCancelButton,
   editorExportButton,
   editorModal,
@@ -68,19 +96,20 @@ import {
   openViewButton,
   paletteNameInput,
   privacyModal,
-  refreshDiscoverButton,
   removeAllButton,
   cookiesModal,
   contactModal,
   settingsModal,
   termsModal,
   themeSelect,
-  viewEditButton,
+  viewLikeButton,
+  viewSaveButton,
+  viewSaveEditButton,
   viewModal,
 } from "./dom";
 import { exportPalettesSmart, getExportTargets, handleExportAction, setExportMode, setSelectedExportFormat } from "./export/manager";
 import { createGeneratedPalette, syncBaseColorState } from "./generation";
-import { t } from "./i18n";
+import { onLanguageChange, t } from "./i18n";
 import { ensureLicenseLoaded, ensureLicensesLoaded } from "./licenses";
 import { nameColor, resolveNameFormat } from "./palette/naming";
 import {
@@ -89,6 +118,7 @@ import {
   getPaletteById,
   openEditorForPalette,
   openViewForPalette,
+  renderViewModal,
   redoEditorChange,
   saveEditorChanges,
   setupEditorLayout,
@@ -100,7 +130,7 @@ import {
 } from "./palette/ui";
 import { persistPreferences } from "./persistence";
 import { applyColorNotation, applyLanguagePreference, applyMotionPreference, applyTheme, syncNameFormat } from "./preferences";
-import { cloudState, state, viewState } from "./state";
+import { cloudState, discoveryState, state, viewState } from "./state";
 import { hydrateExportActionIcons, setButtonContent } from "./ui/icons";
 import { closeOpenModals, setModalOpen, setupModal } from "./ui/modals";
 import { appendLog, showToast } from "./ui/notifications";
@@ -108,6 +138,10 @@ import { rgbToHex } from "./utils/color";
 import { createId } from "./utils/id";
 
 export const applyActionLabels = () => {
+  document.querySelectorAll<HTMLButtonElement>('button[data-close="true"][data-i18n="common.close"]').forEach((button) => {
+    setButtonContent(button, "x", t("common.close"), true);
+    button.classList.add("close-button");
+  });
   setButtonContent(openDiscoverButton, "globe", t("action.discover"));
   setButtonContent(openCloudButton, "cloud", t("action.cloud"));
   setButtonContent(openSettingsButton, "settings", t("action.settings"));
@@ -123,8 +157,6 @@ export const applyActionLabels = () => {
   setButtonContent(exportAllButton, "download", t("action.download"));
   setButtonContent(confirmGenerateButton, "generate", t("action.createPalette"));
   setButtonContent(generateEmptyButton, "plus", t("action.createEmptyPalette"));
-  setButtonContent(viewEditButton, "edit", t("action.edit"));
-  setButtonContent(refreshDiscoverButton, "refresh", t("action.refresh"));
   setButtonContent(cloudSignInButton, "login", t("action.signInGoogle"));
   setButtonContent(cloudEmailSignInButton, "login", t("action.signInEmail"));
   setButtonContent(cloudEmailSignUpButton, "plus", t("action.signUpEmail"));
@@ -152,24 +184,75 @@ export const setupActions = () => {
     return false;
   };
 
+  type CloudAuthMode = "signin" | "signup";
+  let currentCloudAuthMode: CloudAuthMode = "signin";
+
+  const setCloudAuthMode = (mode: CloudAuthMode) => {
+    currentCloudAuthMode = mode;
+    if (cloudAuthSection) {
+      cloudAuthSection.dataset.mode = mode;
+    }
+    if (cloudAuthSwitchButton) {
+      cloudAuthSwitchButton.textContent = t(mode === "signin" ? "cloud.auth.switch.signup" : "cloud.auth.switch.signin");
+    }
+    if (cloudPasswordInput) {
+      cloudPasswordInput.autocomplete = mode === "signup" ? "new-password" : "current-password";
+    }
+  };
+
+  const activateRecaptchaOnInput = () => {
+    const hasValue = Boolean(cloudEmailInput?.value.trim() || cloudPasswordInput?.value.trim());
+    if (!hasValue) {
+      return;
+    }
+    void setupRecaptcha(cloudRecaptcha);
+  };
+
   openDiscoverButton?.addEventListener("click", () => {
     if (!cloudState.isConfigured) {
       showToast(t("toast.firebaseDiscoveryMissing"), "info");
       return;
+    }
+    if (discoveryState.palettes.length === 0) {
+      discoveryState.loading = true;
+      renderDiscovery();
     }
     void fetchUserInteractions().then(() => {
       listenToDiscovery();
       renderDiscovery();
     });
     setModalOpen(discoverModal, true);
+    if (discoverSearchInput) {
+      discoverSearchInput.value = discoveryState.search;
+    }
   });
 
   openCloudButton?.addEventListener("click", () => {
     resetCloudProfileDraft();
     refreshCloudControls();
+    void refreshCloudUser();
+    if (!cloudState.user) {
+      setCloudAuthMode("signin");
+    }
     setModalOpen(cloudModal, true);
-    void setupRecaptcha(cloudRecaptcha);
+    if (cloudRecaptcha) {
+      cloudRecaptcha.classList.add("is-hidden");
+    }
     resetRecaptcha();
+  });
+
+  cloudAuthSwitchButton?.addEventListener("click", () => {
+    const nextMode: CloudAuthMode = currentCloudAuthMode === "signin" ? "signup" : "signin";
+    setCloudAuthMode(nextMode);
+    cloudEmailInput?.focus();
+  });
+
+  cloudEmailInput?.addEventListener("input", activateRecaptchaOnInput);
+  cloudPasswordInput?.addEventListener("input", activateRecaptchaOnInput);
+  setCloudAuthMode("signin");
+
+  onLanguageChange(() => {
+    setCloudAuthMode(currentCloudAuthMode);
   });
 
   openSettingsButton?.addEventListener("click", () => {
@@ -358,7 +441,25 @@ export const setupActions = () => {
     });
   });
 
-  viewEditButton?.addEventListener("click", () => {
+  viewSaveEditButton?.addEventListener("click", () => {
+    if (viewState.mode === "discover") {
+      const publicPalette = discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId);
+      if (!publicPalette) {
+        return;
+      }
+      if (cloudState.user && publicPalette.ownerId === cloudState.user.uid) {
+        return;
+      }
+      void savePublicPalette(publicPalette).then((copy) => {
+        if (!copy) {
+          return;
+        }
+        setModalOpen(viewModal, false);
+        openEditorForPalette(copy.id);
+      });
+      return;
+    }
+
     if (!viewState.paletteId || !getPaletteById(viewState.paletteId)) {
       return;
     }
@@ -366,10 +467,35 @@ export const setupActions = () => {
     openEditorForPalette(viewState.paletteId);
   });
 
-  refreshDiscoverButton?.addEventListener("click", () => {
-    void fetchUserInteractions().then(() => {
-      listenToDiscovery();
-      renderDiscovery();
+  viewLikeButton?.addEventListener("click", () => {
+    if (viewState.mode !== "discover") {
+      return;
+    }
+    const publicPalette = discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId);
+    if (!publicPalette) {
+      return;
+    }
+    if (cloudState.user && publicPalette.ownerId === cloudState.user.uid) {
+      return;
+    }
+    void toggleLikePublicPalette(publicPalette).then(() => {
+      renderViewModal();
+    });
+  });
+
+  viewSaveButton?.addEventListener("click", () => {
+    if (viewState.mode !== "discover") {
+      return;
+    }
+    const publicPalette = discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId);
+    if (!publicPalette) {
+      return;
+    }
+    if (cloudState.user && publicPalette.ownerId === cloudState.user.uid) {
+      return;
+    }
+    void savePublicPalette(publicPalette).then(() => {
+      renderViewModal();
     });
   });
 
@@ -394,6 +520,15 @@ export const setupActions = () => {
       return null;
     }
     return { email, password };
+  };
+
+  const resolveEmailOnly = () => {
+    const email = cloudEmailInput?.value.trim() ?? "";
+    if (!email) {
+      showToast(t("toast.emailMissing"), "info");
+      return null;
+    }
+    return email;
   };
 
   cloudEmailSignInButton?.addEventListener("click", async () => {
@@ -434,9 +569,16 @@ export const setupActions = () => {
       return;
     }
     try {
-      await createUserWithEmailAndPassword(firebaseClient.auth, payload.email, payload.password);
+      const credential = await createUserWithEmailAndPassword(firebaseClient.auth, payload.email, payload.password);
       if (cloudPasswordInput) {
         cloudPasswordInput.value = "";
+      }
+      try {
+        await sendEmailVerification(credential.user);
+        showToast(t("toast.verifyEmailSent"), "success");
+      } catch (error) {
+        console.error(error);
+        showToast(t("toast.verifyEmailFailed"), "error");
       }
     } catch (error) {
       console.error(error);
@@ -446,7 +588,48 @@ export const setupActions = () => {
     }
   });
 
-  cloudSignOutButton?.addEventListener("click", async () => {
+  cloudPasswordResetButton?.addEventListener("click", async () => {
+    if (!firebaseClient) {
+      showToast(t("toast.firebaseMissing"), "error");
+      return;
+    }
+    const email = resolveEmailOnly();
+    if (!email) {
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(firebaseClient.auth, email);
+      showToast(t("toast.passwordResetSent"), "success");
+    } catch (error) {
+      console.error(error);
+      showToast(t("toast.passwordResetFailed"), "error");
+    }
+  });
+
+  cloudVerifyEmailButton?.addEventListener("click", async () => {
+    if (!firebaseClient) {
+      showToast(t("toast.firebaseMissing"), "error");
+      return;
+    }
+    const currentUser = firebaseClient.auth.currentUser;
+    if (!currentUser) {
+      showToast(t("toast.verifyEmailSignIn"), "info");
+      return;
+    }
+    if (currentUser.emailVerified) {
+      showToast(t("toast.verifyEmailAlready"), "info");
+      return;
+    }
+    try {
+      await sendEmailVerification(currentUser);
+      showToast(t("toast.verifyEmailSent"), "success");
+    } catch (error) {
+      console.error(error);
+      showToast(t("toast.verifyEmailFailed"), "error");
+    }
+  });
+
+  const handleCloudSignOut = async (options: { prefillEmail?: string; nextAuthMode?: CloudAuthMode } = {}) => {
     if (!firebaseClient) {
       return;
     }
@@ -469,10 +652,112 @@ export const setupActions = () => {
         }
       }
       await signOut(firebaseClient.auth);
+      if (cloudEmailInput && options.prefillEmail) {
+        cloudEmailInput.value = options.prefillEmail;
+      }
+      if (cloudPasswordInput) {
+        cloudPasswordInput.value = "";
+      }
+      if (options.nextAuthMode) {
+        setCloudAuthMode(options.nextAuthMode);
+      }
+      if (cloudRecaptcha) {
+        cloudRecaptcha.classList.add("is-hidden");
+      }
+      resetRecaptcha();
     } catch (error) {
       console.error(error);
       showToast(t("toast.signOutFailed"), "error");
     }
+  };
+
+  cloudSignOutButton?.addEventListener("click", async () => {
+    await handleCloudSignOut();
+  });
+
+  cloudDeleteAccountButton?.addEventListener("click", async () => {
+    if (!firebaseClient) {
+      showToast(t("toast.firebaseMissing"), "error");
+      return;
+    }
+    if (!firebaseClient.auth.currentUser) {
+      showToast(t("toast.deleteAccountFailed"), "error");
+      return;
+    }
+    const confirmed = window.confirm(t("cloud.deleteAccountConfirm"));
+    if (!confirmed) {
+      return;
+    }
+    const runDelete = async () => {
+      const result = await deleteCloudAccount();
+      if (result === "success") {
+        showToast(t("toast.deleteAccountSuccess"), "success");
+        return true;
+      }
+      if (result === "reauth") {
+        return false;
+      }
+      showToast(t("toast.deleteAccountFailed"), "error");
+      return null;
+    };
+
+    const initial = await runDelete();
+    if (initial !== false) {
+      return;
+    }
+
+    const user = firebaseClient.auth.currentUser;
+    if (!user) {
+      showToast(t("toast.deleteAccountFailed"), "error");
+      return;
+    }
+
+    const providers = new Set(user.providerData.map((provider) => provider.providerId));
+    const tryReauth = async () => {
+      if (providers.has("google.com")) {
+        try {
+          await reauthenticateWithPopup(user, firebaseClient.provider);
+          return true;
+        } catch (error) {
+          console.warn("[cloud] Re-auth with Google failed.", error);
+          return false;
+        }
+      }
+      if (providers.has("password")) {
+        const email = user.email ?? cloudEmailInput?.value.trim() ?? "";
+        if (!email) {
+          return false;
+        }
+        const password = window.prompt(t("cloud.deleteAccountPasswordPrompt"));
+        if (!password) {
+          return false;
+        }
+        try {
+          await reauthenticateWithCredential(user, EmailAuthProvider.credential(email, password));
+          return true;
+        } catch (error) {
+          console.warn("[cloud] Re-auth with password failed.", error);
+          return false;
+        }
+      }
+      return false;
+    };
+
+    const reauthed = await tryReauth();
+    if (!reauthed) {
+      showToast(t("toast.deleteAccountReauth"), "info");
+      return;
+    }
+
+    const retry = await runDelete();
+    if (retry === false) {
+      showToast(t("toast.deleteAccountFailed"), "error");
+    }
+  });
+
+  cloudChangeEmailButton?.addEventListener("click", async () => {
+    const email = cloudState.user?.email ?? cloudEmailInput?.value.trim() ?? "";
+    await handleCloudSignOut({ prefillEmail: email, nextAuthMode: "signup" });
   });
 
   cloudSyncButton?.addEventListener("click", () => {
@@ -499,6 +784,20 @@ export const setupActions = () => {
   languageSelect?.addEventListener("change", () => applyLanguagePreference(languageSelect.value));
   generateUseBaseToggle?.addEventListener("change", syncBaseColorState);
 
+  if (discoverSortSelect) {
+    discoverSortSelect.value = discoveryState.sort;
+    discoverSortSelect.addEventListener("change", () => {
+      setDiscoverySort(discoverSortSelect.value);
+    });
+  }
+
+  if (discoverSearchInput) {
+    discoverSearchInput.value = discoveryState.search;
+    discoverSearchInput.addEventListener("input", () => {
+      setDiscoverySearch(discoverSearchInput.value);
+    });
+  }
+
   setupModal(importModal);
   setupModal(settingsModal);
   setupModal(legalModal);
@@ -515,6 +814,7 @@ export const setupActions = () => {
   setupModal(exportModal);
   setupModal(viewModal);
   setupModal(discoverModal);
+  setupModal(discoverProfileModal);
   setupEditorLayout();
   setupCloudProfileControls();
 
@@ -553,6 +853,7 @@ export const setupActions = () => {
         exportModal,
         viewModal,
         discoverModal,
+        discoverProfileModal,
       ]);
     }
 

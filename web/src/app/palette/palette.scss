@@ -39,9 +39,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
+  padding: 4px 8px;
   border-radius: 999px;
-  font-size: 0.64rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -681,4 +681,53 @@ input.color-swatch-input {
   &.is-active {
     box-shadow: inset 0 0 0 2px var(--swatch-ring);
   }
+}
+
+.view-public-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.view-public-author {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.view-public-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.view-public-left,
+.view-public-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-public-right {
+  justify-content: flex-end;
+}
+
+.view-public-like {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.view-public-like-count {
+  font-weight: 600;
+  color: var(--ink);
 }

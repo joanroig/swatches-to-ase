@@ -5,11 +5,12 @@ import { cloudState } from "../state";
 import type { Palette } from "../types";
 import { createId } from "../utils/id";
 import { firebaseClient } from "./context";
+import { isCloudUserVerified } from "./verification";
 
 const PUBLIC_SYNC_COOLDOWN_MS = 2500;
 
 export const upsertPublicPalette = async (palette: Palette) => {
-  if (!firebaseClient || !cloudState.user || !palette.isPublic) {
+  if (!firebaseClient || !cloudState.user || !palette.isPublic || !isCloudUserVerified()) {
     return;
   }
   const publicId = palette.publicId ?? createId();

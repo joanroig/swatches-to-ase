@@ -26,7 +26,8 @@ type ModalSetupOptions = {
 export const setupModal = (modal: HTMLDivElement | null, options: ModalSetupOptions = {}) => {
   modal?.addEventListener("click", (event) => {
     const target = event.target as HTMLElement;
-    if (target?.dataset?.close === "true") {
+    const closeTarget = target?.closest?.<HTMLElement>("[data-close=\"true\"]");
+    if (closeTarget) {
       if (options.onBeforeClose && !options.onBeforeClose()) {
         return;
       }
