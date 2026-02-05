@@ -1,7 +1,15 @@
 import { exportPaletteToAse, exportPaletteToGpl, exportPaletteToSwatches } from "@core/palette";
 import JSZip from "jszip";
 
-import { exportActionButtons, exportAllButton, exportFormatOptions, exportModal, openExportButton, removeAllButton } from "../dom";
+import {
+  exportActionButtons,
+  exportAllButton,
+  exportFormatOptions,
+  exportModal,
+  fabExportButton,
+  openExportButton,
+  removeAllButton,
+} from "../dom";
 import { updateProcessingState } from "../processing";
 import { getPreferencesPayload } from "../preferences";
 import { buildCompleteShareUrl, buildSharedPaletteUrl } from "../share";
@@ -273,6 +281,9 @@ export const updateExportAvailability = () => {
   const hasPalettes = state.palettes.length > 0;
   if (openExportButton) {
     openExportButton.disabled = !hasPalettes;
+  }
+  if (fabExportButton) {
+    fabExportButton.disabled = !hasPalettes;
   }
   if (removeAllButton) {
     removeAllButton.disabled = !hasPalettes;

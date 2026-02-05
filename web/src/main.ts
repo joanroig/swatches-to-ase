@@ -17,6 +17,7 @@ import {
   setupFormatSelects,
 } from "./app/preferences";
 import { waitForAppReady } from "./app/ui/ready";
+import { setupShell } from "./app/ui/shell";
 import { setupTopbarShadow } from "./app/ui/topbar";
 import { setupVersionBadge } from "./app/ui/version";
 
@@ -29,6 +30,7 @@ setupColorNotationSelects();
 setupDropzone();
 setupVersionBadge();
 setupTopbarShadow();
+setupShell();
 onLanguageChange(() => {
   applyActionLabels();
   refreshColorNotationSelects();

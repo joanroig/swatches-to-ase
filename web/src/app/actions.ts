@@ -11,15 +11,7 @@ import {
 } from "firebase/auth";
 import { firebaseClient } from "./cloud/context";
 import { deleteCloudAccount } from "./cloud/delete";
-import {
-  fetchUserInteractions,
-  listenToDiscovery,
-  renderDiscovery,
-  savePublicPalette,
-  setDiscoverySearch,
-  setDiscoverySort,
-  toggleLikePublicPalette,
-} from "./cloud/discovery";
+import { savePublicPalette, setDiscoverySearch, setDiscoverySort, toggleLikePublicPalette } from "./cloud/discovery";
 import { resetCloudProfileDraft, setupCloudProfileControls } from "./cloud/profile";
 import {
   getRecaptchaToken,
@@ -34,6 +26,7 @@ import {
   addBwToggle,
   addColorButton,
   aboutModal,
+  appShell,
   cloudModal,
   cloudAuthSection,
   cloudAuthSwitchButton,
@@ -52,7 +45,6 @@ import {
   colorNotationEditorSelect,
   colorNotationSelect,
   confirmGenerateButton,
-  discoverModal,
   discoverProfileModal,
   discoverSearchInput,
   discoverSortSelect,
@@ -78,8 +70,6 @@ import {
   licenseModal,
   licensesModal,
   motionSelect,
-  openCloudButton,
-  openDiscoverButton,
   openExportButton,
   openAboutButton,
   openFooterLicenseButton,
@@ -91,11 +81,18 @@ import {
   openCookiesButton,
   openContactButton,
   openPrivacyButton,
-  openSettingsButton,
+  openCloudButtons,
+  openSettingsButtons,
   openTermsButton,
   openViewButton,
   paletteNameInput,
   privacyModal,
+  fabExportButton,
+  fabGenerateButton,
+  fabImportButton,
+  fabToggleButton,
+  viewToggleButtons,
+  sidebarToggleButton,
   removeAllButton,
   cookiesModal,
   contactModal,
@@ -142,9 +139,26 @@ export const applyActionLabels = () => {
     setButtonContent(button, "x", t("common.close"), true);
     button.classList.add("close-button");
   });
-  setButtonContent(openDiscoverButton, "globe", t("action.discover"));
-  setButtonContent(openCloudButton, "cloud", t("action.cloud"));
-  setButtonContent(openSettingsButton, "settings", t("action.settings"));
+  viewToggleButtons.forEach((button) => {
+    const target = button.dataset.viewTarget;
+    if (target === "library") {
+      setButtonContent(button, "files", t("nav.library"));
+    } else if (target === "discover") {
+      setButtonContent(button, "globe", t("action.discover"));
+    }
+  });
+  openSettingsButtons.forEach((button) => {
+    const isSidebar = button.dataset.context === "sidebar";
+    setButtonContent(button, "settings", t("action.settings"), !isSidebar);
+  });
+  if (sidebarToggleButton) {
+    const isCollapsed = appShell?.dataset.sidebar === "collapsed";
+    setButtonContent(sidebarToggleButton, "chevronDown", t(isCollapsed ? "nav.expand" : "nav.collapse"));
+  }
+  setButtonContent(fabToggleButton, "plus", t("fab.actions"), true);
+  setButtonContent(fabImportButton, "import", t("action.import"));
+  setButtonContent(fabGenerateButton, "generate", t("action.generate"));
+  setButtonContent(fabExportButton, "export", t("action.exportAll"));
   setButtonContent(openImportButton, "import", t("action.import"));
   setButtonContent(openGenerateButton, "generate", t("action.generate"));
   setButtonContent(removeAllButton, "trash", t("action.removeAll"));
@@ -208,37 +222,20 @@ export const setupActions = () => {
     void setupRecaptcha(cloudRecaptcha);
   };
 
-  openDiscoverButton?.addEventListener("click", () => {
-    if (!cloudState.isConfigured) {
-      showToast(t("toast.firebaseDiscoveryMissing"), "info");
-      return;
-    }
-    if (discoveryState.palettes.length === 0) {
-      discoveryState.loading = true;
-      renderDiscovery();
-    }
-    void fetchUserInteractions().then(() => {
-      listenToDiscovery();
-      renderDiscovery();
+  openCloudButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      resetCloudProfileDraft();
+      refreshCloudControls();
+      void refreshCloudUser();
+      if (!cloudState.user) {
+        setCloudAuthMode("signin");
+      }
+      setModalOpen(cloudModal, true);
+      if (cloudRecaptcha) {
+        cloudRecaptcha.classList.add("is-hidden");
+      }
+      resetRecaptcha();
     });
-    setModalOpen(discoverModal, true);
-    if (discoverSearchInput) {
-      discoverSearchInput.value = discoveryState.search;
-    }
-  });
-
-  openCloudButton?.addEventListener("click", () => {
-    resetCloudProfileDraft();
-    refreshCloudControls();
-    void refreshCloudUser();
-    if (!cloudState.user) {
-      setCloudAuthMode("signin");
-    }
-    setModalOpen(cloudModal, true);
-    if (cloudRecaptcha) {
-      cloudRecaptcha.classList.add("is-hidden");
-    }
-    resetRecaptcha();
   });
 
   cloudAuthSwitchButton?.addEventListener("click", () => {
@@ -255,8 +252,10 @@ export const setupActions = () => {
     setCloudAuthMode(currentCloudAuthMode);
   });
 
-  openSettingsButton?.addEventListener("click", () => {
-    setModalOpen(settingsModal, true);
+  openSettingsButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setModalOpen(settingsModal, true);
+    });
   });
 
   openLegalButton?.addEventListener("click", () => {
@@ -310,6 +309,14 @@ export const setupActions = () => {
     setModalOpen(generateModal, true);
   });
 
+  fabImportButton?.addEventListener("click", () => {
+    openImportButton?.click();
+  });
+
+  fabGenerateButton?.addEventListener("click", () => {
+    openGenerateButton?.click();
+  });
+
   removeAllButton?.addEventListener("click", async () => {
     if (state.palettes.length === 0) {
       return;
@@ -336,6 +343,10 @@ export const setupActions = () => {
     setExportMode("batch");
     setSelectedExportFormat("all");
     setModalOpen(exportModal, true);
+  });
+
+  fabExportButton?.addEventListener("click", () => {
+    openExportButton?.click();
   });
 
   editorExportButton?.addEventListener("click", () => {
@@ -813,7 +824,6 @@ export const setupActions = () => {
   setupModal(editorModal, { onBeforeClose: confirmEditorClose });
   setupModal(exportModal);
   setupModal(viewModal);
-  setupModal(discoverModal);
   setupModal(discoverProfileModal);
   setupEditorLayout();
   setupCloudProfileControls();
@@ -852,7 +862,6 @@ export const setupActions = () => {
         editorModal,
         exportModal,
         viewModal,
-        discoverModal,
         discoverProfileModal,
       ]);
     }

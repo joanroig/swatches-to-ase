@@ -5,6 +5,16 @@
   align-items: stretch;
 }
 
+.discover-toolbar {
+  position: sticky;
+  top: calc(16px + var(--topbar-offset, 0px));
+  z-index: 2;
+  background: var(--card);
+  padding: 12px 0 10px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--stroke);
+}
+
 .discover-controls {
   display: grid;
   align-items: end;
@@ -227,6 +237,11 @@
 }
 
 @media (max-width: 720px) {
+  .discover-toolbar {
+    top: calc(8px + var(--topbar-offset, 0px));
+    padding: 10px 0 8px;
+  }
+
   .discover-controls {
     grid-template-columns: 1fr;
   }

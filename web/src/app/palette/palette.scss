@@ -4,6 +4,12 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+@media (min-width: 960px) {
+  .palette-list {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+}
+
 .palette-card {
   border-radius: 16px;
   border: 1px solid var(--stroke);
@@ -49,6 +55,7 @@
   background: var(--surface-2);
   border: 1px solid var(--stroke);
   flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .palette-card-header {
@@ -201,19 +208,32 @@
   border-radius: 999px;
   background: rgba(14, 165, 233, 0.12);
   color: var(--accent-3);
+  white-space: nowrap;
 }
 
 .palette-meta {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
 }
 
 .palette-meta-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   min-width: 0;
+  width: 100%;
+}
+
+.palette-meta-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  justify-self: end;
 }
 
 .chip {
@@ -577,6 +597,7 @@
   min-height: 26px;
   border-radius: 8px;
   justify-content: center;
+  touch-action: none;
 
   .icon {
     width: 12px;

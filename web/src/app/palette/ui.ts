@@ -559,6 +559,7 @@ export const renderPaletteList = () => {
   if (state.palettes.length === 0) {
     paletteList.innerHTML = `<p class="empty">${t("palette.empty")}</p>`;
     updateExportAvailability();
+    window.dispatchEvent(new Event("actiondock:sync"));
     return;
   }
 
@@ -588,16 +589,19 @@ export const renderPaletteList = () => {
     const metaRow = document.createElement("div");
     metaRow.className = "palette-meta-row";
     metaRow.append(title);
+    const metaBadges = document.createElement("div");
+    metaBadges.className = "palette-meta-badges";
     const count = document.createElement("span");
     count.className = "palette-count";
     count.textContent = t("palette.colors", { count: palette.colors.length });
-    metaRow.appendChild(count);
+    metaBadges.appendChild(count);
     if (palette.isPublic) {
       const badge = document.createElement("span");
       badge.className = "palette-badge";
       badge.textContent = t("palette.public");
-      metaRow.appendChild(badge);
+      metaBadges.appendChild(badge);
     }
+    metaRow.appendChild(metaBadges);
 
     meta.append(metaRow);
 
@@ -726,6 +730,7 @@ export const renderPaletteList = () => {
   }
   updateExportAvailability();
   renderViewModal();
+  window.dispatchEvent(new Event("actiondock:sync"));
 };
 
 const togglePaletteVisibility = async (paletteId: string) => {
@@ -939,80 +944,118 @@ export const renderEditor = () => {
     list.classList.remove("is-dragging");
   };
 
-  list.addEventListener("dragover", (event) => {
-    event.preventDefault();
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = "move";
-    }
-  });
+  const setupPointerDrag = (dragHandle: HTMLButtonElement, row: HTMLDivElement, colorId: string) => {
+    let activePointerId: number | null = null;
+    let startX = 0;
+    let startY = 0;
+    let hasMoved = false;
+    let currentDropRow: HTMLElement | null = null;
+    const dragThreshold = 4;
 
-  list.addEventListener("drop", (event) => {
-    event.preventDefault();
-    const paletteId = dragState.paletteId ?? palette.id;
-    const colorId = dragState.colorId ?? event.dataTransfer?.getData("text/plain");
-    if (!paletteId || !colorId) {
+    const clearDropRow = () => {
+      if (currentDropRow) {
+        currentDropRow.classList.remove("is-dragover");
+        currentDropRow = null;
+      }
+      dropTarget.classList.remove("is-dragover");
+    };
+
+    const updateDragTarget = (event: PointerEvent) => {
+      const target = document.elementFromPoint(event.clientX, event.clientY) as HTMLElement | null;
+      const nextRow = target?.closest<HTMLElement>(".color-row") ?? null;
+      if (currentDropRow && currentDropRow !== nextRow) {
+        currentDropRow.classList.remove("is-dragover");
+        currentDropRow = null;
+      }
+      if (nextRow && nextRow !== row) {
+        nextRow.classList.add("is-dragover");
+        currentDropRow = nextRow;
+      }
+      dropTarget.classList.toggle("is-dragover", Boolean(target?.closest(".color-drop-target")));
+    };
+
+    const finishPointerDrag = (event: PointerEvent) => {
+      if (activePointerId !== event.pointerId) {
+        return;
+      }
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", finishPointerDrag);
+      window.removeEventListener("pointercancel", finishPointerDrag);
+      try {
+        dragHandle.releasePointerCapture(event.pointerId);
+      } catch {
+        // Ignore pointer capture errors when the element is detached.
+      }
+
+      if (hasMoved) {
+        const paletteId = dragState.paletteId ?? palette.id;
+        const draggedColorId = dragState.colorId ?? colorId;
+        if (paletteId && draggedColorId) {
+          const target = document.elementFromPoint(event.clientX, event.clientY) as HTMLElement | null;
+          const targetRow = target?.closest<HTMLElement>(".color-row");
+          const targetId = targetRow?.dataset.colorId ?? null;
+          if (targetId && targetId !== draggedColorId) {
+            const targetIndex = palette.colors.findIndex((entry) => entry.id === targetId);
+            if (targetIndex >= 0) {
+              moveColorToIndex(paletteId, draggedColorId, targetIndex);
+            }
+          } else if (target?.closest(".color-drop-target") || target?.closest(".color-list") === list) {
+            moveColorToIndex(paletteId, draggedColorId, palette.colors.length);
+          }
+        }
+      }
+
+      dragState.paletteId = null;
+      dragState.colorId = null;
+      activePointerId = null;
+      hasMoved = false;
+      clearDropRow();
       resetDragClasses();
-      return;
-    }
-    moveColorToIndex(paletteId, colorId, palette.colors.length);
-    resetDragClasses();
-  });
+    };
 
-  dropTarget.addEventListener("dragover", (event) => {
-    event.preventDefault();
-    dropTarget.classList.add("is-dragover");
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = "move";
-    }
-  });
+    const handlePointerMove = (event: PointerEvent) => {
+      if (activePointerId !== event.pointerId) {
+        return;
+      }
+      const deltaX = event.clientX - startX;
+      const deltaY = event.clientY - startY;
+      if (!hasMoved && Math.hypot(deltaX, deltaY) < dragThreshold) {
+        return;
+      }
+      if (!hasMoved) {
+        hasMoved = true;
+        row.classList.add("is-dragging");
+        list.classList.add("is-dragging");
+      }
+      updateDragTarget(event);
+    };
 
-  dropTarget.addEventListener("dragleave", () => {
-    dropTarget.classList.remove("is-dragover");
-  });
-
-  dropTarget.addEventListener("drop", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const paletteId = dragState.paletteId ?? palette.id;
-    const colorId = dragState.colorId ?? event.dataTransfer?.getData("text/plain");
-    if (!paletteId || !colorId) {
-      resetDragClasses();
-      return;
-    }
-    moveColorToIndex(paletteId, colorId, palette.colors.length);
-    resetDragClasses();
-  });
+    dragHandle.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+      event.preventDefault();
+      activePointerId = event.pointerId;
+      startX = event.clientX;
+      startY = event.clientY;
+      hasMoved = false;
+      dragState.paletteId = palette.id;
+      dragState.colorId = colorId;
+      try {
+        dragHandle.setPointerCapture(event.pointerId);
+      } catch {
+        // Ignore pointer capture errors in unsupported contexts.
+      }
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", finishPointerDrag);
+      window.addEventListener("pointercancel", finishPointerDrag);
+    });
+  };
 
   palette.colors.forEach((color, index) => {
     const row = document.createElement("div");
     row.className = "color-row";
     row.dataset.colorId = color.id;
-
-    row.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      row.classList.add("is-dragover");
-      if (event.dataTransfer) {
-        event.dataTransfer.dropEffect = "move";
-      }
-    });
-    row.addEventListener("dragleave", () => {
-      row.classList.remove("is-dragover");
-    });
-    row.addEventListener("drop", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const paletteId = dragState.paletteId ?? palette.id;
-      const fromId = dragState.colorId ?? event.dataTransfer?.getData("text/plain");
-      if (!paletteId || !fromId || fromId === color.id) {
-        resetDragClasses();
-        return;
-      }
-      const targetIndex = palette.colors.findIndex((entry) => entry.id === color.id);
-      if (targetIndex >= 0) {
-        moveColorToIndex(paletteId, fromId, targetIndex);
-      }
-      resetDragClasses();
-    });
 
     const content = document.createElement("div");
     content.className = "color-card-content";
@@ -1040,23 +1083,9 @@ export const renderEditor = () => {
     const dragHandle = document.createElement("button");
     dragHandle.type = "button";
     dragHandle.className = "ghost drag-handle";
-    dragHandle.draggable = true;
+    dragHandle.draggable = false;
     setButtonContent(dragHandle, "grip", t("editor.drag"), true);
-    dragHandle.addEventListener("dragstart", (event) => {
-      dragState.paletteId = palette.id;
-      dragState.colorId = color.id;
-      row.classList.add("is-dragging");
-      list.classList.add("is-dragging");
-      if (event.dataTransfer) {
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", color.id);
-      }
-    });
-    dragHandle.addEventListener("dragend", () => {
-      dragState.paletteId = null;
-      dragState.colorId = null;
-      resetDragClasses();
-    });
+    setupPointerDrag(dragHandle, row, color.id);
 
     const textGroup = document.createElement("div");
     textGroup.className = "color-card-text";
