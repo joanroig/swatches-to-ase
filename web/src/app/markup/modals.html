@@ -208,9 +208,15 @@
 <div class="modal" id="generate-modal" aria-hidden="true">
   <div class="modal-backdrop" data-close="true"></div>
   <div class="modal-card" role="dialog" aria-modal="true">
-    <div class="modal-header">
+    <div class="modal-header generate-modal-header">
       <h3 data-i18n="generate.title">New Palette</h3>
-      <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+      <div class="modal-header-actions generate-modal-header-actions">
+        <button class="ghost" id="generate-history-back" type="button" data-i18n="action.back" disabled>Back</button>
+        <button class="ghost" id="generate-history-forward" type="button" data-i18n="action.forward" disabled>
+          Forward
+        </button>
+        <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+      </div>
     </div>
     <div class="modal-body">
       <div class="generate-layout">

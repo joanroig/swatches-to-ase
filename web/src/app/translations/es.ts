@@ -36,6 +36,8 @@ const es: TranslationMap = {
   "action.publish": "Publicar",
   "action.unpublish": "Retirar",
   "action.remove": "Eliminar",
+  "action.back": "Anterior",
+  "action.forward": "Siguiente",
   "action.undo": "Deshacer",
   "action.redo": "Rehacer",
   "action.save": "Guardar",

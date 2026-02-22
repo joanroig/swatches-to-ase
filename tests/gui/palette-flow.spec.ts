@@ -71,6 +71,37 @@ test("format and count changes keep existing generated colors stable", async ({ 
   expect(afterRemoveHexes).toEqual(initialHexes.slice(0, 4));
 });
 
+test("new palette preview supports back and forward through generated history", async ({ page }) => {
+  await clearStorage(page);
+
+  await page.click("#open-generate");
+  await expect(page.locator("#generate-history-back")).toBeDisabled();
+  await expect(page.locator("#generate-history-forward")).toBeDisabled();
+
+  const firstHexes = await getGeneratedPreviewHexes(page);
+  let secondHexes = firstHexes;
+  for (let attempt = 0; attempt < 4 && secondHexes.join("|") === firstHexes.join("|"); attempt += 1) {
+    await page.click("#confirm-generate");
+    secondHexes = await getGeneratedPreviewHexes(page);
+  }
+  expect(secondHexes).not.toEqual(firstHexes);
+
+  await expect(page.locator("#generate-history-back")).toBeEnabled();
+  await expect(page.locator("#generate-history-forward")).toBeDisabled();
+
+  await page.click("#generate-history-back");
+  await expect.poll(() => getGeneratedPreviewHexes(page)).toEqual(firstHexes);
+  await expect(page.locator("#generate-history-back")).toBeDisabled();
+  await expect(page.locator("#generate-history-forward")).toBeEnabled();
+
+  await page.click("#generate-history-forward");
+  await expect.poll(() => getGeneratedPreviewHexes(page)).toEqual(secondHexes);
+
+  await page.click("#generate-history-back");
+  await page.click("#confirm-generate");
+  await expect(page.locator("#generate-history-forward")).toBeDisabled();
+});
+
 test("generate empty palette, edit colors, and apply notation", async ({ page }) => {
   await clearStorage(page);
 

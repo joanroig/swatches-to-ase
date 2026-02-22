@@ -46,6 +46,8 @@ import {
   colorNotationSelect,
   confirmGenerateButton,
   generateBaseColorInput,
+  generateHistoryBackButton,
+  generateHistoryForwardButton,
   discoverProfileModal,
   discoverSearchInput,
   discoverSortSelect,
@@ -112,6 +114,9 @@ import { exportPalettesSmart, getExportTargets, handleExportAction, setExportMod
 import {
   randomizeGeneratedPalettePreview,
   saveGeneratedPaletteFromPreview,
+  showNextGeneratedPalettePreview,
+  showPreviousGeneratedPalettePreview,
+  startGeneratedPalettePreviewSession,
   syncBaseColorState,
   syncGeneratedPalettePreviewBaseColor,
   syncGeneratedPalettePreviewCount,
@@ -181,6 +186,8 @@ export const applyActionLabels = () => {
   setButtonContent(editorRedoButton, "redo", t("action.redo"), true);
   setButtonContent(addColorButton, "plus", t("action.addColor"));
   setButtonContent(exportAllButton, "download", t("action.download"));
+  setButtonContent(generateHistoryBackButton, "undo", t("action.back"), true);
+  setButtonContent(generateHistoryForwardButton, "redo", t("action.forward"), true);
   setButtonContent(confirmGenerateButton, "generate", t("action.generatePalette"));
   setButtonContent(saveGeneratedPaletteButton, "bookmark", t("action.save"));
   setButtonContent(cloudSignInButton, "login", t("action.signInGoogle"));
@@ -319,7 +326,7 @@ export const setupActions = () => {
 
   openGenerateButton?.addEventListener("click", () => {
     syncBaseColorState();
-    randomizeGeneratedPalettePreview();
+    startGeneratedPalettePreviewSession();
     setModalOpen(generateModal, true);
   });
 
@@ -437,6 +444,14 @@ export const setupActions = () => {
 
   confirmGenerateButton?.addEventListener("click", () => {
     randomizeGeneratedPalettePreview();
+  });
+
+  generateHistoryBackButton?.addEventListener("click", () => {
+    showPreviousGeneratedPalettePreview();
+  });
+
+  generateHistoryForwardButton?.addEventListener("click", () => {
+    showNextGeneratedPalettePreview();
   });
 
   saveGeneratedPaletteButton?.addEventListener("click", () => {

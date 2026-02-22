@@ -4,6 +4,8 @@ import {
   generateBaseColorInput,
   generateCountInput,
   generateFormatSelect,
+  generateHistoryBackButton,
+  generateHistoryForwardButton,
   generateNameInput,
   generatePreviewName,
   generatePreviewStrip,
@@ -32,6 +34,8 @@ type GenerationContext = {
 };
 
 let generatedPreview: GeneratedPreview | null = null;
+let generatedPreviewHistory: GeneratedPreview[] = [];
+let generatedPreviewHistoryIndex = -1;
 let previewTextLayoutFrame: number | null = null;
 let hasPreviewResizeListener = false;
 
@@ -67,6 +71,47 @@ const clonePaletteColors = (colors: Palette["colors"]) =>
     ...color,
     rgb: [...color.rgb] as [number, number, number],
   }));
+
+const clonePalette = (palette: Palette): Palette => ({
+  ...palette,
+  colors: clonePaletteColors(palette.colors),
+});
+
+const cloneGeneratedPreview = (preview: GeneratedPreview): GeneratedPreview => ({
+  style: preview.style,
+  palette: clonePalette(preview.palette),
+});
+
+const canNavigateGeneratedPreviewBack = () => generatedPreviewHistoryIndex > 0;
+
+const canNavigateGeneratedPreviewForward = () =>
+  generatedPreviewHistoryIndex >= 0 && generatedPreviewHistoryIndex < generatedPreviewHistory.length - 1;
+
+const syncGeneratedPreviewHistoryButtons = () => {
+  if (generateHistoryBackButton) {
+    generateHistoryBackButton.disabled = !canNavigateGeneratedPreviewBack();
+  }
+  if (generateHistoryForwardButton) {
+    generateHistoryForwardButton.disabled = !canNavigateGeneratedPreviewForward();
+  }
+};
+
+const pushGeneratedPreviewHistory = (preview: GeneratedPreview) => {
+  if (generatedPreviewHistoryIndex < generatedPreviewHistory.length - 1) {
+    generatedPreviewHistory = generatedPreviewHistory.slice(0, generatedPreviewHistoryIndex + 1);
+  }
+  generatedPreviewHistory.push(cloneGeneratedPreview(preview));
+  generatedPreviewHistoryIndex = generatedPreviewHistory.length - 1;
+  generatedPreview = cloneGeneratedPreview(generatedPreviewHistory[generatedPreviewHistoryIndex]);
+  return generatedPreview;
+};
+
+const syncCurrentGeneratedPreviewHistoryEntry = () => {
+  if (!generatedPreview || generatedPreviewHistoryIndex < 0 || generatedPreviewHistoryIndex >= generatedPreviewHistory.length) {
+    return;
+  }
+  generatedPreviewHistory[generatedPreviewHistoryIndex] = cloneGeneratedPreview(generatedPreview);
+};
 
 const applyBaseColorToColors = (colors: Palette["colors"], baseHex: string) => {
   if (!baseHex || colors.length === 0) {
@@ -213,12 +258,21 @@ export const syncBaseColorState = () => {
 export const randomizeGeneratedPalettePreview = () => {
   const style = resolveStyle();
   syncBaseColorState();
-  generatedPreview = {
+  const preview = pushGeneratedPreviewHistory({
     style,
     palette: buildGeneratedPalette(style),
-  };
+  });
   renderGeneratedPreview();
-  return generatedPreview.palette;
+  syncGeneratedPreviewHistoryButtons();
+  return preview.palette;
+};
+
+export const startGeneratedPalettePreviewSession = () => {
+  generatedPreviewHistory = [];
+  generatedPreviewHistoryIndex = -1;
+  generatedPreview = null;
+  syncGeneratedPreviewHistoryButtons();
+  return randomizeGeneratedPalettePreview();
 };
 
 export const syncGeneratedPalettePreviewFormat = () => {
@@ -231,7 +285,9 @@ export const syncGeneratedPalettePreviewFormat = () => {
     style,
     palette: composeGeneratedPalette(style, generatedPreview.palette.colors, nameFormat, baseHex, generatedPreview.palette.id),
   };
+  syncCurrentGeneratedPreviewHistoryEntry();
   renderGeneratedPreview();
+  syncGeneratedPreviewHistoryButtons();
   return generatedPreview.palette;
 };
 
@@ -246,7 +302,9 @@ export const syncGeneratedPalettePreviewCount = () => {
       style,
       palette: composeGeneratedPalette(style, [], nameFormat, baseHex, generatedPreview.palette.id),
     };
+    syncCurrentGeneratedPreviewHistoryEntry();
     renderGeneratedPreview();
+    syncGeneratedPreviewHistoryButtons();
     return generatedPreview.palette;
   }
 
@@ -260,7 +318,9 @@ export const syncGeneratedPalettePreviewCount = () => {
     style,
     palette: composeGeneratedPalette(style, nextColors, nameFormat, baseHex, generatedPreview.palette.id),
   };
+  syncCurrentGeneratedPreviewHistoryEntry();
   renderGeneratedPreview();
+  syncGeneratedPreviewHistoryButtons();
   return generatedPreview.palette;
 };
 
@@ -274,7 +334,9 @@ export const syncGeneratedPalettePreviewBaseColor = () => {
     style,
     palette: composeGeneratedPalette(style, generatedPreview.palette.colors, nameFormat, baseHex, generatedPreview.palette.id),
   };
+  syncCurrentGeneratedPreviewHistoryEntry();
   renderGeneratedPreview();
+  syncGeneratedPreviewHistoryButtons();
   return generatedPreview.palette;
 };
 
@@ -283,6 +345,31 @@ export const syncGeneratedPalettePreviewName = () => {
     return;
   }
   renderGeneratedPreview();
+  syncGeneratedPreviewHistoryButtons();
+};
+
+export const showPreviousGeneratedPalettePreview = () => {
+  if (!canNavigateGeneratedPreviewBack()) {
+    syncGeneratedPreviewHistoryButtons();
+    return null;
+  }
+  generatedPreviewHistoryIndex -= 1;
+  generatedPreview = cloneGeneratedPreview(generatedPreviewHistory[generatedPreviewHistoryIndex]);
+  renderGeneratedPreview();
+  syncGeneratedPreviewHistoryButtons();
+  return generatedPreview.palette;
+};
+
+export const showNextGeneratedPalettePreview = () => {
+  if (!canNavigateGeneratedPreviewForward()) {
+    syncGeneratedPreviewHistoryButtons();
+    return null;
+  }
+  generatedPreviewHistoryIndex += 1;
+  generatedPreview = cloneGeneratedPreview(generatedPreviewHistory[generatedPreviewHistoryIndex]);
+  renderGeneratedPreview();
+  syncGeneratedPreviewHistoryButtons();
+  return generatedPreview.palette;
 };
 
 export const saveGeneratedPaletteFromPreview = () => {
@@ -295,4 +382,6 @@ export const saveGeneratedPaletteFromPreview = () => {
     lastModified: Date.now(),
   } as Palette;
 };
+
+syncGeneratedPreviewHistoryButtons();
 
