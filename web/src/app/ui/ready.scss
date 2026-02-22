@@ -1,5 +1,6 @@
 body:not(.is-ready) {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 
 body:not(.is-ready) .page {

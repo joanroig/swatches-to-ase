@@ -193,6 +193,7 @@ export const getColorNotationLabel = (notation: string) => {
 
 export const getStyleLabel = (style: string) => {
   const keyMap: Record<string, string> = {
+    empty: "style.empty",
     analogous: "style.analogous",
     "cold-pair": "style.coldPair",
     complementary: "style.complementary",

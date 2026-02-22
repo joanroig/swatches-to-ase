@@ -63,7 +63,16 @@ Keep code modular so feature growth does not collapse into one entry file (e.g. 
 - **Lint:** `npm run lint`
 - **Format (fix):** `npm run format`
 
-## 7. Useful commands recap
+## 7. Firestore contract checks (cloud sync)
+
+When changing cloud sync payloads or published palette schema, keep Firestore rules in sync.
+
+- If you change payload shape/fields in files like `web/src/app/cloud/*`, `web/src/app/preferences.ts`, `web/src/app/types.ts`, or `web/src/app/share.ts`, review and update `firestore.rules` in the same change.
+- Treat `permission-denied` during sync as a likely schema/rules mismatch first (before broader debugging).
+- After rules changes, deploy rules for the active Firebase project before validating cloud sync in production-like environments.
+- Keep `tests/web/cloud-sync.test.ts` and `tests/gui/cloud-sync.spec.ts` aligned with any payload/schema updates.
+
+## 8. Useful commands recap
 
 | Command                 | Purpose                                      |
 | ----------------------- | -------------------------------------------- |

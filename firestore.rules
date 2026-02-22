@@ -34,6 +34,7 @@ service cloud.firestore {
           'addBlackWhite',
           'exportFormat',
           'colorNotation',
+          'generateStyle',
           'motion',
           'language'
         ])
@@ -42,6 +43,7 @@ service cloud.firestore {
         && pref.addBlackWhite is bool
         && pref.exportFormat is string
         && pref.colorNotation is string
+        && (!hasKey(pref, 'generateStyle') || pref.generateStyle is string)
         && (!hasKey(pref, 'motion') || (pref.motion is string && pref.motion in ['system', 'on', 'off']))
         && (!hasKey(pref, 'language') || (pref.language is string && pref.language in ['system', 'en', 'es']));
     }

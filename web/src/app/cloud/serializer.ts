@@ -70,12 +70,14 @@ const isPreferences = (value: unknown): value is Preferences => {
     candidate.language === "system" ||
     candidate.language === "en" ||
     candidate.language === "es";
+  const generateStyleValid = typeof candidate.generateStyle === "undefined" || typeof candidate.generateStyle === "string";
   return (
     typeof candidate.theme === "string" &&
     typeof candidate.colorNameFormat === "string" &&
     typeof candidate.addBlackWhite === "boolean" &&
     typeof candidate.exportFormat === "string" &&
     typeof candidate.colorNotation === "string" &&
+    generateStyleValid &&
     motionValid &&
     languageValid
   );

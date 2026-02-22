@@ -82,13 +82,13 @@
     </div>
     <div class="modal-body">
       <div class="section">
-          <div class="section-header">
-            <div>
-              <p class="hint" id="cloud-status" data-i18n="cloud.status.signedOut">
-                Sign in to sync palettes between devices and publish them.
-              </p>
-            </div>
+        <div class="section-header">
+          <div>
+            <p class="hint" id="cloud-status" data-i18n="cloud.status.signedOut">
+              Sign in to sync palettes between devices and publish them.
+            </p>
           </div>
+        </div>
         <div class="cloud-auth" id="cloud-auth" data-mode="signin">
           <div class="cloud-actions">
             <button class="primary" id="cloud-signin" type="button" data-i18n="action.signInGoogle">Sign in with Google</button>
@@ -106,16 +106,12 @@
             <div class="cloud-recaptcha is-hidden" id="cloud-recaptcha"></div>
             <div class="cloud-email-actions">
               <button class="ghost" id="cloud-email-signin" type="button" data-auth="signin" data-i18n="action.signInEmail">Sign in</button>
-              <button class="ghost" id="cloud-email-signup" type="button" data-auth="signup" data-i18n="action.signUpEmail">Create account</button>
+              <button class="ghost" id="cloud-email-signup" type="button" data-auth="signup" data-i18n="action.signUpEmail">
+                Create account
+              </button>
             </div>
             <div class="cloud-email-links">
-              <button
-                class="text-link"
-                id="cloud-password-reset"
-                type="button"
-                data-auth="signin"
-                data-i18n="cloud.password.reset"
-              >
+              <button class="text-link" id="cloud-password-reset" type="button" data-auth="signin" data-i18n="cloud.password.reset">
                 Reset password
               </button>
             </div>
@@ -133,10 +129,10 @@
             </div>
             <div class="cloud-verification-copy">
               <h5 data-i18n="cloud.verification.title">Check your inbox</h5>
-                <p class="hint">
-                  <span data-i18n="cloud.verification.message">We've sent a verification link to</span>
-                  <span class="cloud-verification-email" id="cloud-verification-email">you@example.com</span>.
-                </p>
+              <p class="hint">
+                <span data-i18n="cloud.verification.message">We've sent a verification link to</span>
+                <span class="cloud-verification-email" id="cloud-verification-email">you@example.com</span>.
+              </p>
             </div>
           </div>
           <div class="cloud-verification-actions">
@@ -213,56 +209,91 @@
   <div class="modal-backdrop" data-close="true"></div>
   <div class="modal-card" role="dialog" aria-modal="true">
     <div class="modal-header">
-      <h3 data-i18n="generate.title">Generate palette</h3>
+      <h3 data-i18n="generate.title">New Palette</h3>
       <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
     </div>
     <div class="modal-body">
-      <div class="field">
-        <label for="generate-name" data-i18n="generate.name.label">Palette name</label>
-        <input type="text" id="generate-name" placeholder="Generated palette" data-i18n-placeholder="generate.name.placeholder" />
-      </div>
-      <div class="form-grid">
-        <div class="field">
-          <label for="generate-style" data-i18n="generate.style.label">Palette style</label>
-          <select id="generate-style">
-            <option value="analogous" data-i18n="style.analogous">Analogous</option>
-            <option value="cold-pair" data-i18n="style.coldPair">Cold pair</option>
-            <option value="complementary" data-i18n="style.complementary">Complementary</option>
-            <option value="contrasting" data-i18n="style.contrasting">Contrasting</option>
-            <option value="neutral" data-i18n="style.neutral">Neutral</option>
-            <option value="pastel-pair" data-i18n="style.pastelPair">Pastel pair</option>
-            <option value="same-family" data-i18n="style.sameFamily">Same family</option>
-            <option value="shade" data-i18n="style.shade">Shade</option>
-            <option value="triadic" data-i18n="style.triadic">Triadic</option>
-            <option value="vivid-pair" data-i18n="style.vividPair">Vivid pair</option>
-            <option value="warm-cold" data-i18n="style.warmCold">Warm / Cold</option>
-            <option value="warm-pair" data-i18n="style.warmPair">Warm pair</option>
-          </select>
+      <div class="generate-layout">
+        <div class="field generate-name-field">
+          <label for="generate-name" data-i18n="generate.name.label">Palette name</label>
+          <input type="text" id="generate-name" placeholder="New palette" data-i18n-placeholder="generate.name.placeholder" />
         </div>
-        <div class="field">
-          <label for="generate-format" data-i18n="generate.format.label">Color naming</label>
-          <select id="generate-format"></select>
-        </div>
-        <div class="field">
-          <label for="generate-count" data-i18n="generate.count.label">Number of colors</label>
-          <input type="number" id="generate-count" min="1" max="16" value="5" />
-        </div>
-        <div class="field">
-          <label data-i18n="generate.base.label">Base color</label>
-          <div class="inline-field">
-            <label class="toggle is-compact">
-              <input type="checkbox" id="generate-use-base" />
-              <span class="toggle-track"></span>
-              <span class="toggle-label" data-i18n="generate.base.use">Use base</span>
-            </label>
-            <input type="color" id="generate-base-color" value="#38bdf8" />
+        <div class="generate-controls">
+          <div class="form-grid generate-form-grid">
+            <div class="field">
+              <label for="generate-style" data-i18n="generate.style.label">Palette style</label>
+              <select id="generate-style">
+                <option value="empty" data-i18n="style.empty">Empty</option>
+                <option value="analogous" data-i18n="style.analogous">Analogous</option>
+                <option value="cold-pair" data-i18n="style.coldPair">Cold pair</option>
+                <option value="complementary" data-i18n="style.complementary">Complementary</option>
+                <option value="contrasting" data-i18n="style.contrasting">Contrasting</option>
+                <option value="neutral" data-i18n="style.neutral">Neutral</option>
+                <option value="pastel-pair" data-i18n="style.pastelPair">Pastel pair</option>
+                <option value="same-family" data-i18n="style.sameFamily">Same family</option>
+                <option value="shade" data-i18n="style.shade">Shade</option>
+                <option value="triadic" data-i18n="style.triadic">Triadic</option>
+                <option value="vivid-pair" data-i18n="style.vividPair">Vivid pair</option>
+                <option value="warm-cold" data-i18n="style.warmCold">Warm / Cold</option>
+                <option value="warm-pair" data-i18n="style.warmPair">Warm pair</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="generate-format" data-i18n="generate.format.label">Color naming</label>
+              <select id="generate-format"></select>
+            </div>
+            <div class="field">
+              <label for="generate-count" data-i18n="generate.count.label">Number of colors</label>
+              <select id="generate-count">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5" selected>5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+              </select>
+            </div>
+            <div class="field generate-base-field">
+              <label data-i18n="generate.base.label">Base color</label>
+              <div class="inline-field generate-base-inline">
+                <label class="toggle is-compact">
+                  <input type="checkbox" id="generate-use-base" />
+                  <span class="toggle-track"></span>
+                  <span class="toggle-label" data-i18n="generate.base.use">Use base</span>
+                </label>
+                <div class="generate-base-color-field" id="generate-base-color-field">
+                  <input type="color" id="generate-base-color" value="#38bdf8" data-i18n-aria-label="generate.base.label" />
+                  <span class="generate-base-color-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <use href="/icons/edit.svg#icon"></use>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+        <div class="generate-preview" id="generate-preview" aria-live="polite">
+          <div class="generate-preview-meta">
+            <p class="generate-preview-name" id="generate-preview-name"></p>
+            <p class="hint generate-preview-subtitle" id="generate-preview-subtitle"></p>
+          </div>
+          <div class="generate-preview-strip" id="generate-preview-strip"></div>
+        </div>
       </div>
-      <div class="modal-actions">
-        <button class="ghost" data-close="true" data-i18n="common.cancel">Cancel</button>
-        <button class="ghost" id="generate-empty-button" type="button" data-i18n="action.createEmptyPalette">Create empty palette</button>
-        <button class="primary" id="confirm-generate" data-i18n="action.createPalette">Create palette</button>
+      <div class="modal-actions generate-modal-actions">
+        <button class="ghost" id="confirm-generate" type="button" data-i18n="action.generatePalette">Generate</button>
+        <button class="primary" id="save-generated-palette" type="button" data-i18n="action.save">Save</button>
       </div>
     </div>
   </div>
@@ -404,7 +435,7 @@
       <div class="legal-section">
         <h4 data-i18n="privacy.controller.title">Data controller</h4>
         <p class="legal-copy" data-i18n="privacy.controller.body">
-          Palette Studio is operated by Joan Roig. You can contact us athttps://github.com/joanroig/palette-studio/issues.
+          Palette Studio is operated by Joan Roig. You can contact us at https://github.com/joanroig/palette-studio/issues.
         </p>
       </div>
       <div class="legal-section">
@@ -416,9 +447,8 @@
       <div class="legal-section">
         <h4 data-i18n="privacy.cloud.title">Cloud sync data</h4>
         <p class="legal-copy" data-i18n="privacy.cloud.body">
-          If you enable cloud sync, we store your account email, display name, avatar colors, palette data, and
-          likes/saves in Firebase Authentication and Firestore. If you sign in with Google, Google shares your
-          profile information with us.
+          If you enable cloud sync, we store your account email, display name, avatar colors, palette data, and likes/saves in Firebase
+          Authentication and Firestore. If you sign in with Google, Google shares your profile information with us.
         </p>
       </div>
       <div class="legal-section">
@@ -430,8 +460,8 @@
       <div class="legal-section">
         <h4 data-i18n="privacy.security.title">Security</h4>
         <p class="legal-copy" data-i18n="privacy.security.body">
-          We use Firebase App Check and Google reCAPTCHA Enterprise to prevent abuse. These services may process
-          device and network information (such as IP address) and set security cookies.
+          We use Firebase App Check and Google reCAPTCHA Enterprise to prevent abuse. These services may process device and network
+          information (such as IP address) and set security cookies.
         </p>
       </div>
       <div class="legal-section">
@@ -445,36 +475,36 @@
       <div class="legal-section">
         <h4 data-i18n="privacy.thirdParty.title">Third-party processors</h4>
         <p class="legal-copy" data-i18n="privacy.thirdParty.body">
-          We use Firebase (Google) for authentication, database storage, and app protection. Google processes data
-          as a processor under its data processing terms.
+          We use Firebase (Google) for authentication, database storage, and app protection. Google processes data as a processor under its
+          data processing terms.
         </p>
       </div>
       <div class="legal-section">
         <h4 data-i18n="privacy.transfers.title">International transfers</h4>
         <p class="legal-copy" data-i18n="privacy.transfers.body">
-          Data may be processed outside your country, including in the United States. Google uses appropriate
-          safeguards such as Standard Contractual Clauses.
+          Data may be processed outside your country, including in the United States. Google uses appropriate safeguards such as Standard
+          Contractual Clauses.
         </p>
       </div>
       <div class="legal-section">
         <h4 data-i18n="privacy.retention.title">Retention</h4>
         <p class="legal-copy" data-i18n="privacy.retention.body">
-          Local data stays on your device until you delete it. Cloud data is stored while your account is active.
-          You can delete your account and cloud data from the Cloud settings.
+          Local data stays on your device until you delete it. Cloud data is stored while your account is active. You can delete your
+          account and cloud data from the Cloud settings.
         </p>
       </div>
       <div class="legal-section">
         <h4 data-i18n="privacy.rights.title">Your rights</h4>
         <p class="legal-copy" data-i18n="privacy.rights.body">
-          You have the right to access, correct, delete, restrict or object to processing, and to data portability.
-          You can also lodge a complaint with your supervisory authority.
+          You have the right to access, correct, delete, restrict or object to processing, and to data portability. You can also lodge a
+          complaint with your supervisory authority.
         </p>
       </div>
       <div class="legal-section">
         <h4 data-i18n="privacy.choices.title">Your choices</h4>
         <p class="legal-copy" data-i18n="privacy.choices.body">
-          You can sign out to stop syncing, delete your account from Cloud settings, and clear local data at any time by
-          removing palettes and preferences.
+          You can sign out to stop syncing, delete your account from Cloud settings, and clear local data at any time by removing palettes
+          and preferences.
         </p>
       </div>
     </div>
@@ -492,9 +522,7 @@
       <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
     </div>
     <div class="modal-body legal-body">
-      <p class="legal-copy" data-i18n="cookies.intro">
-        We use cookies and similar storage for essential functionality and security.
-      </p>
+      <p class="legal-copy" data-i18n="cookies.intro">We use cookies and similar storage for essential functionality and security.</p>
       <div class="legal-section">
         <h4 data-i18n="cookies.essential.title">Essential storage</h4>
         <p class="legal-copy" data-i18n="cookies.essential.body">
@@ -509,9 +537,7 @@
       </div>
       <div class="legal-section">
         <h4 data-i18n="cookies.noAnalytics.title">No analytics or ads</h4>
-        <p class="legal-copy" data-i18n="cookies.noAnalytics.body">
-          We do not use analytics, advertising, or cross-site tracking cookies.
-        </p>
+        <p class="legal-copy" data-i18n="cookies.noAnalytics.body">We do not use analytics, advertising, or cross-site tracking cookies.</p>
       </div>
     </div>
   </div>
@@ -533,7 +559,13 @@
         <p class="legal-copy" data-i18n="contact.issues.body">
           The fastest way to reach us is to open an issue with details, screenshots, or steps to reproduce.
         </p>
-        <a class="text-link" href="https://github.com/joanroig/palette-studio/issues" target="_blank" rel="noreferrer" data-i18n="contact.issues.link">
+        <a
+          class="text-link"
+          href="https://github.com/joanroig/palette-studio/issues"
+          target="_blank"
+          rel="noreferrer"
+          data-i18n="contact.issues.link"
+        >
           Open a GitHub issue
         </a>
       </div>
@@ -556,9 +588,7 @@
       <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
     </div>
     <div class="modal-body legal-body">
-      <p class="legal-copy" data-i18n="about.body">
-        Palette Studio is a palette tool for designers and developers.
-      </p>
+      <p class="legal-copy" data-i18n="about.body">Palette Studio is a palette tool for designers and developers.</p>
     </div>
   </div>
 </div>
@@ -617,12 +647,7 @@
         <input type="text" id="palette-name" placeholder="Palette name" data-i18n-placeholder="editor.paletteName.placeholder" />
       </div>
       <div class="editor-header-actions">
-        <div
-          class="segmented editor-layout-toggle"
-          role="radiogroup"
-          aria-label="Layout"
-          data-i18n-aria-label="editor.layout.label"
-        >
+        <div class="segmented editor-layout-toggle" role="radiogroup" aria-label="Layout" data-i18n-aria-label="editor.layout.label">
           <label class="segmented-option">
             <input type="radio" name="editor-layout" value="horizontal" checked />
             <span data-i18n="editor.layout.horizontal">Horizontal</span>

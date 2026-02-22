@@ -45,6 +45,7 @@ import {
   colorNotationEditorSelect,
   colorNotationSelect,
   confirmGenerateButton,
+  generateBaseColorInput,
   discoverProfileModal,
   discoverSearchInput,
   discoverSortSelect,
@@ -60,9 +61,11 @@ import {
   exportFormatOptions,
   exportModal,
   formatSelect,
-  generateEmptyButton,
   generateFormatSelect,
   generateModal,
+  generateNameInput,
+  generateCountInput,
+  generateStyleSelect,
   generateUseBaseToggle,
   importModal,
   languageSelect,
@@ -94,6 +97,7 @@ import {
   viewToggleButtons,
   sidebarToggleButton,
   removeAllButton,
+  saveGeneratedPaletteButton,
   cookiesModal,
   contactModal,
   settingsModal,
@@ -105,7 +109,15 @@ import {
   viewModal,
 } from "./dom";
 import { exportPalettesSmart, getExportTargets, handleExportAction, setExportMode, setSelectedExportFormat } from "./export/manager";
-import { createGeneratedPalette, syncBaseColorState } from "./generation";
+import {
+  randomizeGeneratedPalettePreview,
+  saveGeneratedPaletteFromPreview,
+  syncBaseColorState,
+  syncGeneratedPalettePreviewBaseColor,
+  syncGeneratedPalettePreviewCount,
+  syncGeneratedPalettePreviewFormat,
+  syncGeneratedPalettePreviewName,
+} from "./generation";
 import { onLanguageChange, t } from "./i18n";
 import { ensureLicenseLoaded, ensureLicensesLoaded } from "./licenses";
 import { nameColor, resolveNameFormat } from "./palette/naming";
@@ -169,8 +181,8 @@ export const applyActionLabels = () => {
   setButtonContent(editorRedoButton, "redo", t("action.redo"), true);
   setButtonContent(addColorButton, "plus", t("action.addColor"));
   setButtonContent(exportAllButton, "download", t("action.download"));
-  setButtonContent(confirmGenerateButton, "generate", t("action.createPalette"));
-  setButtonContent(generateEmptyButton, "plus", t("action.createEmptyPalette"));
+  setButtonContent(confirmGenerateButton, "generate", t("action.generatePalette"));
+  setButtonContent(saveGeneratedPaletteButton, "bookmark", t("action.save"));
   setButtonContent(cloudSignInButton, "login", t("action.signInGoogle"));
   setButtonContent(cloudEmailSignInButton, "login", t("action.signInEmail"));
   setButtonContent(cloudEmailSignUpButton, "plus", t("action.signUpEmail"));
@@ -250,6 +262,7 @@ export const setupActions = () => {
 
   onLanguageChange(() => {
     setCloudAuthMode(currentCloudAuthMode);
+    syncGeneratedPalettePreviewName();
   });
 
   openSettingsButtons.forEach((button) => {
@@ -306,6 +319,7 @@ export const setupActions = () => {
 
   openGenerateButton?.addEventListener("click", () => {
     syncBaseColorState();
+    randomizeGeneratedPalettePreview();
     setModalOpen(generateModal, true);
   });
 
@@ -422,18 +436,14 @@ export const setupActions = () => {
   });
 
   confirmGenerateButton?.addEventListener("click", () => {
-    const palette = createGeneratedPalette(false);
-    state.palettes.unshift(palette);
-    syncActivePalette(palette.id);
-    appendLog(t("log.generated"), "success");
-    setModalOpen(generateModal, false);
+    randomizeGeneratedPalettePreview();
   });
 
-  generateEmptyButton?.addEventListener("click", () => {
-    const palette = createGeneratedPalette(true);
+  saveGeneratedPaletteButton?.addEventListener("click", () => {
+    const palette = saveGeneratedPaletteFromPreview();
     state.palettes.unshift(palette);
     syncActivePalette(palette.id);
-    appendLog(t("log.generatedEmpty"), "success");
+    appendLog(t(palette.colors.length === 0 ? "log.generatedEmpty" : "log.generated"), "success");
     setModalOpen(generateModal, false);
   });
 
@@ -782,6 +792,23 @@ export const setupActions = () => {
   generateFormatSelect?.addEventListener("change", () => {
     syncNameFormat(generateFormatSelect.value);
     syncPaletteColorNames(generateFormatSelect.value);
+    syncGeneratedPalettePreviewFormat();
+  });
+  generateStyleSelect?.addEventListener("change", () => {
+    persistPreferences();
+    randomizeGeneratedPalettePreview();
+  });
+  generateCountInput?.addEventListener("change", () => {
+    syncGeneratedPalettePreviewCount();
+  });
+  generateBaseColorInput?.addEventListener("input", () => {
+    if (!(generateUseBaseToggle?.checked ?? false)) {
+      return;
+    }
+    syncGeneratedPalettePreviewBaseColor();
+  });
+  generateNameInput?.addEventListener("input", () => {
+    syncGeneratedPalettePreviewName();
   });
   addBwToggle?.addEventListener("change", persistPreferences);
   exportFormatOptions.forEach((option) => option.addEventListener("change", persistPreferences));
@@ -793,7 +820,14 @@ export const setupActions = () => {
   });
   motionSelect?.addEventListener("change", () => applyMotionPreference(motionSelect.value));
   languageSelect?.addEventListener("change", () => applyLanguagePreference(languageSelect.value));
-  generateUseBaseToggle?.addEventListener("change", syncBaseColorState);
+  generateUseBaseToggle?.addEventListener("change", () => {
+    syncBaseColorState();
+    if (!(generateUseBaseToggle?.checked ?? false)) {
+      randomizeGeneratedPalettePreview();
+      return;
+    }
+    syncGeneratedPalettePreviewBaseColor();
+  });
 
   if (discoverSortSelect) {
     discoverSortSelect.value = discoveryState.sort;

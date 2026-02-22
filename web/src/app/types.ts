@@ -34,6 +34,7 @@ export type Preferences = {
   addBlackWhite: boolean;
   exportFormat: string;
   colorNotation: string;
+  generateStyle?: string;
   motion?: "system" | "on" | "off";
   language?: "system" | "en" | "es";
 };

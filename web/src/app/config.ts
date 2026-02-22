@@ -16,6 +16,7 @@ export const COLOR_NOTATIONS = [
 ];
 
 export const STYLE_LABELS: Record<string, string> = {
+  empty: "Empty",
   analogous: "Analogous",
   "cold-pair": "Cold Pair",
   complementary: "Complementary",

@@ -73,7 +73,7 @@ test("test account can sync to firestore", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.click("#open-cloud");
+  await page.locator('[data-action="open-cloud"]:visible').click();
 
   await page.fill("#cloud-email-input", cloudTestEmail);
   await page.fill("#cloud-password-input", cloudTestPassword);

@@ -1,23 +1,21 @@
 {
   "projects": {
-    "production": "palettestudio",
-    "staging": "palette-studio-app",
-    "test": "palettes"
+    "palettes": "palette-studio-app"
   },
   "targets": {
     "palette-studio-app": {
       "hosting": {
         "production": [
-          "palettestudio"
+          "palettes"
         ],
         "mirror-1": [
-          "palettes"
+          "palettestudio"
         ],
         "mirror-2": [
           "palette-studio-app"
         ],
         "pre": [
-          "palettestudiobeta"
+          "palettesbeta"
         ]
       }
     }

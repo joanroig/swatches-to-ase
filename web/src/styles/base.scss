@@ -9,6 +9,8 @@ body {
   color: var(--ink);
   user-select: none;
   overflow-x: hidden;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 
 input,

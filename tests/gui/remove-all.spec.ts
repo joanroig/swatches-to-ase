@@ -16,12 +16,15 @@ test("remove all clears palettes after confirmation", async ({ page }) => {
 
   await page.goto("/");
   await page.click("#open-generate");
-  await page.click("#generate-empty-button");
+  await page.selectOption("#generate-style", "empty");
+  await page.click("#save-generated-palette");
 
   const card = page.locator(".palette-card");
   await expect(card).toHaveCount(1);
   await expect(page.locator("#open-export")).toBeEnabled();
 
+  await page.locator('[data-action="open-settings"]:visible').click();
+  await expect(page.locator("#settings-modal")).toHaveAttribute("aria-hidden", "false");
   await page.click("#remove-all-palettes");
 
   await expect(card).toHaveCount(0);

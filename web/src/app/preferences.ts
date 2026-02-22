@@ -5,6 +5,7 @@ import {
   colorNotationSelect,
   formatSelect,
   generateFormatSelect,
+  generateStyleSelect,
   languageSelect,
   motionSelect,
   themeSelect,
@@ -15,6 +16,21 @@ import { persistPreferences } from "./persistence";
 import type { Preferences } from "./types";
 
 let onNotationChange: (() => void) | null = null;
+const DEFAULT_GENERATE_STYLE = "shade";
+
+const resolveGenerateStylePreference = (value?: string | null) => {
+  const normalized = value?.trim().toLowerCase() ?? "";
+  if (generateStyleSelect?.querySelector(`option[value="${normalized}"]`)) {
+    return normalized;
+  }
+  return DEFAULT_GENERATE_STYLE;
+};
+
+const applyGenerateStylePreference = (value?: string | null) => {
+  if (generateStyleSelect) {
+    generateStyleSelect.value = resolveGenerateStylePreference(value);
+  }
+};
 
 export const setColorNotationChangeHandler = (handler: (() => void) | null) => {
   onNotationChange = handler;
@@ -27,6 +43,7 @@ export const getPreferencesPayload = (): Preferences => ({
   addBlackWhite: addBwToggle?.checked ?? false,
   exportFormat: getSelectedExportFormat(),
   colorNotation: getColorNotation(),
+  generateStyle: resolveGenerateStylePreference(generateStyleSelect?.value),
   language: normalizeLanguagePreference(languageSelect?.value),
 });
 
@@ -100,6 +117,7 @@ export const applyRemotePreferences = (prefs: Preferences) => {
   if (generateFormatSelect && prefs.colorNameFormat) {
     generateFormatSelect.value = prefs.colorNameFormat;
   }
+  applyGenerateStylePreference(prefs.generateStyle);
   if (addBwToggle) {
     addBwToggle.checked = prefs.addBlackWhite ?? false;
   }
@@ -191,6 +209,7 @@ export const hydratePreferences = () => {
   if (!raw) {
     applyTheme(themeSelect?.value ?? "system");
     applyMotionPreference(motionSelect?.value ?? "system", false);
+    applyGenerateStylePreference();
     applyLanguagePreference(languageSelect?.value ?? "system", false);
     return;
   }
@@ -200,6 +219,7 @@ export const hydratePreferences = () => {
   } catch {
     applyTheme(themeSelect?.value ?? "system");
     applyMotionPreference(motionSelect?.value ?? "system", false);
+    applyGenerateStylePreference();
     applyLanguagePreference(languageSelect?.value ?? "system", false);
   }
 };

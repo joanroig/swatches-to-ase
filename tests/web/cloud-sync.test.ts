@@ -21,6 +21,7 @@ const samplePreferences: Preferences = {
   addBlackWhite: false,
   exportFormat: "all",
   colorNotation: "hex",
+  generateStyle: "shade",
 };
 
 test("buildSyncPayload includes palettes, preferences, and revision", () => {
