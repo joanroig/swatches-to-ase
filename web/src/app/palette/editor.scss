@@ -433,17 +433,6 @@ button.drag-handle {
   }
 }
 
-/* The native picker is triggered by the value/name buttons, so keep it out of the layout. */
-input.color-swatch-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-  appearance: none;
-  -webkit-appearance: none;
-}
-
 /* Buttons sit on top of the swatch colour, so they follow its contrast. */
 .color-row .ghost {
   border-color: transparent;
@@ -530,7 +519,11 @@ input.color-swatch-input {
 
   .color-card-value {
     font-size: 0.86rem;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
+    /* HSL and CMYK readouts are far longer than a hex; let them wrap rather than truncate. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
   }
 
   .color-card-name {
@@ -583,6 +576,7 @@ input.color-swatch-input {
   #palette-editor[data-layout="vertical"] .color-card-name {
     writing-mode: sideways-lr;
     text-orientation: mixed;
+    white-space: nowrap;
     line-height: 1;
     flex: 0 1 auto;
     min-height: 0;

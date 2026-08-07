@@ -48,7 +48,7 @@ test("use base color inserts base as first generated color", async ({ page }) =>
   const card = page.locator(".palette-card");
   await expect(card).toHaveCount(1);
   await card.getByRole("button", { name: "Edit" }).click();
-  await expect(page.locator('.color-row input[type="color"]').first()).toHaveValue("#ff0000");
+  await expect(page.locator(".color-card-value").first()).toHaveText("#FF0000");
 });
 
 test("format and count changes keep existing generated colors stable", async ({ page }) => {
@@ -124,8 +124,13 @@ test("generate empty palette, edit colors, and apply notation", async ({ page })
   await expect(page.locator(".color-card-value").first()).toContainText(",");
 
   const initialValue = await page.locator(".color-card-value").first().innerText();
-  const swatchInput = page.locator('.color-row input[type="color"]').first();
-  await setColorValue(swatchInput, "#00ff88");
+
+  // Colours are edited through the colour tools popover rather than a native input.
+  await page.locator(".color-card-value").first().click();
+  await expect(page.locator(".color-tools")).toBeVisible();
+  await page.locator(".color-hex-input").fill("#00FF88");
+  await page.locator(".color-hex-input").press("Enter");
+  await page.keyboard.press("Escape");
 
   const updatedValue = await page.locator(".color-card-value").first().innerText();
   expect(updatedValue).not.toBe(initialValue);

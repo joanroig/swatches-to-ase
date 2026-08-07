@@ -228,14 +228,9 @@
     margin-right: auto;
   }
 
-  input[type="color"]:not(.color-swatch-input) {
+  input[type="color"] {
     width: 48px;
     height: 48px;
-  }
-
-  input.color-swatch-input {
-    width: 40px;
-    height: 40px;
   }
 
   .topbar-actions button {

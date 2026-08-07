@@ -6,7 +6,7 @@ import { persistPalettes } from "../persistence";
 import { state } from "../state";
 import type { Palette } from "../types";
 import { showToast } from "../ui/notifications";
-import { renderEditor } from "./editor";
+import { dismissColorTools, renderEditor } from "./editor";
 import { renderPaletteList } from "./list";
 import { renderViewModal } from "./view";
 
@@ -200,6 +200,7 @@ export const saveEditorChanges = async () => {
 };
 
 export const confirmEditorClose = () => {
+  dismissColorTools();
   if (!editorSession.isDirty) {
     resetEditorSession();
     return true;

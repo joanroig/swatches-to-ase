@@ -14,10 +14,11 @@ import { getColorNotation } from "../preferences";
 import { state } from "../state";
 import type { Palette, PaletteColor } from "../types";
 import { setButtonContent } from "../ui/icons";
+import { closeColorTools, openColorTools } from "../color/tools";
 import { setModalOpen } from "../ui/modals";
 import { showToast } from "../ui/notifications";
 import { createSortable } from "../ui/sortable";
-import { formatColorValue, getContrastColor, hexToRgb, rgbToHex } from "../utils/color";
+import { formatColorValue, getContrastColor, rgbToHex } from "../utils/color";
 import { createId } from "../utils/id";
 import { resetEditorSession, startEditorSession, updateEditorDirtyState } from "./editor-session";
 import { resolveActiveNameFormat } from "./format";
@@ -87,6 +88,9 @@ export const setupEditorLayout = () => {
     applyEditorLayout(next);
   });
 };
+
+/** The popover is anchored to a row, so it must go when the rows are rebuilt. */
+export const dismissColorTools = () => closeColorTools();
 
 export const openEditorForPalette = (paletteId: string) => {
   syncActivePalette(paletteId);
@@ -188,14 +192,6 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
   textGroup.className = "color-card-text";
   textGroup.append(valueLabel, nameLabel);
 
-  const swatch = document.createElement("input");
-  swatch.type = "color";
-  swatch.className = "color-swatch-input";
-  swatch.value = rgbToHex(color.rgb);
-  swatch.setAttribute("aria-label", t("editor.colorPicker"));
-  swatch.title = t("editor.colorPicker");
-  swatch.tabIndex = -1;
-
   const applyRowVisuals = (rgb: [number, number, number], name: string) => {
     const hex = rgbToHex(rgb);
     row.style.background = hex;
@@ -207,9 +203,44 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
     valueLabel.textContent = formatColorValue({ ...color, rgb, name }, notation);
   };
 
-  const openPicker = () => swatch.click();
-  valueLabel.addEventListener("click", openPicker);
-  nameLabel.addEventListener("click", openPicker);
+  /** Apply a colour to the palette without recording an undo step (used while dragging). */
+  const previewColor = (rgb: [number, number, number]) => {
+    const target = palette.colors.find((entry) => entry.id === color.id);
+    const nextName = nameColor(rgbToHex(rgb).toUpperCase(), nameFormat, getRowIndex(row));
+    if (target) {
+      target.rgb = rgb;
+      target.name = nextName;
+    }
+    applyRowVisuals(rgb, nextName);
+    renderViewModal();
+    updateEditorDirtyState(palette);
+  };
+
+  const openPicker = (anchor: HTMLElement) => {
+    const original = [...color.rgb] as [number, number, number];
+    openColorTools({
+      // Anchor to the control that was clicked. Anchoring to the row put the popover a full
+      // column-height away from the pointer in the column layout.
+      anchor,
+      rgb: palette.colors.find((entry) => entry.id === color.id)?.rgb ?? original,
+      name: nameLabel.textContent ?? color.name,
+      onPreview: previewColor,
+      onCommit: (rgb) => {
+        // Route through `updatePalette` so the change becomes an undo step.
+        updatePalette(palette.id, (item) => {
+          const target = item.colors.find((entry) => entry.id === color.id);
+          if (target) {
+            target.rgb = [...rgb] as [number, number, number];
+            target.name = nameColor(rgbToHex(rgb).toUpperCase(), nameFormat, index);
+          }
+        });
+      },
+      onCancel: () => previewColor(original),
+    });
+  };
+
+  valueLabel.addEventListener("click", () => openPicker(valueLabel));
+  nameLabel.addEventListener("click", () => openPicker(nameLabel));
 
   const actions = document.createElement("div");
   actions.className = "color-actions";
@@ -251,40 +282,21 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
     });
   });
 
-  actions.append(copyButton, duplicateButton, removeButton);
+  const tuneButton = document.createElement("button");
+  tuneButton.type = "button";
+  tuneButton.className = "ghost";
+  setButtonContent(tuneButton, "edit", t("editor.colorPicker"), true);
+  tuneButton.addEventListener("click", () => openPicker(tuneButton));
+
+  actions.append(tuneButton, copyButton, duplicateButton, removeButton);
   // Flat children so each layout can order them independently: the row places the handle first and
   // the actions last, the column pins the handle to the top, the label to the bottom and floats the
   // actions in the middle.
-  row.append(dragHandle, textGroup, actions, swatch, createInsertButton(palette.id, row));
+  row.append(dragHandle, textGroup, actions, createInsertButton(palette.id, row));
   if (index === palette.colors.length - 1) {
     row.appendChild(createInsertButton(palette.id, row, true));
   }
   applyRowVisuals(color.rgb, color.name);
-
-  // `input` fires continuously while the OS picker is open: paint without re-rendering the list.
-  swatch.addEventListener("input", () => {
-    const nextRgb = hexToRgb(swatch.value);
-    const nextName = nameColor(swatch.value.toUpperCase(), nameFormat, getRowIndex(row));
-    const target = palette.colors.find((entry) => entry.id === color.id);
-    if (target) {
-      target.rgb = nextRgb;
-      target.name = nextName;
-    }
-    applyRowVisuals(nextRgb, nextName);
-    renderViewModal();
-    updateEditorDirtyState(palette);
-  });
-
-  // `change` fires once, when the picker closes: commit through the normal update path.
-  swatch.addEventListener("change", () => {
-    updatePalette(palette.id, (item) => {
-      const target = item.colors.find((entry) => entry.id === color.id);
-      if (target) {
-        target.rgb = hexToRgb(swatch.value);
-        target.name = nameColor(swatch.value.toUpperCase(), nameFormat, getRowIndex(row));
-      }
-    });
-  });
 
   return row;
 };

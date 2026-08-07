@@ -12,6 +12,7 @@ const ICONS = {
   duplicate: "/icons/duplicate.svg#icon",
   rows: "/icons/rows.svg#icon",
   columns: "/icons/columns.svg#icon",
+  eyedropper: "/icons/eyedropper.svg#icon",
   chevronUp: "/icons/chevronUp.svg#icon",
   chevronDown: "/icons/chevronDown.svg#icon",
   grip: "/icons/grip.svg#icon",
