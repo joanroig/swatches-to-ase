@@ -15,9 +15,9 @@ export type PopoverOptions = {
 
 const OPEN_CLASS = "is-open";
 
-export const setupPopover = ({ root, trigger, panel, closeOnPanelClick = true }: PopoverOptions) => {
+export const setupPopover = ({ root, trigger, panel, closeOnPanelClick = true }: PopoverOptions): { close: () => void } => {
   if (!trigger || !panel) {
-    return { close: () => undefined };
+    return { close: () => {} };
   }
 
   const close = () => {

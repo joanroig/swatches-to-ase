@@ -1,4 +1,5 @@
 import type {
+  Folder,
   Palette,
   PaletteColor,
   Preferences,
@@ -24,14 +25,19 @@ const sanitizePalette = (palette: Palette): StoredPalette => ({
   lastModified: typeof palette.lastModified === "number" ? palette.lastModified : 0,
   isPublic: palette.isPublic ?? false,
   publicId: palette.publicId ?? null,
+  folderId: palette.folderId ?? null,
 });
+
+const sanitizeFolder = (folder: Folder): Folder => ({ id: folder.id, name: folder.name });
 
 export const buildSyncPayload = (
   palettes: Palette[],
+  folders: Folder[],
   activePaletteId: string | null,
   preferences: Preferences,
 ): StoredSyncPayload => ({
   palettes: palettes.map(sanitizePalette),
+  folders: folders.map(sanitizeFolder),
   activePaletteId,
   preferences,
   revision: createId(),
@@ -56,6 +62,14 @@ const isStoredPalette = (value: unknown): value is StoredPalette => {
     Array.isArray(candidate.colors) &&
     candidate.colors.every(isStoredPaletteColor)
   );
+};
+
+const isFolder = (value: unknown): value is Folder => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const candidate = value as Folder;
+  return typeof candidate.id === "string" && typeof candidate.name === "string";
 };
 
 const isPreferences = (value: unknown): value is Preferences => {
@@ -96,7 +110,11 @@ export const parseSyncPayload = (value: unknown): SyncPayload | null => {
   ) {
     return null;
   }
+  // `folders` was added after the first release, so treat a missing list as "no folders".
+  const folders = Array.isArray(candidate.folders) ? candidate.folders.filter(isFolder) : [];
+  const folderIds = new Set(folders.map((folder) => folder.id));
   return {
+    folders,
     palettes: candidate.palettes.map((palette) => ({
       id: palette.id,
       name: palette.name,
@@ -108,6 +126,7 @@ export const parseSyncPayload = (value: unknown): SyncPayload | null => {
       lastModified: typeof palette.lastModified === "number" ? palette.lastModified : 0,
       isPublic: palette.isPublic ?? false,
       publicId: palette.publicId ?? null,
+      folderId: palette.folderId && folderIds.has(palette.folderId) ? palette.folderId : null,
     })),
     activePaletteId: candidate.activePaletteId ?? null,
     preferences: candidate.preferences,

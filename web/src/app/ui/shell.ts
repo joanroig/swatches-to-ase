@@ -161,7 +161,7 @@ const ensureDiscoverReady = () => {
   // `fetchUserInteractions` swallows its own errors, but never let a rejection here stop Discover
   // from starting to listen.
   void fetchUserInteractions()
-    .catch(() => undefined)
+    .catch((): void => {})
     .then(() => {
       listenToDiscovery();
       renderDiscovery();

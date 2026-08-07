@@ -24,7 +24,21 @@
   <div class="shell">
     <main class="main-content">
       <section class="panel panel-palettes view-section view-library is-active" data-view-section="library" style="--delay: 0.15s">
-        <div class="palette-list" id="palette-list"></div>
+        <div class="library-toolbar">
+          <div class="field compact library-search">
+            <input
+              id="library-search"
+              type="search"
+              placeholder="Search palettes, folders or hex"
+              data-i18n-placeholder="library.search.placeholder"
+              aria-label="Search palettes"
+              data-i18n-aria-label="library.search.label"
+            />
+          </div>
+          <button class="ghost" id="create-folder" type="button" data-i18n="folder.create">New folder</button>
+        </div>
+        <p class="empty is-hidden" id="library-empty-search" data-i18n="library.search.empty">No palettes match your search.</p>
+        <div class="library-groups" id="palette-list"></div>
         <div class="panel-palettes-spacer" aria-hidden="true"></div>
         <div class="action-dock" aria-label="Palette actions">
           <button class="ghost" id="open-import" data-i18n="action.import">Import</button>

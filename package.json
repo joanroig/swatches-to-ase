@@ -25,7 +25,7 @@
     "build:desktop": "npm run build:web && tsc -p electron/tsconfig.json",
     "dist:desktop": "npm run build:desktop && electron-builder",
     "run:dev": "nodemon",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p electron/tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p web/tsconfig.json --noEmit && tsc -p electron/tsconfig.json --noEmit",
     "test": "npm run typecheck && node --test --import tsx",
     "test:coverage": "npm run typecheck && node --test --experimental-test-coverage --import tsx",
     "test:gui": "node scripts/ensure-playwright.mjs && playwright test",

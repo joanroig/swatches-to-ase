@@ -421,6 +421,7 @@ const applyRemoteStateWithPalettes = (
   cloudState.applyingRemote = true;
   cloudState.lastRevision = payload.revision;
   state.palettes = palettes;
+  state.folders = payload.folders;
   state.activePaletteId = activePaletteId;
   applyRemotePreferences(payload.preferences);
   persistPreferences();
@@ -531,7 +532,7 @@ export const syncToCloud = async (source: "manual" | "auto" | "init" = "auto"): 
     updateCloudControls();
     return false;
   }
-  const payload = buildSyncPayload(state.palettes, state.activePaletteId, getPreferencesPayload());
+  const payload = buildSyncPayload(state.palettes, state.folders, state.activePaletteId, getPreferencesPayload());
   cloudState.lastRevision = payload.revision;
   const publicPalettes = state.palettes.filter((palette) => palette.isPublic);
   const publicPalettesToSync = publicPalettes.filter((palette) => !wasRecentlyUpserted(palette.id));

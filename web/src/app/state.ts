@@ -1,9 +1,16 @@
-import type { CloudUser, DiscoverySort, ExportMode, Palette, PublicPalette } from "./types";
+import type { CloudUser, DiscoverySort, ExportMode, Folder, Palette, PublicPalette } from "./types";
 
 export const state = {
   processing: false,
   palettes: [] as Palette[],
+  folders: [] as Folder[],
   activePaletteId: "" as string | null,
+};
+
+/** Library view state. Not persisted to the cloud; collapse and search are per device. */
+export const libraryState = {
+  search: "",
+  collapsedFolderIds: new Set<string>(),
 };
 
 export const exportState = {

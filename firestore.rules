@@ -55,9 +55,10 @@ service cloud.firestore {
     }
 
     function isValidSyncDoc(data) {
-      return data.keys().hasOnly(['palettes', 'activePaletteId', 'preferences', 'revision', 'updatedAt'])
+      return data.keys().hasOnly(['palettes', 'folders', 'activePaletteId', 'preferences', 'revision', 'updatedAt'])
         && data.palettes is list
         && data.palettes.size() <= 200
+        && (!hasKey(data, 'folders') || (data.folders is list && data.folders.size() <= 100))
         && (data.activePaletteId == null || data.activePaletteId is string)
         && data.preferences is map
         && isValidPreferences(data.preferences)

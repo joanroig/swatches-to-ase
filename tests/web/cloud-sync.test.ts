@@ -25,7 +25,7 @@ const samplePreferences: Preferences = {
 };
 
 test("buildSyncPayload includes palettes, preferences, and revision", () => {
-  const payload = buildSyncPayload([samplePalette], "palette-1", samplePreferences);
+  const payload = buildSyncPayload([samplePalette], [], "palette-1", samplePreferences);
   assert.equal(payload.activePaletteId, "palette-1");
   assert.equal(payload.palettes[0].name, "Cloud palette");
   assert.equal(payload.preferences.theme, "studio");
@@ -33,7 +33,7 @@ test("buildSyncPayload includes palettes, preferences, and revision", () => {
 });
 
 test("parseSyncPayload validates a sync payload", () => {
-  const payload = buildSyncPayload([samplePalette], "palette-1", samplePreferences);
+  const payload = buildSyncPayload([samplePalette], [], "palette-1", samplePreferences);
   const parsed = parseSyncPayload(payload);
   assert.ok(parsed);
   assert.equal(parsed?.palettes[0].publicId, "public-1");

@@ -1,11 +1,151 @@
-.palette-list {
+/* Library: search toolbar, folder groups and the palette cards themselves. */
+
+.library-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.library-search {
+  flex: 1 1 240px;
+  min-width: 0;
+
+  input {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--stroke);
+    background: var(--bg-elevated);
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+.library-groups {
+  display: grid;
+  gap: 18px;
+}
+
+.library-group {
+  display: grid;
+  gap: 12px;
+  border-radius: 18px;
+  transition: background 0.2s ease;
+}
+
+.library-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.library-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 6px 10px 6px 6px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  /* The base `button` rule centres its content; a folder header reads as a heading, so start it. */
+  justify-content: flex-start;
+  text-align: left;
+
+  &:hover {
+    background: var(--surface-2);
+    transform: none;
+  }
+}
+
+.library-group-chevron {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+.library-group-name {
+  /* Grow into the free space so the badge stays at the end and the name is what truncates. */
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-group-toggle .palette-count {
+  flex: 0 0 auto;
+}
+
+.library-group-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  button {
+    padding: 6px;
+  }
+}
+
+.library-group:hover .library-group-actions,
+.library-group:focus-within .library-group-actions,
+.library-group.is-sort-dragging .library-group-actions {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .library-group-actions {
+    opacity: 1;
+  }
+}
+
+.library-group.is-collapsed .palette-grid {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .library-group-actions button {
+    padding: 5px;
+  }
+}
+
+.library-group-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 22px 16px;
+  text-align: center;
+  border: 1px dashed var(--stroke);
+  border-radius: 16px;
+}
+
+/* Each folder body is its own sortable container, which is what lets a card be dragged from one
+   folder into another. */
+.palette-grid {
   display: grid;
   gap: 16px;
   grid-template-columns: minmax(0, 1fr);
+  /* Keep an empty folder tall enough to be a comfortable drop target. */
+  min-height: 72px;
+  border-radius: 16px;
+  transition: background 0.15s ease;
+}
+
+.palette-grid.is-sorting {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 @media (min-width: 960px) {
-  .palette-list {
+  .palette-grid {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 }

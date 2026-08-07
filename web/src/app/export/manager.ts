@@ -50,8 +50,15 @@ const copyToClipboard = async (text: string, successMessage: string) => {
   }
 };
 
-const downloadBlob = (fileName: string, data: BlobPart, mime: string) => {
-  const blob = new Blob([data], { type: mime });
+/**
+ * `BlobPart` requires an `ArrayBufferView<ArrayBuffer>`, but a `Uint8Array` may in principle be
+ * backed by a `SharedArrayBuffer`. Ours never are, so widen the parameter here rather than casting
+ * at each of the call sites.
+ */
+type BinaryPart = BlobPart | Uint8Array;
+
+const downloadBlob = (fileName: string, data: BinaryPart, mime: string) => {
+  const blob = new Blob([data as BlobPart], { type: mime });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -222,7 +229,7 @@ const exportPalettes = async (palettes: Palette[]) => {
     } else if (window.desktopApi) {
       appendLog(t("log.zipCanceled"), "info");
     } else {
-      const blob = new Blob([zipBytes], { type: "application/zip" });
+      const blob = new Blob([zipBytes as BlobPart], { type: "application/zip" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;

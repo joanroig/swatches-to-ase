@@ -8,6 +8,9 @@ const { expect, test } = playwright;
  * well-behaved sortable performs one reorder per slot crossed, never more.
  */
 
+/** Palette cards now live inside a folder grid rather than directly under #palette-list. */
+const PALETTE_GRID = ".palette-grid[data-folder-id]";
+
 const seed = async (page, count: number) => {
   await page.goto("/");
   await page.evaluate((total) => {
@@ -104,7 +107,7 @@ test("holding the pointer still never keeps reshuffling the grid", async ({ page
     await page.mouse.move(probe.x, probe.y, { steps: 6 });
     // Let the loop settle, then start watching with the pointer completely stationary.
     await page.waitForTimeout(120);
-    await startOrderRecorder(page, "#palette-list");
+    await startOrderRecorder(page, PALETTE_GRID);
     await page.waitForTimeout(350);
     const record = await stopOrderRecorder(page);
     expect(record.length, `order kept changing while parked at the ${probe.label}:\n${record.join("\n")}`).toBe(1);
@@ -125,7 +128,7 @@ test("a slow drag across a wrapping grid reorders once per slot, not repeatedly"
   );
   expect(new Set(layout.map((box) => Math.round(box.y))).size).toBeGreaterThan(1);
 
-  await startOrderRecorder(page, "#palette-list");
+  await startOrderRecorder(page, PALETTE_GRID);
 
   const source = layout[0];
   const target = layout[7];
@@ -156,7 +159,7 @@ test("a slow vertical drag in a single-column list reorders monotonically", asyn
   await page.setViewportSize({ width: 760, height: 1200 });
   await seed(page, 6);
 
-  await startOrderRecorder(page, "#palette-list");
+  await startOrderRecorder(page, PALETTE_GRID);
 
   const first = await boxOf(page.locator(".palette-card").nth(0));
   const last = await boxOf(page.locator(".palette-card").nth(5));

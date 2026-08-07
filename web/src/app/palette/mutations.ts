@@ -21,7 +21,19 @@ export const syncActivePalette = (paletteId: string | null) => {
   persistPalettes();
 };
 
-export const updatePalette = (paletteId: string, updater: (palette: Palette) => void) => {
+export type UpdatePaletteOptions = {
+  /**
+   * Set to false when the caller has already produced the correct DOM — a drag reorder, for
+   * instance — so the drop animation is not cut short by a rebuild.
+   */
+  rerenderEditor?: boolean;
+};
+
+export const updatePalette = (
+  paletteId: string,
+  updater: (palette: Palette) => void,
+  options: UpdatePaletteOptions = {},
+) => {
   const palette = getPaletteById(paletteId);
   if (!palette) {
     return;
@@ -29,7 +41,9 @@ export const updatePalette = (paletteId: string, updater: (palette: Palette) => 
   updater(palette);
   palette.lastModified = Date.now();
   renderPaletteList();
-  renderEditor();
+  if (options.rerenderEditor !== false) {
+    renderEditor();
+  }
   updateExportAvailability();
   if (isEditorSessionActive(paletteId)) {
     recordEditorSnapshot(palette);
@@ -91,7 +105,12 @@ export const insertColorAt = (paletteId: string, index: number, rgb: [number, nu
 };
 
 /** Move a colour inside a palette. `toIndex` is the destination slot in the final array. */
-export const moveColorToIndex = (paletteId: string, fromIndex: number, toIndex: number) => {
+export const moveColorToIndex = (
+  paletteId: string,
+  fromIndex: number,
+  toIndex: number,
+  options: UpdatePaletteOptions = {},
+) => {
   updatePalette(paletteId, (palette) => {
     if (fromIndex < 0 || fromIndex >= palette.colors.length) {
       return;
@@ -102,7 +121,7 @@ export const moveColorToIndex = (paletteId: string, fromIndex: number, toIndex: 
     }
     const [moved] = palette.colors.splice(fromIndex, 1);
     palette.colors.splice(bounded, 0, moved);
-  });
+  }, options);
 };
 
 /** Move a palette inside the library. `toIndex` is the destination slot in the final array. */

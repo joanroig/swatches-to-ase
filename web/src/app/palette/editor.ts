@@ -102,21 +102,32 @@ const ensureColorListSortable = () => {
     root: paletteEditor,
     itemSelector: ".color-row[data-color-id]",
     handleSelector: ".drag-handle",
-    onDrop: (fromIndex, toIndex) => {
+    onDrop: ({ fromIndex, toIndex }) => {
       if (!state.activePaletteId) {
         return;
       }
-      moveColorToIndex(state.activePaletteId, fromIndex, toIndex);
+      moveColorToIndex(state.activePaletteId, fromIndex, toIndex, { rerenderEditor: false });
     },
   });
 };
 
+/** The row's live position, so handlers stay correct after a drag reorders the DOM in place. */
+const getRowIndex = (row: HTMLElement) => {
+  const parent = row.parentElement;
+  if (!parent) {
+    return 0;
+  }
+  return Array.from(parent.children)
+    .filter((child) => child instanceof HTMLElement && child.matches(".color-row[data-color-id]"))
+    .indexOf(row);
+};
+
 /**
- * A "+" that inserts a colour at a specific position, shown on hover between swatches. It lives
- * inside a row rather than as its own grid item, because an extra grid item would add a track and
- * resize every swatch.
+ * A "+" that inserts a colour at a specific position, revealed by hovering the edge between two
+ * swatches. It lives inside a row rather than as its own grid item, because an extra grid item
+ * would add a track and resize every swatch.
  */
-const createInsertButton = (paletteId: string, index: number, atEnd = false) => {
+const createInsertButton = (paletteId: string, row: HTMLElement, atEnd = false) => {
   // A small hot zone straddling the boundary, so the "+" only shows when the pointer is near the
   // edge between two swatches rather than anywhere over a swatch.
   const zone = document.createElement("span");
@@ -128,7 +139,7 @@ const createInsertButton = (paletteId: string, index: number, atEnd = false) => 
   setButtonContent(button, "plus", t("action.insertColor"), true);
   button.addEventListener("click", (event) => {
     event.stopPropagation();
-    insertColorAt(paletteId, index);
+    insertColorAt(paletteId, atEnd ? getRowIndex(row) + 1 : getRowIndex(row));
   });
 
   zone.appendChild(button);
@@ -227,16 +238,16 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
   // Flat children so each layout can order them independently: the row places the handle first and
   // the actions last, the column pins the handle to the top, the label to the bottom and floats the
   // actions in the middle.
-  row.append(dragHandle, textGroup, actions, swatch, createInsertButton(palette.id, index));
+  row.append(dragHandle, textGroup, actions, swatch, createInsertButton(palette.id, row));
   if (index === palette.colors.length - 1) {
-    row.appendChild(createInsertButton(palette.id, palette.colors.length, true));
+    row.appendChild(createInsertButton(palette.id, row, true));
   }
   applyRowVisuals(color.rgb, color.name);
 
   // `input` fires continuously while the OS picker is open: paint without re-rendering the list.
   swatch.addEventListener("input", () => {
     const nextRgb = hexToRgb(swatch.value);
-    const nextName = nameColor(swatch.value.toUpperCase(), nameFormat, index);
+    const nextName = nameColor(swatch.value.toUpperCase(), nameFormat, getRowIndex(row));
     const target = palette.colors.find((entry) => entry.id === color.id);
     if (target) {
       target.rgb = nextRgb;
@@ -253,7 +264,7 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
       const target = item.colors.find((entry) => entry.id === color.id);
       if (target) {
         target.rgb = hexToRgb(swatch.value);
-        target.name = nameColor(swatch.value.toUpperCase(), nameFormat, index);
+        target.name = nameColor(swatch.value.toUpperCase(), nameFormat, getRowIndex(row));
       }
     });
   });

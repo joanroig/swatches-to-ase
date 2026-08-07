@@ -27,6 +27,7 @@ export const persistPreferences = () => {
 export const persistPalettes = () => {
   const payload = {
     palettes: state.palettes,
+    folders: state.folders,
     activePaletteId: state.activePaletteId,
   };
   localStorage.setItem(PALETTES_KEY, JSON.stringify(payload));

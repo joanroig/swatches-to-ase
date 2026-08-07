@@ -47,6 +47,7 @@ import {
   colorNotationEditorSelect,
   colorNotationSelect,
   confirmGenerateButton,
+  createFolderButton,
   generateBaseColorInput,
   generateHistoryBackButton,
   generateHistoryForwardButton,
@@ -76,6 +77,7 @@ import {
   generateUseBaseToggle,
   importModal,
   languageSelect,
+  librarySearchInput,
   legalModal,
   licenseModal,
   licensesModal,
@@ -130,6 +132,7 @@ import {
 } from "./generation";
 import { onLanguageChange, t } from "./i18n";
 import { ensureLicenseLoaded, ensureLicensesLoaded } from "./licenses";
+import { createFolder } from "./palette/folders";
 import { nameColor, resolveNameFormat } from "./palette/naming";
 import {
   cancelEditorChanges,
@@ -137,6 +140,7 @@ import {
   getPaletteById,
   openEditorForPalette,
   openViewForPalette,
+  renderPaletteList,
   renderViewModal,
   redoEditorChange,
   saveEditorChanges,
@@ -149,7 +153,7 @@ import {
 } from "./palette/ui";
 import { persistPreferences } from "./persistence";
 import { applyColorNotation, applyLanguagePreference, applyMotionPreference, applyTheme, syncNameFormat } from "./preferences";
-import { cloudState, discoveryState, state, viewState } from "./state";
+import { cloudState, discoveryState, libraryState, state, viewState } from "./state";
 import { hydrateExportActionIcons, setButtonContent } from "./ui/icons";
 import { closeOpenModals, setModalOpen, setupModal } from "./ui/modals";
 import { setupPopover } from "./ui/popover";
@@ -185,6 +189,7 @@ export const applyActionLabels = () => {
   setButtonContent(openImportButton, "import", t("action.import"));
   setButtonContent(openGenerateButton, "generate", t("action.generate"));
   setButtonContent(removeAllButton, "trash", t("action.removeAll"));
+  setButtonContent(createFolderButton, "plus", t("folder.create"));
   setButtonContent(openExportButton, "export", t("action.exportAll"));
   setButtonContent(openViewButton, "view", t("action.view"));
   setButtonContent(editorExportButton, "export", t("action.export"));
@@ -843,6 +848,21 @@ export const setupActions = () => {
       setDiscoverySort(discoverSortSelect.value);
     });
   }
+
+  if (librarySearchInput) {
+    librarySearchInput.value = libraryState.search;
+    librarySearchInput.addEventListener("input", () => {
+      libraryState.search = librarySearchInput.value;
+      renderPaletteList();
+    });
+  }
+
+  createFolderButton?.addEventListener("click", () => {
+    const folder = createFolder();
+    // A brand new folder is empty, so make sure it is expanded and visible.
+    libraryState.collapsedFolderIds.delete(folder.id);
+    renderPaletteList();
+  });
 
   if (discoverSearchInput) {
     discoverSearchInput.value = discoveryState.search;

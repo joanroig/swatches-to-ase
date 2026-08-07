@@ -23,7 +23,7 @@ const loadRecaptchaScript = () => {
     scriptPromise = Promise.resolve();
     return scriptPromise;
   }
-  scriptPromise = new Promise((resolve, reject) => {
+  scriptPromise = new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
     script.src = "https://www.google.com/recaptcha/enterprise.js?render=explicit";
     script.async = true;

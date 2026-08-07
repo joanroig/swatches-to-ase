@@ -22,6 +22,13 @@ export type Palette = {
   lastModified?: number;
   isPublic?: boolean;
   publicId?: string | null;
+  /** `null` or absent means the palette sits in the unfiled section. */
+  folderId?: string | null;
+};
+
+export type Folder = {
+  id: string;
+  name: string;
 };
 
 export type StoredPalette = Omit<Palette, "colors"> & {
@@ -70,6 +77,7 @@ export type PublicPalette = {
 
 export type StoredSyncPayload = {
   palettes: StoredPalette[];
+  folders: Folder[];
   activePaletteId: string | null;
   preferences: Preferences;
   revision: string;
@@ -77,6 +85,7 @@ export type StoredSyncPayload = {
 
 export type SyncPayload = {
   palettes: Palette[];
+  folders: Folder[];
   activePaletteId: string | null;
   preferences: Preferences;
   revision: string;
