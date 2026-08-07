@@ -201,9 +201,12 @@
 .cloud-profile {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 18px;
+  grid-template-areas:
+    "avatar fields"
+    "actions actions";
+  gap: 16px;
   align-items: start;
-  padding: 18px;
+  padding: 16px;
   border-radius: 18px;
   border: 1px solid var(--stroke);
   background: var(--surface-2);
@@ -211,97 +214,101 @@
 }
 
 .cloud-profile-avatar {
-  width: 76px;
-  height: 76px;
+  grid-area: avatar;
+  width: 72px;
+  height: 72px;
   box-shadow: 0 12px 22px rgba(15, 23, 42, 0.18);
 }
 
 .cloud-profile-fields {
+  grid-area: fields;
   display: grid;
-  gap: 14px;
+  gap: 12px;
+  min-width: 0;
 }
 
-.cloud-profile-fields .hint {
-  margin: 0;
+/*
+ * Compact swatch pills instead of full form fields: the avatar preview beside them already shows
+ * the result, so the colour inputs only need to be tappable, not large.
+ */
+.cloud-profile-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cloud-profile-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 14px 5px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--muted);
-}
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
 
-.cloud-profile-grid {
-  display: grid;
-  gap: 14px;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-}
+  &:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--stroke));
+    color: var(--ink);
+  }
 
-.cloud-profile-color-stack {
-  display: grid;
-  gap: 12px;
-}
+  &:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 
-.cloud-profile-colors {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
+  input[type="color"] {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+  }
 
-.cloud-profile-colors .field {
-  gap: 6px;
-}
-
-.cloud-profile-colors input[type="color"] {
-  width: 80px;
-  height: 60px;
-  align-self: center;
+  &:has(input:disabled) {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
 }
 
 .cloud-profile-actions {
+  grid-area: actions;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 6px;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 560px) {
   .cloud-profile {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "avatar"
+      "fields"
+      "actions";
+    justify-items: stretch;
   }
 
   .cloud-profile-avatar {
+    justify-self: center;
     width: 64px;
     height: 64px;
   }
 
   .cloud-profile-actions {
-    width: 100%;
-    justify-content: center;
-  }
+    justify-content: stretch;
 
-  .cloud-profile-grid {
-    grid-template-columns: 1fr;
+    button {
+      width: 100%;
+    }
   }
+}
 
-  .cloud-profile-fields {
-    justify-items: center;
-  }
-
-  .cloud-profile-grid .field {
-    align-items: center;
-  }
-
-  .cloud-profile-grid input[type="text"] {
-    text-align: center;
-  }
-
-  .cloud-profile-colors {
-    justify-items: center;
-  }
-
-  .cloud-profile-colors .field {
-    align-items: center;
-    text-align: center;
-  }
-
+@media (max-width: 720px) {
   .cloud-verification-card {
     grid-template-columns: 1fr;
     justify-items: start;

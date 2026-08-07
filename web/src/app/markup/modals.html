@@ -166,37 +166,34 @@
           <div class="section-header">
             <div>
               <h4 data-i18n="cloud.profile.title">Profile</h4>
+              <p class="hint" data-i18n="cloud.profile.hint">Update your name and avatar colors for shared palettes.</p>
             </div>
           </div>
           <div class="cloud-profile">
             <img class="cloud-avatar cloud-profile-avatar" id="cloud-profile-avatar" alt="" />
             <div class="cloud-profile-fields">
-              <div class="cloud-profile-grid">
-                <div class="field">
-                  <label for="cloud-profile-name" data-i18n="cloud.profile.name.label">Display name</label>
-                  <input
-                    type="text"
-                    id="cloud-profile-name"
-                    placeholder="Palette Studio user"
-                    data-i18n-placeholder="cloud.profile.name.placeholder"
-                  />
-                </div>
-                <div class="cloud-profile-color-stack">
-                  <div class="form-grid cloud-profile-colors">
-                    <div class="field">
-                      <label for="cloud-profile-avatar-bg" data-i18n="cloud.profile.avatar.background">Avatar background</label>
-                      <input type="color" id="cloud-profile-avatar-bg" value="#e2e8f0" />
-                    </div>
-                    <div class="field">
-                      <label for="cloud-profile-avatar-fg" data-i18n="cloud.profile.avatar.foreground">Avatar foreground</label>
-                      <input type="color" id="cloud-profile-avatar-fg" value="#a5b4fc" />
-                    </div>
-                  </div>
-                </div>
+              <div class="field">
+                <label for="cloud-profile-name" data-i18n="cloud.profile.name.label">Display name</label>
+                <input
+                  type="text"
+                  id="cloud-profile-name"
+                  placeholder="Palette Studio user"
+                  data-i18n-placeholder="cloud.profile.name.placeholder"
+                />
               </div>
-              <div class="cloud-profile-actions">
-                <button class="primary" id="cloud-profile-save" type="button" data-i18n="cloud.profile.save">Save profile</button>
+              <div class="cloud-profile-swatches" role="group" aria-label="Avatar colors" data-i18n-aria-label="cloud.profile.avatar.hint">
+                <label class="cloud-profile-swatch" for="cloud-profile-avatar-bg">
+                  <input type="color" id="cloud-profile-avatar-bg" value="#e2e8f0" />
+                  <span data-i18n="cloud.profile.avatar.background">Background</span>
+                </label>
+                <label class="cloud-profile-swatch" for="cloud-profile-avatar-fg">
+                  <input type="color" id="cloud-profile-avatar-fg" value="#a5b4fc" />
+                  <span data-i18n="cloud.profile.avatar.foreground">Foreground</span>
+                </label>
               </div>
+            </div>
+            <div class="cloud-profile-actions">
+              <button class="primary" id="cloud-profile-save" type="button" data-i18n="cloud.profile.save">Save profile</button>
             </div>
           </div>
         </div>
