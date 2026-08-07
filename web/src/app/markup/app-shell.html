@@ -46,43 +46,6 @@
           <button class="primary" id="open-generate" data-i18n="action.generate">New</button>
         </div>
       </section>
-      <footer class="footer footer--library view-section view-library is-active" data-view-section="library">
-        <div class="footer-row">
-          <div class="footer-links">
-            <button class="footer-link" id="open-terms" type="button" data-i18n="footer.terms">Terms</button>
-            <button class="footer-link" id="open-privacy" type="button" data-i18n="footer.privacy">Privacy</button>
-            <button class="footer-link" id="open-cookies" type="button" data-i18n="footer.cookies">Cookies</button>
-            <button class="footer-link" id="open-license-footer" type="button" data-i18n="footer.license">License</button>
-            <button class="footer-link" id="open-contact" type="button" data-i18n="footer.contact">Contact</button>
-            <button class="footer-link" id="open-about" type="button" data-i18n="footer.about">About</button>
-          </div>
-          <div class="footer-links footer-links--meta">
-            <div class="footer-meta-row">
-              <a class="footer-button github-button" href="https://github.com/joanroig/palette-studio" target="_blank" rel="noreferrer">
-                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-                  <use href="/icons/github.svg#icon"></use>
-                </svg>
-                <span data-i18n="footer.github">GitHub</span>
-              </a>
-              <div class="footer-version">
-                <a
-                  class="footer-button version-button"
-                  id="app-version"
-                  href="https://github.com/joanroig/palette-studio/releases"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <span class="version-label" data-i18n="footer.version">Version</span>
-                  <span class="version-number" id="app-version-number"></span>
-                </a>
-                <div class="footer-deploy">
-                  <span class="deploy-stamp" id="deploy-stamp" aria-hidden="true"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
 
       <section class="panel panel-discover view-section view-discover" data-view-section="discover" style="--delay: 0.2s">
         <div class="section-card discover-shell">
@@ -219,6 +182,44 @@
       </div>
     </div>
   </div>
+
+  <footer class="footer">
+    <div class="footer-row">
+      <div class="footer-links">
+        <button class="footer-link" id="open-terms" type="button" data-i18n="footer.terms">Terms</button>
+        <button class="footer-link" id="open-privacy" type="button" data-i18n="footer.privacy">Privacy</button>
+        <button class="footer-link" id="open-cookies" type="button" data-i18n="footer.cookies">Cookies</button>
+        <button class="footer-link" id="open-license-footer" type="button" data-i18n="footer.license">License</button>
+        <button class="footer-link" id="open-contact" type="button" data-i18n="footer.contact">Contact</button>
+        <button class="footer-link" id="open-about" type="button" data-i18n="footer.about">About</button>
+      </div>
+      <div class="footer-links footer-links--meta">
+        <div class="footer-meta-row">
+          <a class="footer-button github-button" href="https://github.com/joanroig/palette-studio" target="_blank" rel="noreferrer">
+            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+              <use href="/icons/github.svg#icon"></use>
+            </svg>
+            <span data-i18n="footer.github">GitHub</span>
+          </a>
+          <div class="footer-version">
+            <a
+              class="footer-button version-button"
+              id="app-version"
+              href="https://github.com/joanroig/palette-studio/releases"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span class="version-label" data-i18n="footer.version">Version</span>
+              <span class="version-number" id="app-version-number"></span>
+            </a>
+            <div class="footer-deploy">
+              <span class="deploy-stamp" id="deploy-stamp" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <div data-slot="modals"></div>
 

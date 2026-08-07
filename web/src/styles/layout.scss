@@ -50,6 +50,10 @@
   gap: 12px;
 }
 
+/*
+ * The app frame fills the viewport, so the footer below it starts off screen and is revealed by
+ * scrolling. That also gives the sidebar a full-height column to push its bottom controls into.
+ */
 .shell {
   display: grid;
   gap: 24px;
@@ -57,6 +61,7 @@
   grid-template-areas:
     "main"
     "sidebar";
+  min-height: calc(100vh - var(--frame-offset, 160px));
 }
 
 .main-content {
@@ -439,10 +444,7 @@
 
 /* The footer and the FAB both belong to the library: the FAB's actions are import/export/generate,
    and none of them apply anywhere else. */
-.page[data-view="discover"] .footer,
-.page[data-view="playground"] .footer {
-  display: none;
-}
+
 
 .page[data-view="discover"] .fab-hub,
 .page[data-view="playground"] .fab-hub {
@@ -455,46 +457,34 @@
   color: var(--muted);
 }
 
+/* Below the whole app — both columns — rather than inside the library's own column. */
 .footer {
-  margin-top: 36px;
+  margin-top: 40px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.footer--library {
-  margin-top: 0;
-  width: 100%;
-  padding: 0 22px;
   align-items: center;
+  gap: 12px;
   text-align: center;
 }
 
-.footer--library .footer-row {
+.footer-row {
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.footer--library .footer-links {
+.footer-links {
   justify-content: center;
 }
 
-.footer--library .footer-links--meta {
+.footer-links--meta {
   align-items: center;
 }
 
-.footer--library .footer-meta-row {
+.footer-meta-row {
   justify-content: center;
 }
 
-.footer-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  width: 100%;
-}
 
 .footer-links {
   display: flex;
