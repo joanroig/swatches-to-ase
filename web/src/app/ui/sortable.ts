@@ -205,26 +205,46 @@ export const createSortable = (options: SortableOptions) => {
     }));
   };
 
-  /** Glue the dragged item to the pointer, clamped inside its container. */
+  /**
+   * Glue the dragged item to the pointer.
+   *
+   * The clamp is against the whole delegation root when items may cross containers, not against
+   * the container they started in. Clamping per container made a cross-folder drag feel stuck: the
+   * card refused to leave its own folder until the pointer had already arrived in the next one.
+   */
   const applyTranslate = (pointerX: number, pointerY: number) => {
     if (!container || !item) {
       return;
     }
-    const { x: localX, y: localY, scaleX, scaleY } = toLocalPoint(pointerX, pointerY);
-    // Read the item's live layout box rather than the frozen slot: `offset*` ignores our own
-    // transform, so this stays correct however many times the item has been re-inserted.
-    const layoutLeft = item.offsetLeft - originLeft;
-    const layoutTop = item.offsetTop - originTop;
-    const maxLeft = container.offsetWidth - item.offsetWidth;
-    const maxTop = container.offsetHeight - item.offsetHeight;
-    const desiredLeft = localX - grabOffsetX / scaleX;
-    const desiredTop = localY - grabOffsetY / scaleY;
-    const nextLeft = maxLeft >= 0 ? Math.min(Math.max(desiredLeft, 0), maxLeft) : 0;
-    const nextTop = maxTop >= 0 ? Math.min(Math.max(desiredTop, 0), maxTop) : 0;
+    const { scaleX, scaleY } = toLocalPoint(pointerX, pointerY);
+    const containerRect = container.getBoundingClientRect();
+    const bounds = (containerSelector ? root : container).getBoundingClientRect();
+    const width = item.offsetWidth * scaleX;
+    const height = item.offsetHeight * scaleY;
 
-    translateX = nextLeft - layoutLeft;
-    translateY = nextTop - layoutTop;
+    const maxLeft = bounds.right - width;
+    const maxTop = bounds.bottom - height;
+    const desiredLeft = pointerX - grabOffsetX;
+    const desiredTop = pointerY - grabOffsetY;
+    const nextLeft = maxLeft >= bounds.left ? Math.min(Math.max(desiredLeft, bounds.left), maxLeft) : bounds.left;
+    const nextTop = maxTop >= bounds.top ? Math.min(Math.max(desiredTop, bounds.top), maxTop) : bounds.top;
+
+    // Where the item's own layout box currently sits, in viewport coordinates.
+    const layoutLeft = containerRect.left + (item.offsetLeft - originLeft) * scaleX;
+    const layoutTop = containerRect.top + (item.offsetTop - originTop) * scaleY;
+
+    translateX = (nextLeft - layoutLeft) / scaleX;
+    translateY = (nextTop - layoutTop) / scaleY;
     item.style.transform = `translate(${translateX}px, ${translateY}px)`;
+  };
+
+  /** True when the pointer is over the container the item currently belongs to. */
+  const isPointerOverContainer = (pointerX: number, pointerY: number) => {
+    if (!container) {
+      return false;
+    }
+    const rect = container.getBoundingClientRect();
+    return pointerX >= rect.left && pointerX <= rect.right && pointerY >= rect.top && pointerY <= rect.bottom;
   };
 
   /**
@@ -466,7 +486,11 @@ export const createSortable = (options: SortableOptions) => {
 
     event.preventDefault();
     syncContainerUnderPointer(event.clientX, event.clientY);
-    moveItemTo(resolveTargetIndex(event.clientX, event.clientY));
+    // While the pointer is in the space between containers, hold the current position rather than
+    // shuffling the old container around; otherwise the hand-off looks jumpy.
+    if (!containerSelector || isPointerOverContainer(event.clientX, event.clientY)) {
+      moveItemTo(resolveTargetIndex(event.clientX, event.clientY));
+    }
     applyTranslate(event.clientX, event.clientY);
   }
 

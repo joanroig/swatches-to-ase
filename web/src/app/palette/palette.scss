@@ -146,7 +146,10 @@
 
 @media (min-width: 960px) {
   .palette-grid {
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    /* `auto-fill`, not `auto-fit`: `auto-fit` collapses the empty tracks, so a folder holding two
+       palettes would stretch them across the full width while a fuller folder showed four normal
+       cards. Keeping the empty tracks gives every folder the same column width. */
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   }
 }
 
@@ -194,8 +197,12 @@
   box-shadow: 0 16px 30px rgba(15, 23, 42, 0.28);
 }
 
+/* Fully opaque while lifted: a translucent card reads as a rendering glitch when it floats over
+   the cards it is passing. The shadow carries the lift instead. */
 .palette-card.is-sort-dragging {
-  opacity: 0.92;
+  opacity: 1;
+  background: var(--bg-elevated);
+  box-shadow: 0 22px 44px rgba(15, 23, 42, 0.45);
 }
 
 .color-row.is-sort-dragging {
