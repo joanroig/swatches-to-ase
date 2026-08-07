@@ -28,10 +28,7 @@ const readEnvFile = (filePath: string) => {
     }
     const key = trimmed.slice(0, splitIndex).trim();
     let value = trimmed.slice(splitIndex + 1).trim();
-    if (
-      (value.startsWith("\"") && value.endsWith("\"")) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }
     envValues[key] = value;
@@ -84,6 +81,21 @@ test("test account can sync to firestore", async ({ page }) => {
 
   // Sync is gated on a verified email, so an unverified test account cannot exercise this path.
   // Skip with an actionable message rather than failing on a disabled button.
+  //
+  // Read it only once the sync controls have settled: signing in triggers more than one pass of
+  // `updateCloudControls`, and sampling between them saw the verification banner still hidden and
+  // marched on into an assertion that could never pass.
+  await page
+    .waitForFunction(
+      () => {
+        const sync = document.querySelector<HTMLButtonElement>("#cloud-sync");
+        const verification = document.querySelector("#cloud-verification");
+        return Boolean(verification && !verification.classList.contains("is-hidden")) || Boolean(sync && !sync.disabled);
+      },
+      null,
+      { timeout: 30_000 },
+    )
+    .catch(() => undefined);
   const needsVerification = await page
     .locator("#cloud-verification")
     .evaluate((element: Element) => !element.classList.contains("is-hidden"))
@@ -102,10 +114,14 @@ test("test account can sync to firestore", async ({ page }) => {
   // The timestamp lives in #cloud-sync-status; #cloud-status only carries sign-in/verification
   // messaging.
   const synced = await page
-    .waitForFunction(() => {
-      const status = document.querySelector("#cloud-sync-status")?.textContent ?? "";
-      return status.includes("Last synced at") || status.includes("Última sincronización");
-    }, null, { timeout: 20_000 })
+    .waitForFunction(
+      () => {
+        const status = document.querySelector("#cloud-sync-status")?.textContent ?? "";
+        return status.includes("Last synced at") || status.includes("Última sincronización");
+      },
+      null,
+      { timeout: 20_000 },
+    )
     .then(() => true)
     .catch(() => false);
 
