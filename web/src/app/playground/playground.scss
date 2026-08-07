@@ -334,7 +334,12 @@ button.playground-source-detach {
   display: flex;
   align-items: center;
   gap: 4px;
-  flex: 0 0 auto;
+  /* Wraps as a safety net. The width the tools need depends on the *selected* harmony — "Analogous"
+     against "Complementary" is some 70px — so no fixed breakpoint can guarantee they fit. Wrapping
+     turns an overflow into a second row instead of clipping the last control off the edge. */
+  flex-wrap: wrap;
+  row-gap: 6px;
+  min-width: 0;
 }
 
 .playground-tool-group {
@@ -467,6 +472,7 @@ button.playground-tool--accent {
 }
 
 .playground-select-text {
+  min-width: 0;
   font-size: 0.86rem;
   font-weight: 600;
   color: var(--ink);
@@ -1322,68 +1328,7 @@ button.ui-cta {
   }
 }
 
-@container playground (max-width: 620px) {
-  /* Columns get unreadably narrow past a handful of colours, so the ramp turns into rows. */
-  .playground-ramp {
-    grid-auto-flow: row;
-    grid-auto-columns: auto;
-    grid-auto-rows: minmax(56px, 1fr);
-  }
-
-  .playground-swatch {
-    flex-direction: row-reverse;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 10px;
-  }
-
-  .playground-swatch:first-child {
-    border-radius: 17px 17px 0 0;
-  }
-
-  .playground-swatch:last-child {
-    border-radius: 0 0 17px 17px;
-  }
-
-  /* The seam runs horizontally when the ramp is stacked, so the hot strip turns with it. */
-  .playground-insert-zone {
-    top: 0;
-    bottom: auto;
-    left: 0;
-    right: 0;
-    width: auto;
-    height: 24px;
-    transform: translateY(-50%);
-  }
-
-  .playground-insert-zone--end {
-    top: auto;
-    bottom: 0;
-    transform: translateY(50%);
-  }
-
-  .playground-swatch-label {
-    flex-direction: row;
-    align-items: baseline;
-    justify-content: flex-start;
-    gap: 10px;
-    width: auto;
-  }
-
-  .playground-preview-title {
-    display: none;
-  }
-
-  .playground-scene-tabs {
-    width: 100%;
-  }
-
-  .scene-ui {
-    grid-template-columns: 54px 1fr;
-  }
-}
-
-@container playground (max-width: 520px) {
+@container playground (max-width: 660px) {
   /*
    * Captions and the dividers around them go. There is not enough width for a caption *and* a
    * harmony name like "Complementary"; the select carries an `aria-label` and the stepper an
@@ -1455,5 +1400,66 @@ button.ui-cta {
 
   .playground-select {
     flex: 0 1 auto;
+  }
+}
+
+@container playground (max-width: 620px) {
+  /* Columns get unreadably narrow past a handful of colours, so the ramp turns into rows. */
+  .playground-ramp {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-auto-rows: minmax(56px, 1fr);
+  }
+
+  .playground-swatch {
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+  }
+
+  .playground-swatch:first-child {
+    border-radius: 17px 17px 0 0;
+  }
+
+  .playground-swatch:last-child {
+    border-radius: 0 0 17px 17px;
+  }
+
+  /* The seam runs horizontally when the ramp is stacked, so the hot strip turns with it. */
+  .playground-insert-zone {
+    top: 0;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: 24px;
+    transform: translateY(-50%);
+  }
+
+  .playground-insert-zone--end {
+    top: auto;
+    bottom: 0;
+    transform: translateY(50%);
+  }
+
+  .playground-swatch-label {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 10px;
+    width: auto;
+  }
+
+  .playground-preview-title {
+    display: none;
+  }
+
+  .playground-scene-tabs {
+    width: 100%;
+  }
+
+  .scene-ui {
+    grid-template-columns: 54px 1fr;
   }
 }
