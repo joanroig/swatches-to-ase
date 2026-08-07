@@ -544,7 +544,7 @@
 .panel {
   background: var(--card);
   border: 1px solid var(--stroke-strong);
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   padding: 22px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(12px);

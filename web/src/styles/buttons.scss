@@ -7,15 +7,15 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  border-radius: 999px;
-  padding: 10px 16px;
-  font-size: 0.95rem;
+  border-radius: var(--radius-pill);
+  padding: 0 16px;
+  font-size: 0.92rem;
   font-weight: 600;
   text-decoration: none;
   color: var(--ink);
   border: 1px solid var(--stroke);
   background: var(--bg-elevated);
-  min-height: 42px;
+  min-height: var(--control-md);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
@@ -32,8 +32,9 @@
 button.footer-link {
   border: none;
   background: transparent;
+  min-height: 0;
   padding: 6px 2px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--muted);
@@ -84,9 +85,10 @@ button.footer-link {
 
 button {
   border: none;
-  border-radius: 999px;
-  padding: 10px 18px;
-  font-size: 0.95rem;
+  border-radius: var(--radius-pill);
+  min-height: var(--control-md);
+  padding: 0 18px;
+  font-size: 0.92rem;
   cursor: pointer;
   font-weight: 600;
   transition:
@@ -133,9 +135,12 @@ button {
     background: rgba(79, 70, 229, 0.08);
   }
 
+  /* Square, at the same height as a text button, so a row of mixed buttons reads as one row. */
   &.icon-only {
-    padding: 8px 10px;
-    border-radius: 12px;
+    width: var(--control-md);
+    min-width: var(--control-md);
+    padding: 0;
+    border-radius: var(--radius-sm);
 
     .icon {
       width: 18px;
@@ -144,10 +149,11 @@ button {
   }
 
   &.close-button {
-    width: 36px;
-    height: 36px;
+    width: var(--control-md);
+    min-width: var(--control-md);
+    height: var(--control-md);
     padding: 0;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     border: 1px solid var(--stroke);
     background: transparent;
     flex: 0 0 auto;

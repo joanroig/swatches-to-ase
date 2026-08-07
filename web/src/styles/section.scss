@@ -14,7 +14,7 @@
 .section-card {
   display: grid;
   min-width: 0;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--stroke-strong);
   background: var(--surface-2);
   overflow: hidden;
@@ -30,7 +30,7 @@
 }
 
 .section-card--open > .section-head:first-child {
-  border-radius: 17px 17px 0 0;
+  border-radius: calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px) 0 0;
 }
 
 .section-head {

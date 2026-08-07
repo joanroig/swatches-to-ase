@@ -11,16 +11,16 @@
  */
 
 .chip-group {
-  --chip-height: 32px;
+  --chip-height: var(--control-sm);
 
   display: flex;
   align-items: center;
   gap: 4px;
   flex: none;
   min-width: 0;
-  height: 40px;
+  height: calc(var(--control-sm) + 8px);
   padding: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg-elevated);
 }
 
@@ -49,7 +49,7 @@
   min-width: 0;
   padding-inline: 14px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--ink);
   font-size: 0.85rem;
@@ -164,7 +164,7 @@
   min-width: 100%;
   max-height: min(320px, 60vh);
   padding: 6px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--stroke-strong);
   background: var(--bg-elevated);
   box-shadow: var(--shadow);
@@ -183,7 +183,7 @@ button.chip-select-option {
   min-height: 0;
   padding: 8px 12px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink);
   font-size: 0.85rem;

@@ -17,6 +17,27 @@
   --shadow-soft: 0 12px 24px rgba(20, 22, 39, 0.14);
   --swatch-ring: rgba(15, 23, 42, 0.45);
   --published: #f97316;
+
+  /*
+   * Shape and size scale.
+   *
+   * Themes only ever changed colour, so every component picked its own radius and height and the
+   * app ended up with a dozen of each — 8, 9, 10, 12, 14, 16, 18, 20, 22px radii, and controls at
+   * 30, 32, 36, 38, 40, 42 and 44px tall. These are the only values a control or a container
+   * should use. They live with the colour tokens because they are the same kind of decision.
+   */
+  --radius-pill: 999px;
+  --radius-sm: 9px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+
+  /** Chips and icon buttons inside a group. */
+  --control-sm: 32px;
+  /** Buttons, inputs and selects — the default. */
+  --control-md: 38px;
+  /** Primary actions and anything that needs a comfortable touch target. */
+  --control-lg: 44px;
 }
 
 :root[data-theme="system"],
