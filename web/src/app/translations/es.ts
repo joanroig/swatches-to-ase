@@ -382,7 +382,7 @@ const es: TranslationMap = {
   "folder.count": { one: "{count} paleta", other: "{count} paletas" },
   "folder.create": "Nueva carpeta",
   "folder.defaultName": "Nueva carpeta",
-  "folder.unfiled": "Sin carpeta",
+  "folder.unfiled": "Borradores",
   "folder.empty": "Arrastra paletas aquí para archivarlas.",
   "folder.rename": "Renombrar carpeta",
   "folder.renamePrompt": "Nombre de la carpeta",

@@ -65,6 +65,7 @@ export const deleteFolder = (folderId: string) => {
     }
   });
   libraryState.collapsedFolderIds.delete(folderId);
+  persistCollapsedFolders();
   persistPalettes();
 };
 
@@ -83,6 +84,35 @@ export const moveFolderToIndex = (fromIndex: number, toIndex: number) => {
   persistPalettes();
 };
 
+/*
+ * Which groups are collapsed, kept per device.
+ *
+ * Local storage rather than the synced preferences: which folders you happen to have furled is a
+ * property of this screen, not of the library, and putting it in the sync payload would mean a
+ * Firestore rules migration for something nobody wants mirrored to another machine.
+ */
+const COLLAPSED_STORAGE_KEY = "palette-studio.collapsed-folders";
+
+const persistCollapsedFolders = () => {
+  try {
+    localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify([...libraryState.collapsedFolderIds]));
+  } catch {
+    // Storage can be unavailable (private mode, quota). The state still works for this session.
+  }
+};
+
+export const restoreCollapsedFolders = () => {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_STORAGE_KEY);
+    const stored: unknown = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(stored)) {
+      libraryState.collapsedFolderIds = new Set(stored.filter((id): id is string => typeof id === "string"));
+    }
+  } catch {
+    libraryState.collapsedFolderIds = new Set();
+  }
+};
+
 export const isFolderCollapsed = (folderId: string) => libraryState.collapsedFolderIds.has(folderId);
 
 export const toggleFolderCollapsed = (folderId: string) => {
@@ -91,6 +121,7 @@ export const toggleFolderCollapsed = (folderId: string) => {
   } else {
     libraryState.collapsedFolderIds.add(folderId);
   }
+  persistCollapsedFolders();
 };
 
 /**

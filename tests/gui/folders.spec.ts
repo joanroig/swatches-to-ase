@@ -132,3 +132,36 @@ test("a folder can be collapsed and expanded", async ({ page }) => {
   await expect(group).not.toHaveClass(/is-collapsed/);
   await expect(group.locator(".palette-card")).toBeVisible();
 });
+
+test("a collapsed folder stays collapsed across a reload", async ({ page }) => {
+  await seed(page, ["Alpha"]);
+  const group = page.locator('.library-group[data-folder-id="__unfiled__"]');
+  await group.locator(".library-group-toggle").click();
+  await expect(group).toHaveClass(/is-collapsed/);
+
+  await page.reload();
+  await expect(page.locator("body")).toHaveClass(/is-ready/);
+  await expect(page.locator('.library-group[data-folder-id="__unfiled__"]')).toHaveClass(/is-collapsed/);
+});
+
+test("a folder is renamed in place, without a browser prompt", async ({ page }) => {
+  await seed(page, ["Alpha"]);
+  await page.locator("#create-folder").click();
+  const group = page.locator(".library-group[data-folder-id]:not([data-folder-id='__unfiled__'])").first();
+
+  // `window.prompt` is a no-op in Electron, so renaming happens inline. Fail loudly if one appears.
+  page.on("dialog", (dialog) => {
+    throw new Error(`Unexpected ${dialog.type()} dialog: ${dialog.message()}`);
+  });
+
+  await group.locator('.library-group-actions [title="Rename folder"]').click();
+  const input = group.locator(".library-group-rename");
+  await expect(input).toBeVisible();
+  await input.fill("Campaign");
+  await input.press("Enter");
+
+  await expect(group.locator(".library-group-name")).toHaveText("Campaign");
+  await page.reload();
+  await expect(page.locator("body")).toHaveClass(/is-ready/);
+  await expect(page.locator(".library-group-name").first()).toHaveText("Campaign");
+});

@@ -380,6 +380,9 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
   count.textContent = t("folder.count", { count: group.palettes.length });
   toggle.append(chevron, kind, label, count);
   toggle.addEventListener("click", () => {
+    if (header.querySelector(".library-group-rename")) {
+      return;
+    }
     toggleFolderCollapsed(group.id);
     renderPaletteList();
   });
@@ -398,18 +401,59 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
   grip.className = "ghost library-group-grip";
   setButtonContent(grip, "grip", t("action.dragToReorder"), true);
 
+  /*
+   * Rename in place rather than through `window.prompt`.
+   *
+   * The prompt is a no-op in Electron — it returns immediately without showing anything — so the
+   * desktop build simply could not rename a folder. Editing the name where it sits works
+   * everywhere, and is a better interaction on the web too.
+   */
+  const startRename = () => {
+    if (header.querySelector(".library-group-rename")) {
+      return;
+    }
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "library-group-rename";
+    input.value = folder.name;
+    input.setAttribute("aria-label", t("folder.rename"));
+
+    let settled = false;
+    const finish = (commit: boolean) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      if (commit) {
+        renameFolder(folder.id, input.value);
+      }
+      renderPaletteList();
+    };
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        finish(true);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        finish(false);
+      }
+    });
+    // Blur commits: clicking away from a half-typed name reads as "yes, that one".
+    input.addEventListener("blur", () => finish(true));
+
+    label.replaceWith(input);
+    input.focus();
+    input.select();
+  };
+
   // Icon-only: the labels are long enough to crowd the name out of a narrow header.
   const renameButton = createIconButton(
     "edit",
     t("folder.rename"),
     (event) => {
       event.stopPropagation();
-      const nextName = window.prompt(t("folder.renamePrompt"), folder.name);
-      if (nextName === null) {
-        return;
-      }
-      renameFolder(folder.id, nextName);
-      renderPaletteList();
+      startRename();
     },
     true,
   );
@@ -435,12 +479,17 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
 
 const createLibraryGroup = (group: LibraryGroup, isSearching: boolean) => {
   const section = document.createElement("section");
-  section.className = "section-card library-group";
+  section.className = "section-card section-card--open library-group";
   section.dataset.folderId = group.id;
 
   const collapsed = !isSearching && isFolderCollapsed(group.id);
   section.classList.toggle("is-collapsed", collapsed);
   section.appendChild(createFolderHeader(group, collapsed));
+
+  // A wrapper the collapse animation can size: the grid itself is the sortable container and must
+  // keep its own layout.
+  const body = document.createElement("div");
+  body.className = "library-group-body";
 
   const grid = document.createElement("div");
   grid.className = "palette-grid";
@@ -455,7 +504,8 @@ const createLibraryGroup = (group: LibraryGroup, isSearching: boolean) => {
     grid.appendChild(empty);
   }
 
-  section.appendChild(grid);
+  body.appendChild(grid);
+  section.appendChild(body);
   return section;
 };
 

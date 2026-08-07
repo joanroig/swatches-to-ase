@@ -380,7 +380,7 @@ const en: TranslationMap = {
   "folder.count": { one: "{count} palette", other: "{count} palettes" },
   "folder.create": "New folder",
   "folder.defaultName": "New folder",
-  "folder.unfiled": "Unfiled",
+  "folder.unfiled": "Drafts",
   "folder.empty": "Drop palettes here to file them.",
   "folder.rename": "Rename folder",
   "folder.renamePrompt": "Folder name",

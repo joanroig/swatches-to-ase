@@ -20,6 +20,19 @@
   overflow: hidden;
 }
 
+/*
+ * For cards whose content has to escape them — the library folders, where a dragged card is lifted
+ * out of one folder and over another. They round their own header instead of relying on the card
+ * to clip it.
+ */
+.section-card--open {
+  overflow: visible;
+}
+
+.section-card--open > .section-head:first-child {
+  border-radius: 17px 17px 0 0;
+}
+
 .section-head {
   display: flex;
   align-items: center;

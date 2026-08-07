@@ -69,6 +69,20 @@
   color: var(--accent);
 }
 
+.library-group-rename {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid var(--accent);
+  background: var(--bg-elevated);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .library-group-name {
   /* Grow into the free space so the badge stays at the end and the name is what truncates. */
   flex: 1 1 auto;
@@ -92,12 +106,55 @@
   }
 }
 
+/*
+ * Collapse animates through `grid-template-rows`, which is the one way to transition to and from a
+ * content-sized height without measuring it in JavaScript and without the jump `display: none`
+ * gives. The body still needs `min-height: 0` and `overflow: hidden` so the row can actually reach
+ * zero.
+ */
+.library-group-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.24s ease;
+}
+
+.library-group-body > * {
+  min-height: 0;
+  overflow: hidden;
+  /* Visible immediately on expand, hidden only once the collapse has finished — clipped content is
+     still focusable and still announced, which a collapsed folder should not be. */
+  visibility: visible;
+  transition: visibility 0s linear 0s;
+}
+
+.library-group.is-collapsed .library-group-body > * {
+  visibility: hidden;
+  transition: visibility 0s linear 0.24s;
+}
+
+/* A card being dragged is lifted out of its folder, so the wrapper must stop clipping for the
+   duration. No collapse animation can be running at the same time, so nothing is lost. */
+.library-group-body:has(> .palette-grid.is-sorting),
+.library-group-body:has(> .palette-grid.is-sorting) > * {
+  overflow: visible;
+}
+
+.library-group.is-collapsed .library-group-body {
+  grid-template-rows: 0fr;
+}
+
 .library-group .palette-grid {
   padding: 14px;
 }
 
-.library-group.is-collapsed .palette-grid {
-  display: none;
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) .library-group-body {
+    transition: none;
+  }
+}
+
+body[data-motion="off"] .library-group-body {
+  transition: none;
 }
 
 @media (max-width: 640px) {
@@ -142,17 +199,20 @@
 }
 
 /*
- * The drop zone is drawn on a pseudo-element inset *outwards*, so its edge does not coincide with
- * the card edges. Flush against them it was almost impossible to see which folder you were over.
- * It is always present but transparent, so it can fade in and out as the drag moves between
- * folders rather than snapping.
+ * The drop zone is drawn on a pseudo-element inside the folder's own body. It used to be inset
+ * *outwards* so its edge would not coincide with the card edges — but folders are cards in their
+ * own right now, so an outward inset spilled over the header and was clipped by the card. Inside
+ * the body it reads clearly and stays where it belongs.
+ *
+ * It is always present but transparent, so it fades in and out as the drag moves between folders
+ * rather than snapping.
  */
 .palette-grid::before {
   content: "";
   position: absolute;
-  inset: -12px;
+  inset: 4px;
   z-index: 0;
-  border-radius: 22px;
+  border-radius: 14px;
   border: 2px dashed color-mix(in srgb, var(--accent) 55%, transparent);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   pointer-events: none;
