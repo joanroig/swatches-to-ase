@@ -10,7 +10,7 @@ const en: TranslationMap = {
   "action.openInPlayground": "Open in Playground",
   "nav.playground": "Playground",
   "playground.shuffle": "Shuffle",
-  "playground.shuffleKey": "Space",
+  "playground.spaceHint": "Press the spacebar to generate palettes",
   "playground.preview": "Preview",
   "playground.style": "Harmony",
   "playground.count": "Colors",

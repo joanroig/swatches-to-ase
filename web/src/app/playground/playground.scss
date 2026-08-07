@@ -172,129 +172,188 @@ button.playground-swatch-action.is-on {
   white-space: nowrap;
 }
 
-/* --------------------------------------------------------------- toolbar --- */
+/* ---------------------------------------------------------------- top bar --- */
 
 /*
- * One bar, three zones: generate on the left, options in the middle, save on the right.
+ * A flat tool strip above the palette, in the manner of Coolors: a hint on the left, then the
+ * actions on the right as evenly sized icon buttons separated into groups by hairline dividers.
  *
- * Every control in here is the same object — same height, same radius, same border and fill — and
- * that uniformity is the whole point. The previous version mixed a pill button, a 7px key cap, a
- * 12px select and two pill groups at three different heights, and no amount of spacing could make
- * five different shapes look deliberate.
- *
- * Captions live *inside* their control's chrome rather than floating beside it, so a labelled field
- * is still one shape rather than two things that happen to be adjacent.
+ * Flat is the point. The previous version gave every control its own pill — border, fill and all —
+ * which turned a row of five actions into a row of five competing boxes. Here the chrome belongs to
+ * the bar, and the controls are just marks on it until you hover one.
  */
-.playground-toolbar {
-  --control-height: 40px;
-  --control-radius: 999px;
+.playground-topbar {
+  --tool-height: 34px;
 
-  /* Grid, not wrapping flex: the bar stays one row until the stacked layout takes over at a known
-     width, instead of re-wrapping into a different shape at every size. The slack lives in the
-     last track — with a `minmax(0, 1fr)` zero floor it shrank under its content and wrapped
-     "Save to library" onto three lines. */
-  display: grid;
-  grid-template-columns: auto auto 1fr;
+  display: flex;
   align-items: center;
-  gap: 10px 14px;
-  padding: 10px 12px;
-  border-radius: 20px;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 52px;
+  padding: 6px 8px 6px 14px;
+  border-radius: 14px;
   border: 1px solid var(--stroke);
   background: var(--surface);
 }
 
-.playground-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.playground-topbar-lead {
   min-width: 0;
+  flex: 1 1 auto;
 }
 
-.playground-group--save {
-  justify-content: flex-end;
-
-  button {
-    white-space: nowrap;
-  }
-}
-
-/* The shared control shell: primary button, history group and both fields. */
-.playground-toolbar > .playground-group > button,
-.playground-history,
-.playground-field {
-  height: var(--control-height);
-  border-radius: var(--control-radius);
-}
-
-.playground-history,
-.playground-field {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  border: 1px solid var(--stroke);
-  background: var(--bg-elevated);
-}
-
-.playground-toolbar > .playground-group > button {
-  padding-inline: 18px;
-  font-weight: 600;
-}
-
-button.playground-shuffle {
-  gap: 10px;
-  padding-inline: 18px 8px;
-  font-weight: 700;
-}
-
-/* Sits inside the button it describes, so the hint is not a stray control of its own. */
-.playground-kbd {
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 22%);
-  font-family: inherit;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: inherit;
+.playground-hint {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.playground-history {
-  gap: 2px;
-  padding: 0 4px;
+.playground-source {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0;
+  font-size: 0.88rem;
+}
 
-  button {
-    height: 30px;
-    width: 30px;
-    padding: 0;
-    border: 0;
-    background: transparent;
+.playground-source-text {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+button.playground-source-detach {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.playground-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.playground-tool-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.playground-tool-divider {
+  width: 1px;
+  height: 22px;
+  margin-inline: 6px;
+  background: var(--stroke-strong);
+  flex: none;
+}
+
+/* One button style for the whole bar: no border, no fill, a wash on hover. */
+button.playground-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--tool-height);
+  min-height: 0;
+  padding-inline: 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  .icon {
+    width: 17px;
+    height: 17px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--surface-2);
+  }
+
+  &:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+  }
+
+  /* Icon-only buttons stay square so the group reads as an even row. */
+  &.icon-only {
+    width: var(--tool-height);
+    padding-inline: 0;
   }
 }
 
-.playground-field {
-  gap: 10px;
-  padding-inline: 14px;
+/* The one action worth colouring. Still flat — a tint, not a filled pill. */
+button.playground-tool--accent {
+  color: var(--accent);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
 }
 
-.playground-field-label {
-  font-size: 0.78rem;
+.playground-tool-caption {
+  font-size: 0.86rem;
   font-weight: 600;
   color: var(--muted);
   white-space: nowrap;
 }
 
-/* The field is the chrome, so the control inside it carries none of its own. */
-.playground-field select {
+.playground-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--tool-height);
+  padding-inline: 10px 26px;
+  border-radius: 9px;
+  min-width: 0;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--surface-2);
+  }
+
+  /* `appearance: none` removes the native arrow, so the field draws its own. */
+  &::after {
+    content: "";
+    position: absolute;
+    right: 11px;
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: translateY(-2px) rotate(45deg);
+    pointer-events: none;
+  }
+}
+
+.playground-select select {
   appearance: none;
   height: 100%;
   min-width: 0;
-  padding: 0 20px 0 0;
+  padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 600;
   color: inherit;
   cursor: pointer;
@@ -305,46 +364,18 @@ button.playground-shuffle {
   }
 }
 
-/* `appearance: none` removes the native arrow, so the field draws its own. */
-.playground-field--select {
-  position: relative;
-
-  &::after {
-    content: "";
-    position: absolute;
-    right: 14px;
-    width: 7px;
-    height: 7px;
-    border-right: 2px solid var(--muted);
-    border-bottom: 2px solid var(--muted);
-    transform: translateY(-2px) rotate(45deg);
-    pointer-events: none;
-  }
-}
-
-.playground-field--stepper {
-  gap: 4px;
-  padding-inline: 14px 4px;
-}
-
 .playground-stepper {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-
-  button {
-    height: 30px;
-    width: 30px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-  }
+  height: var(--tool-height);
+  padding-left: 10px;
 }
 
 .playground-count {
-  min-width: 1.4rem;
+  min-width: 1.3rem;
   text-align: center;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -1137,30 +1168,35 @@ button.ui-cta {
 
 /* ------------------------------------------------------------ responsive --- */
 
-@container playground (max-width: 900px) {
-  /*
-   * Two tidy rows instead of one overflowing one: generate + save on top, options underneath.
-   * Left to itself the bar wrapped into a different shape at almost every width.
-   */
-  .playground-toolbar {
-    grid-template-columns: 1fr auto;
-    gap: 10px;
+@container playground (max-width: 980px) {
+  /* The hint is the first thing to go: it is advice, and the tools are the bar's job. */
+  .playground-topbar-lead:has(.playground-hint:not(.is-hidden)) {
+    display: none;
   }
 
-  /* Explicit placement. Auto-placement follows DOM order, and the full-width options row pushed
-     save down to a third row of its own, which is exactly the orphaned-control look this layout
-     exists to avoid. */
-  .playground-group--save {
-    grid-row: 1;
-    grid-column: 2;
+  .playground-tools {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+  }
+}
+
+@container playground (max-width: 760px) {
+  /* Tools drop onto their own row rather than being squeezed. Still one strip, still one row of
+     evenly sized buttons — just under the lead instead of beside it. */
+  .playground-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px;
   }
 
-  /* Left-aligned, not stretched edge to edge: `space-between` on a two-item row opened a gutter
-     wide enough to read as a mistake. */
-  .playground-group--options {
-    grid-row: 2;
-    grid-column: 1 / -1;
-    gap: 10px;
+  .playground-topbar-lead:has(.playground-hint:not(.is-hidden)) {
+    display: block;
+    padding-inline: 4px;
+  }
+
+  .playground-tools {
+    justify-content: space-between;
   }
 }
 
@@ -1187,21 +1223,6 @@ button.ui-cta {
     width: auto;
   }
 
-  .playground-group--generate {
-    min-width: 0;
-  }
-
-  /* The harmony field takes whatever the stepper leaves, so the style name is not clipped. */
-  .playground-field--select {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .playground-field--select select {
-    flex: 1 1 auto;
-    width: 100%;
-  }
-
   .playground-preview-title {
     display: none;
   }
@@ -1215,42 +1236,88 @@ button.ui-cta {
   }
 }
 
-@container playground (max-width: 460px) {
+@container playground (max-width: 520px) {
   /*
-   * Drop the captions. There is not enough width for both them and a harmony name like
-   * "Complementary", and the controls read fine without them — the select carries an `aria-label`
-   * and the stepper an `aria-label` on its group, so nothing is lost to assistive tech.
+   * Captions and the dividers around them go. There is not enough width for a caption *and* a
+   * harmony name like "Complementary"; the select carries an `aria-label` and the stepper an
+   * `aria-label` on its group, so nothing is lost to assistive tech.
    */
-  .playground-field-label {
+  .playground-tool-caption,
+  .playground-hint {
     display: none;
   }
 
-  .playground-field {
-    padding-inline: 12px;
+  .playground-tool-divider {
+    margin-inline: 3px;
   }
 
-  .playground-field--stepper {
-    padding-inline: 4px;
-  }
-
-  /* The keyboard hint is desktop-only advice. */
-  .playground-kbd {
-    display: none;
-  }
-
-  button.playground-shuffle {
+  .playground-select {
+    padding-inline: 8px 24px;
     flex: 1 1 auto;
-    padding-inline: 12px;
   }
 
-  /* Full width on its own row, below the options. Without the explicit row it inherited the
-     `grid-row: 1` from the wider layout and jumped above Shuffle. */
-  .playground-group--save {
-    grid-row: 3;
-    grid-column: 1 / -1;
+  .playground-stepper {
+    padding-left: 4px;
+  }
 
-    button {
-      width: 100%;
-    }
+  /* Labels off the two text buttons: the icons carry them, and their titles still spell them out. */
+  button.playground-tool span {
+    display: none;
+  }
+
+  button.playground-tool {
+    width: var(--tool-height);
+    padding-inline: 0;
+  }
+
+  /*
+   * Two rows rather than one that scrolls: the icon actions on top, the harmony picker underneath.
+   * Horizontal scrolling pushed "Save to library" off the end of the strip, where nothing said it
+   * was there.
+   */
+  .playground-tools {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .playground-tool-group--shuffle {
+    order: 1;
+  }
+
+  .playground-tool-group--history {
+    order: 3;
+  }
+
+  .playground-tool-group--save {
+    order: 5;
+    margin-left: auto;
+  }
+
+  .playground-tool-group--options {
+    order: 6;
+    flex: 1 1 100%;
+    gap: 6px;
+  }
+
+  .playground-tool-divider:nth-of-type(1) {
+    order: 2;
+  }
+
+  /* Only the first divider survives. Save is pushed to the far end by `margin-left: auto` and the
+     options moved to their own row, so the other two had nothing left to separate and hung in the
+     middle of the row pointing at nothing. */
+  .playground-tool-divider:nth-of-type(2),
+  .playground-tool-divider:nth-of-type(3) {
+    display: none;
+  }
+
+  /* Natural width, so the chevron stays next to the harmony name instead of being pinned to the
+     far edge of a stretched field. */
+  .playground-select {
+    flex: 0 1 auto;
+  }
+
+  .playground-stepper {
+    margin-left: auto;
   }
 }

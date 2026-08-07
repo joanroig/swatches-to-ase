@@ -4,6 +4,7 @@ import {
   playgroundAddButton,
   playgroundCountLabel,
   playgroundDetachButton,
+  playgroundHint,
   playgroundRamp,
   playgroundRedoButton,
   playgroundRemoveButton,
@@ -207,11 +208,14 @@ const renderStage = () => {
 const renderChrome = () => {
   const linked = Boolean(playgroundState.sourcePaletteId);
   playgroundSource?.classList.toggle("is-hidden", !linked);
+  // The lead slot holds one or the other, never both.
+  playgroundHint?.classList.toggle("is-hidden", linked);
   if (playgroundSourceText && linked) {
     playgroundSourceText.textContent = t("playground.editing", { name: playgroundState.sourceName ?? "" });
   }
   if (playgroundSaveButton) {
     setButtonContent(playgroundSaveButton, "bookmark", t(linked ? "playground.update" : "playground.save"));
+    playgroundSaveButton.classList.add("playground-tool");
   }
   if (playgroundUndoButton) {
     playgroundUndoButton.disabled = !canUndoPlayground();
@@ -228,23 +232,32 @@ const render = () => {
 };
 
 /** The three chrome buttons whose icon + label are rebuilt on every language change. */
+/**
+ * The bar's buttons, rebuilt on every language change.
+ *
+ * `setButtonContent` clears and re-fills the button, so it also wipes the `playground-tool` class
+ * it must keep. Re-adding it here is cheaper than teaching the shared helper about callers that
+ * style their own buttons.
+ */
+const TOOL_BUTTONS = [
+  playgroundShuffleButton,
+  playgroundUndoButton,
+  playgroundRedoButton,
+  playgroundAddButton,
+  playgroundRemoveButton,
+  playgroundSaveButton,
+];
+
 const syncPlaygroundLabels = () => {
   setButtonContent(playgroundShuffleButton, "refresh", t("playground.shuffle"));
-  // Appended after `setButtonContent`, which clears the button. Inside the button rather than
-  // beside it: as a sibling the key cap was a sixth control shape sitting loose on the bar.
-  if (playgroundShuffleButton) {
-    const key = document.createElement("kbd");
-    key.className = "playground-kbd";
-    key.textContent = t("playground.shuffleKey");
-    key.setAttribute("aria-hidden", "true");
-    playgroundShuffleButton.appendChild(key);
-    playgroundShuffleButton.setAttribute("aria-keyshortcuts", "Space");
-  }
+  playgroundShuffleButton?.setAttribute("aria-keyshortcuts", "Space");
+  playgroundShuffleButton?.classList.add("playground-tool--accent");
   setButtonContent(playgroundAddButton, "plus", t("playground.addColor"), true);
   setButtonContent(playgroundRemoveButton, "minus", t("playground.removeLast"), true);
   setButtonContent(playgroundSaveButton, "bookmark", t("playground.save"));
   setButtonContent(playgroundUndoButton, "undo", t("action.undo"), true);
   setButtonContent(playgroundRedoButton, "redo", t("action.redo"), true);
+  TOOL_BUTTONS.forEach((button) => button?.classList.add("playground-tool"));
 };
 
 const ensureSortable = () => {

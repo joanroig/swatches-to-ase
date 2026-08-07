@@ -120,59 +120,69 @@
       </section>
 
       <section class="panel panel-playground view-section view-playground" data-view-section="playground" style="--delay: 0.2s">
-        <div class="playground-ramp" id="playground-ramp" aria-label="Working palette"></div>
-
-        <p class="playground-source is-hidden" id="playground-source">
-          <span class="playground-source-text" id="playground-source-text"></span>
-          <button class="playground-source-detach" id="playground-detach" type="button" data-i18n="playground.detach">
-            Detach
-          </button>
-        </p>
-
-        <div class="playground-toolbar">
-          <div class="playground-group playground-group--generate">
-            <button class="primary playground-shuffle" id="playground-shuffle" type="button" data-i18n="playground.shuffle">
-              Shuffle
-            </button>
-            <div class="playground-history" role="group">
-              <button class="ghost icon-only" id="playground-undo" type="button"></button>
-              <button class="ghost icon-only" id="playground-redo" type="button"></button>
-            </div>
+        <div class="playground-topbar">
+          <div class="playground-topbar-lead">
+            <p class="playground-hint" id="playground-hint" data-i18n="playground.spaceHint">
+              Press the spacebar to generate palettes
+            </p>
+            <p class="playground-source is-hidden" id="playground-source">
+              <span class="playground-source-text" id="playground-source-text"></span>
+              <button class="playground-source-detach" id="playground-detach" type="button" data-i18n="playground.detach">
+                Save as new instead
+              </button>
+            </p>
           </div>
 
-          <div class="playground-group playground-group--options">
-            <label class="playground-field playground-field--select">
-              <span class="playground-field-label" data-i18n="playground.style">Harmony</span>
-              <select id="playground-style" aria-label="Harmony" data-i18n-aria-label="playground.style">
-                <option value="analogous" data-i18n="style.analogous">Analogous</option>
-                <option value="cold-pair" data-i18n="style.coldPair">Cold pair</option>
-                <option value="complementary" data-i18n="style.complementary">Complementary</option>
-                <option value="contrasting" data-i18n="style.contrasting">Contrasting</option>
-                <option value="neutral" data-i18n="style.neutral">Neutral</option>
-                <option value="pastel-pair" data-i18n="style.pastelPair">Pastel pair</option>
-                <option value="same-family" data-i18n="style.sameFamily">Same family</option>
-                <option value="shade" data-i18n="style.shade">Shade</option>
-                <option value="triadic" data-i18n="style.triadic">Triadic</option>
-                <option value="vivid-pair" data-i18n="style.vividPair">Vivid pair</option>
-                <option value="warm-cold" data-i18n="style.warmCold">Warm / Cold</option>
-                <option value="warm-pair" data-i18n="style.warmPair">Warm pair</option>
-              </select>
-            </label>
+          <div class="playground-tools">
+            <div class="playground-tool-group playground-tool-group--shuffle">
+              <button class="playground-tool playground-tool--accent" id="playground-shuffle" type="button"></button>
+            </div>
 
-            <div class="playground-field playground-field--stepper">
-              <span class="playground-field-label" data-i18n="playground.count">Colors</span>
+            <span class="playground-tool-divider" aria-hidden="true"></span>
+
+            <div class="playground-tool-group playground-tool-group--history">
+              <button class="playground-tool" id="playground-undo" type="button"></button>
+              <button class="playground-tool" id="playground-redo" type="button"></button>
+            </div>
+
+            <span class="playground-tool-divider" aria-hidden="true"></span>
+
+            <div class="playground-tool-group playground-tool-group--options">
+              <label class="playground-select">
+                <span class="playground-tool-caption" data-i18n="playground.style">Harmony</span>
+                <select id="playground-style" aria-label="Harmony" data-i18n-aria-label="playground.style">
+                  <option value="analogous" data-i18n="style.analogous">Analogous</option>
+                  <option value="cold-pair" data-i18n="style.coldPair">Cold pair</option>
+                  <option value="complementary" data-i18n="style.complementary">Complementary</option>
+                  <option value="contrasting" data-i18n="style.contrasting">Contrasting</option>
+                  <option value="neutral" data-i18n="style.neutral">Neutral</option>
+                  <option value="pastel-pair" data-i18n="style.pastelPair">Pastel pair</option>
+                  <option value="same-family" data-i18n="style.sameFamily">Same family</option>
+                  <option value="shade" data-i18n="style.shade">Shade</option>
+                  <option value="triadic" data-i18n="style.triadic">Triadic</option>
+                  <option value="vivid-pair" data-i18n="style.vividPair">Vivid pair</option>
+                  <option value="warm-cold" data-i18n="style.warmCold">Warm / Cold</option>
+                  <option value="warm-pair" data-i18n="style.warmPair">Warm pair</option>
+                </select>
+              </label>
+
               <div class="playground-stepper" role="group" data-i18n-aria-label="playground.count">
-                <button class="ghost icon-only" id="playground-remove" type="button"></button>
+                <span class="playground-tool-caption" data-i18n="playground.count">Colors</span>
+                <button class="playground-tool" id="playground-remove" type="button"></button>
                 <span class="playground-count" id="playground-count">5</span>
-                <button class="ghost icon-only" id="playground-add" type="button"></button>
+                <button class="playground-tool" id="playground-add" type="button"></button>
               </div>
             </div>
-          </div>
 
-          <div class="playground-group playground-group--save">
-            <button class="ghost" id="playground-save" type="button" data-i18n="playground.save">Save to library</button>
+            <span class="playground-tool-divider" aria-hidden="true"></span>
+
+            <div class="playground-tool-group playground-tool-group--save">
+              <button class="playground-tool" id="playground-save" type="button"></button>
+            </div>
           </div>
         </div>
+
+        <div class="playground-ramp" id="playground-ramp" aria-label="Working palette"></div>
 
         <section class="playground-preview">
           <header class="playground-preview-head">

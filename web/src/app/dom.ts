@@ -130,6 +130,7 @@ export const playgroundRemoveButton = document.querySelector<HTMLButtonElement>(
 export const playgroundCountLabel = document.querySelector<HTMLSpanElement>("#playground-count");
 export const playgroundUndoButton = document.querySelector<HTMLButtonElement>("#playground-undo");
 export const playgroundRedoButton = document.querySelector<HTMLButtonElement>("#playground-redo");
+export const playgroundHint = document.querySelector<HTMLParagraphElement>("#playground-hint");
 export const playgroundSource = document.querySelector<HTMLParagraphElement>("#playground-source");
 export const playgroundSourceText = document.querySelector<HTMLSpanElement>("#playground-source-text");
 export const playgroundDetachButton = document.querySelector<HTMLButtonElement>("#playground-detach");

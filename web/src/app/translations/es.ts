@@ -10,7 +10,7 @@ const es: TranslationMap = {
   "action.openInPlayground": "Abrir en el Laboratorio",
   "nav.playground": "Laboratorio",
   "playground.shuffle": "Mezclar",
-  "playground.shuffleKey": "Espacio",
+  "playground.spaceHint": "Pulsa la barra espaciadora para generar paletas",
   "playground.preview": "Vista previa",
   "playground.style": "Armonía",
   "playground.count": "Colores",
