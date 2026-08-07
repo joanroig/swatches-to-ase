@@ -24,6 +24,10 @@ export type AnalyticsEvent =
   | "folder_created"
   | "colors_extracted_from_image"
   | "discover_opened"
+  | "playground_opened"
+  | "playground_shuffled"
+  | "playground_scene_changed"
+  | "playground_palette_saved"
   | "sign_in"
   | "sign_up";
 

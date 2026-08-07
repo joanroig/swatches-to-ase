@@ -122,6 +122,16 @@ export const viewLikeButton = document.querySelector<HTMLButtonElement>("#view-l
 export const viewLikeCount = document.querySelector<HTMLSpanElement>("#view-like-count");
 export const viewSaveButton = document.querySelector<HTMLButtonElement>("#view-save");
 export const viewSaveEditButton = document.querySelector<HTMLButtonElement>("#view-save-edit");
+export const playgroundRamp = document.querySelector<HTMLDivElement>("#playground-ramp");
+export const playgroundShuffleButton = document.querySelector<HTMLButtonElement>("#playground-shuffle");
+export const playgroundStyleSelect = document.querySelector<HTMLSelectElement>("#playground-style");
+export const playgroundAddButton = document.querySelector<HTMLButtonElement>("#playground-add");
+export const playgroundRemoveButton = document.querySelector<HTMLButtonElement>("#playground-remove");
+export const playgroundCountLabel = document.querySelector<HTMLSpanElement>("#playground-count");
+export const playgroundSaveButton = document.querySelector<HTMLButtonElement>("#playground-save");
+export const playgroundSceneTabs = document.querySelector<HTMLDivElement>("#playground-scene-tabs");
+export const playgroundStage = document.querySelector<HTMLDivElement>("#playground-stage");
+
 export const discoverList = document.querySelector<HTMLDivElement>("#discover-list");
 export const discoverEmpty = document.querySelector<HTMLParagraphElement>("#discover-empty");
 export const discoverSortSelect = document.querySelector<HTMLSelectElement>("#discover-sort");

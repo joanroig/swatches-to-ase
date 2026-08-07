@@ -177,6 +177,8 @@ export const applyActionLabels = () => {
     const target = button.dataset.viewTarget;
     if (target === "library") {
       setButtonContent(button, "files", t("nav.library"));
+    } else if (target === "playground") {
+      setButtonContent(button, "playground", t("nav.playground"));
     } else if (target === "discover") {
       setButtonContent(button, "globe", t("action.discover"));
     }

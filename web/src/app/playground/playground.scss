@@ -1,0 +1,602 @@
+/* ============================================================== playground === */
+
+.panel-playground {
+  gap: 18px;
+}
+
+/* ------------------------------------------------------------------ ramp --- */
+
+.playground-ramp {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  min-height: 220px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--stroke-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+.playground-swatch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 8px 18px;
+  min-width: 0;
+  /* The sortable translates the dragged item, so it must not also be a positioned overlay target. */
+  touch-action: none;
+}
+
+.playground-swatch.is-locked::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 12px;
+  border: 2px solid currentColor;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.playground-swatch-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+/* Touch devices have no hover, so the controls stay visible there. */
+@media (hover: none) {
+  .playground-swatch-actions {
+    opacity: 0.75;
+  }
+}
+
+.playground-swatch:hover .playground-swatch-actions,
+.playground-swatch:focus-within .playground-swatch-actions,
+.playground-swatch.is-locked .playground-swatch-actions {
+  opacity: 1;
+}
+
+button.playground-swatch-action {
+  color: inherit;
+  border-color: transparent;
+  background: transparent;
+  padding: 6px;
+
+  &:hover:not(:disabled) {
+    background: rgb(255 255 255 / 18%);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+  }
+}
+
+button.playground-swatch-action.is-on {
+  background: rgb(255 255 255 / 22%);
+}
+
+.playground-swatch-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  cursor: grab;
+  color: inherit;
+  opacity: 0.85;
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.playground-swatch-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 4px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 10px;
+
+  &:hover {
+    background: rgb(255 255 255 / 14%);
+  }
+}
+
+.playground-swatch-hex {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.playground-swatch-name {
+  display: block;
+  max-width: 100%;
+  font-size: 0.72rem;
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------- bar --- */
+
+.playground-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.playground-bar-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.playground-bar-group--settings {
+  justify-content: flex-end;
+}
+
+.playground-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.playground-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+}
+
+.playground-count {
+  min-width: 1.6rem;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- scenes --- */
+
+.playground-scenes {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.playground-scene-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+  justify-self: start;
+  max-width: 100%;
+}
+
+button.playground-scene-tab {
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+
+  &.is-active {
+    background: linear-gradient(130deg, var(--accent), var(--accent-3));
+    color: #fff;
+  }
+}
+
+.playground-stage {
+  min-width: 0;
+  /* The container lives on the stage, not on `.scene`: a container query cannot style the element
+     that declares the container, and the scenes themselves need to respond to their own width. */
+  container-type: inline-size;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--stroke-strong);
+  background: var(--surface-2);
+}
+
+.scene {
+  min-height: 300px;
+}
+
+/* -- blend ------------------------------------------------------------------ */
+
+.scene-blend {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+}
+
+.blend-mesh {
+  min-height: 220px;
+  /* Deliberately no `background-blend-mode`: `screen` drives every overlap toward white, which on a
+     light or analogous palette erases the palette entirely. Plain alpha stacking keeps the hues. */
+}
+
+.blend-ramp {
+  height: 26px;
+}
+
+.blend-stops {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+.blend-stop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 4px;
+  min-width: 0;
+}
+
+.blend-stop-hex {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* -- ui mock ---------------------------------------------------------------- */
+
+.scene-ui {
+  display: grid;
+  grid-template-columns: 68px 1fr;
+  padding: 0;
+}
+
+.ui-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 0;
+}
+
+.ui-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  background: currentColor;
+  opacity: 0.9;
+}
+
+.ui-rail-item {
+  width: 26px;
+  height: 10px;
+  border-radius: 5px;
+  background: currentColor;
+  opacity: 0.3;
+
+  &.is-active {
+    opacity: 0.85;
+  }
+}
+
+.ui-body {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 20px;
+  min-width: 0;
+}
+
+.ui-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ui-title {
+  font-family: "Fraunces", serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.ui-cta {
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ui-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ui-card {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-radius: 14px;
+  min-width: 0;
+}
+
+.ui-card-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ui-card-label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-panel {
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.ui-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 110px;
+}
+
+.ui-bar {
+  flex: 1 1 0;
+  border-radius: 8px 8px 4px 4px;
+  min-width: 0;
+}
+
+@container (max-width: 560px) {
+  .ui-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ui-cards .ui-card:last-child {
+    display: none;
+  }
+}
+
+/* -- poster ----------------------------------------------------------------- */
+
+.scene-poster {
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  padding: 32px;
+  overflow: hidden;
+}
+
+.poster-shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.poster-shape {
+  position: absolute;
+  opacity: 0.85;
+  /* Deterministic placement: the same palette always draws the same composition. */
+  top: calc(6% + var(--shape-index) * 15%);
+  right: calc(-6% + var(--shape-index) * 9%);
+  width: calc(90px + var(--shape-index) * 14px);
+  height: calc(90px + var(--shape-index) * 14px);
+}
+
+.poster-shape--0 {
+  border-radius: 50%;
+}
+
+.poster-shape--1 {
+  border-radius: 22px;
+  transform: rotate(18deg);
+}
+
+.poster-shape--2 {
+  border-radius: 50% 4px 50% 50%;
+}
+
+.poster-copy {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  max-width: 26ch;
+}
+
+.poster-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.35em;
+  margin: 0;
+  font-family: "Fraunces", serif;
+  font-size: clamp(1.8rem, 6cqw, 3.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+
+.poster-lede {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.75;
+  max-width: 34ch;
+}
+
+.poster-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.poster-chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+/* -- chart ------------------------------------------------------------------ */
+
+.scene-chart {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  background: var(--card);
+}
+
+.chart-donut {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  mask: radial-gradient(circle, transparent 46%, #000 47%);
+  -webkit-mask: radial-gradient(circle, transparent 46%, #000 47%);
+}
+
+.chart-columns {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 170px;
+  min-width: 0;
+}
+
+.chart-column {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  min-width: 0;
+}
+
+.chart-fill {
+  width: 100%;
+  border-radius: 8px 8px 3px 3px;
+}
+
+.chart-tick {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.chart-legend {
+  display: grid;
+  gap: 6px;
+}
+
+.chart-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.chart-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  flex: none;
+}
+
+@container (max-width: 720px) {
+  .scene-chart {
+    grid-template-columns: auto 1fr;
+  }
+
+  .chart-legend {
+    display: none;
+  }
+}
+
+@container (max-width: 460px) {
+  .scene-chart {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .chart-columns {
+    width: 100%;
+  }
+}
+
+/* ------------------------------------------------------------ responsive --- */
+
+@media (max-width: 720px) {
+  /* Columns get unreadably narrow past a handful of colours, so the ramp turns into rows. */
+  .playground-ramp {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-auto-rows: minmax(56px, 1fr);
+  }
+
+  .playground-swatch {
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+  }
+
+  .playground-swatch-label {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 10px;
+    width: auto;
+  }
+
+  .playground-bar-group {
+    width: 100%;
+  }
+
+  .playground-bar-group--settings {
+    justify-content: flex-start;
+  }
+
+  .scene-ui {
+    grid-template-columns: 54px 1fr;
+  }
+}

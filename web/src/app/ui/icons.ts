@@ -38,6 +38,10 @@ const ICONS = {
   more: "/icons/more.svg#icon",
   undo: "/icons/undo.svg#icon",
   redo: "/icons/redo.svg#icon",
+  playground: "/icons/playground.svg#icon",
+  lock: "/icons/lock.svg#icon",
+  minus: "/icons/minus.svg#icon",
+  unlock: "/icons/unlock.svg#icon",
 } as const;
 
 export type IconName = keyof typeof ICONS;

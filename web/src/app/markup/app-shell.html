@@ -118,6 +118,49 @@
         <div class="discover-grid" id="discover-list"></div>
         <p class="empty is-hidden" id="discover-empty" data-i18n="discover.empty">No public palettes available yet.</p>
       </section>
+
+      <section class="panel panel-playground view-section view-playground" data-view-section="playground" style="--delay: 0.2s">
+        <div class="playground-ramp" id="playground-ramp" aria-label="Working palette"></div>
+
+        <div class="playground-bar">
+          <div class="playground-bar-group">
+            <button class="primary playground-shuffle" id="playground-shuffle" type="button" data-i18n="playground.shuffle">
+              Shuffle
+            </button>
+            <span class="playground-hint" data-i18n="playground.shuffleHint">or press space</span>
+          </div>
+          <div class="playground-bar-group playground-bar-group--settings">
+            <div class="field compact">
+              <label for="playground-style" data-i18n="playground.style">Harmony</label>
+              <select id="playground-style">
+                <option value="analogous" data-i18n="style.analogous">Analogous</option>
+                <option value="cold-pair" data-i18n="style.coldPair">Cold pair</option>
+                <option value="complementary" data-i18n="style.complementary">Complementary</option>
+                <option value="contrasting" data-i18n="style.contrasting">Contrasting</option>
+                <option value="neutral" data-i18n="style.neutral">Neutral</option>
+                <option value="pastel-pair" data-i18n="style.pastelPair">Pastel pair</option>
+                <option value="same-family" data-i18n="style.sameFamily">Same family</option>
+                <option value="shade" data-i18n="style.shade">Shade</option>
+                <option value="triadic" data-i18n="style.triadic">Triadic</option>
+                <option value="vivid-pair" data-i18n="style.vividPair">Vivid pair</option>
+                <option value="warm-cold" data-i18n="style.warmCold">Warm / Cold</option>
+                <option value="warm-pair" data-i18n="style.warmPair">Warm pair</option>
+              </select>
+            </div>
+            <div class="playground-stepper" role="group" data-i18n-aria-label="playground.count">
+              <button class="ghost icon-only" id="playground-remove" type="button"></button>
+              <span class="playground-count" id="playground-count">5</span>
+              <button class="ghost icon-only" id="playground-add" type="button"></button>
+            </div>
+            <button class="ghost" id="playground-save" type="button" data-i18n="playground.save">Save to library</button>
+          </div>
+        </div>
+
+        <div class="playground-scenes">
+          <div class="playground-scene-tabs" id="playground-scene-tabs" role="tablist"></div>
+          <div class="playground-stage" id="playground-stage"></div>
+        </div>
+      </section>
     </main>
 
     <div class="sidebar-stack">
@@ -131,6 +174,7 @@
         </div>
         <nav class="sidebar-nav" aria-label="Primary">
           <button class="nav-item" type="button" data-view-target="library"></button>
+          <button class="nav-item" type="button" data-view-target="playground"></button>
           <button class="nav-item" type="button" data-view-target="discover"></button>
         </nav>
       </aside>
@@ -161,6 +205,7 @@
 
   <nav class="bottom-nav" aria-label="Primary">
     <button class="nav-item" type="button" data-view-target="library"></button>
+    <button class="nav-item" type="button" data-view-target="playground"></button>
     <button class="nav-item" type="button" data-view-target="discover"></button>
   </nav>
 </div>

@@ -12,11 +12,16 @@ import {
   viewToggleButtons,
 } from "../dom";
 import { t } from "../i18n";
+import { setPlaygroundActive } from "../playground/ui";
 import { cloudState, discoveryState } from "../state";
 import { setButtonContent } from "./icons";
 import { showToast } from "./notifications";
 
-type AppView = "library" | "discover";
+type AppView = "library" | "playground" | "discover";
+
+const APP_VIEWS: AppView[] = ["library", "playground", "discover"];
+
+const isAppView = (value: string | undefined): value is AppView => Boolean(value) && (APP_VIEWS as string[]).includes(value as string);
 
 let currentView: AppView = "library";
 
@@ -130,6 +135,7 @@ const syncViewState = (view: AppView) => {
       button.removeAttribute("aria-current");
     }
   });
+  setPlaygroundActive(view === "playground");
   scheduleActionDockSync();
 };
 
@@ -178,13 +184,16 @@ export const setActiveView = (view: AppView) => {
   if (view === "discover" && !ensureDiscoverReady()) {
     return;
   }
+  if (view === "playground") {
+    trackEvent("playground_opened");
+  }
   syncViewState(view);
   closeFab();
 };
 
 export const setupShell = () => {
   viewToggleButtons.forEach((button) => {
-    const target = button.dataset.viewTarget === "discover" ? "discover" : "library";
+    const target = isAppView(button.dataset.viewTarget) ? button.dataset.viewTarget : "library";
     button.addEventListener("click", () => setActiveView(target));
   });
 
@@ -223,7 +232,8 @@ export const setupShell = () => {
   window.addEventListener("resize", scheduleActionDockSync);
   window.addEventListener("actiondock:sync", scheduleActionDockSync);
 
-  const initialView = appShell?.dataset.view === "discover" ? "discover" : "library";
+  const storedView = appShell?.dataset.view;
+  const initialView: AppView = isAppView(storedView) ? storedView : "library";
   if (initialView === "discover" && !ensureDiscoverReady()) {
     syncViewState("library");
   } else {

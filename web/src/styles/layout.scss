@@ -90,6 +90,11 @@
   display: flex;
 }
 
+.panel-playground.view-section.is-active {
+  display: grid;
+  align-content: start;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -410,11 +415,15 @@
   height: 24px;
 }
 
-.page[data-view="discover"] .footer {
+/* The footer and the FAB both belong to the library: the FAB's actions are import/export/generate,
+   and none of them apply anywhere else. */
+.page[data-view="discover"] .footer,
+.page[data-view="playground"] .footer {
   display: none;
 }
 
-.page[data-view="discover"] .fab-hub {
+.page[data-view="discover"] .fab-hub,
+.page[data-view="playground"] .fab-hub {
   display: none;
 }
 

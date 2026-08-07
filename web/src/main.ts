@@ -7,6 +7,7 @@ import { onLanguageChange } from "./app/i18n";
 import { setupImageImport } from "./app/image/importer";
 import { importSharedPaletteFromUrl, setupDropzone } from "./app/import";
 import { hydratePalettes } from "./app/palette/storage";
+import { refreshPlayground, setupPlayground } from "./app/playground/ui";
 import { renderEditor, renderPaletteList, renderViewModal, syncPaletteColorNames } from "./app/palette/ui";
 import { setPreferencesPayloadGetter, setScheduleCloudSync } from "./app/persistence";
 import {
@@ -42,8 +43,11 @@ onLanguageChange(() => {
   renderDiscovery();
   refreshCloudControls();
   syncCloudProfileForm();
+  refreshPlayground();
 });
 hydratePreferences();
+// After preferences: the working set is named with the active colour-naming format.
+setupPlayground();
 setupActions();
 hydratePalettes();
 syncPaletteColorNames();
