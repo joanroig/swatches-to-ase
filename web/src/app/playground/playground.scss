@@ -55,9 +55,18 @@ button.playground-source-detach {
   grid-auto-columns: minmax(0, 1fr);
   min-height: 220px;
   border-radius: 18px;
-  overflow: hidden;
+  /* Not `overflow: hidden`: the "+" straddling the outer edges of the first and last swatch has to
+     be able to overhang. The end swatches round their own outer corners instead. */
   border: 1px solid var(--stroke-strong);
   box-shadow: var(--shadow-soft);
+}
+
+.playground-swatch:first-child {
+  border-radius: 17px 0 0 17px;
+}
+
+.playground-swatch:last-child {
+  border-radius: 0 17px 17px 0;
 }
 
 .playground-swatch {
@@ -72,14 +81,23 @@ button.playground-source-detach {
   touch-action: none;
 }
 
-.playground-swatch.is-locked::after {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  border-radius: 12px;
-  border: 2px solid currentColor;
-  opacity: 0.5;
-  pointer-events: none;
+/*
+ * Locked shows the padlock and nothing else — no ring, no grip, no bin.
+ *
+ * The ring plus a full row of icons made a locked swatch the loudest thing on the ramp, when the
+ * point of locking is to take a colour *out* of consideration while you shuffle the rest. Hovering
+ * brings the other controls back.
+ */
+.playground-swatch.is-locked .playground-swatch-grip,
+.playground-swatch.is-locked .playground-swatch-action:not(.is-on) {
+  display: none;
+}
+
+.playground-swatch.is-locked:hover .playground-swatch-grip,
+.playground-swatch.is-locked:focus-within .playground-swatch-grip,
+.playground-swatch.is-locked:hover .playground-swatch-action,
+.playground-swatch.is-locked:focus-within .playground-swatch-action {
+  display: inline-flex;
 }
 
 .playground-swatch-actions {
@@ -118,8 +136,10 @@ button.playground-swatch-action {
   }
 }
 
+/* The padlock carries the state on its own, so it needs no plate behind it. */
 button.playground-swatch-action.is-on {
-  background: rgb(255 255 255 / 22%);
+  background: transparent;
+  opacity: 1;
 }
 
 .playground-swatch-grip {
@@ -172,6 +192,78 @@ button.playground-swatch-action.is-on {
   white-space: nowrap;
 }
 
+/*
+ * The "+" between swatches, mirroring the palette editor. The zone is a hot strip straddling the
+ * seam so the button only appears when the pointer is near the boundary, not anywhere over a
+ * swatch, and it lives inside the swatch rather than as its own grid item — an extra item would
+ * add a track and resize every column.
+ */
+.playground-insert-zone {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 26px;
+  transform: translateX(-50%);
+}
+
+.playground-insert-zone--end {
+  left: auto;
+  right: 0;
+  transform: translateX(50%);
+}
+
+button.playground-insert {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  color: var(--ink);
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  /* A ring from `--ink`, not `--stroke`: the button floats over arbitrary swatch colours and a
+     fixed hairline simply vanished against mid-tones. */
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--ink) 55%, transparent),
+    0 4px 12px rgb(15 23 42 / 35%);
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.4;
+  }
+}
+
+.playground-insert-zone:hover .playground-insert,
+.playground-insert:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.playground-insert-zone:hover .playground-insert:hover {
+  transform: scale(1.12);
+}
+
+@media (hover: none) {
+  .playground-insert-zone {
+    display: none;
+  }
+}
+
 /* ---------------------------------------------------------------- top bar --- */
 
 /*
@@ -192,8 +284,10 @@ button.playground-swatch-action.is-on {
   min-height: 52px;
   padding: 6px 8px 6px 14px;
   border-radius: 14px;
-  border: 1px solid var(--stroke);
-  background: var(--surface);
+  /* The strong stroke, not the hairline: on the dark themes a `--stroke` border against `--surface`
+     inside an already dark panel left the bar with no visible edge at all. */
+  border: 1px solid var(--stroke-strong);
+  background: var(--bg-elevated);
 }
 
 .playground-topbar-lead {
@@ -253,7 +347,9 @@ button.playground-source-detach {
   width: 1px;
   height: 22px;
   margin-inline: 6px;
-  background: var(--stroke-strong);
+  background: currentColor;
+  color: var(--muted);
+  opacity: 0.45;
   flex: none;
 }
 
@@ -284,11 +380,11 @@ button.playground-tool {
   }
 
   &:hover:not(:disabled) {
-    background: var(--surface-2);
+    background: color-mix(in srgb, var(--ink) 12%, transparent);
   }
 
   &:disabled {
-    opacity: 0.38;
+    opacity: 0.32;
     cursor: not-allowed;
   }
 
@@ -315,47 +411,84 @@ button.playground-tool--accent {
   white-space: nowrap;
 }
 
+.playground-hint {
+  color: var(--muted);
+}
+
+/*
+ * Caption, value and chevron sit together as one phrase. The chevron used to be pinned to the far
+ * right of a stretched field, which read as an arrow belonging to whatever came after it rather
+ * than to the harmony picker.
+ */
 .playground-select {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   height: var(--tool-height);
-  padding-inline: 10px 26px;
+  padding-inline: 10px;
   border-radius: 9px;
   min-width: 0;
   transition: background 0.15s ease;
+  cursor: pointer;
 
   &:hover {
-    background: var(--surface-2);
+    background: color-mix(in srgb, var(--ink) 12%, transparent);
   }
 
-  /* `appearance: none` removes the native arrow, so the field draws its own. */
+  /* `appearance: none` removes the native arrow, so the field draws its own — right after the
+     value, not at the far edge. */
   &::after {
     content: "";
-    position: absolute;
-    right: 11px;
     width: 6px;
     height: 6px;
-    border-right: 2px solid var(--muted);
-    border-bottom: 2px solid var(--muted);
+    margin-left: -2px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    color: var(--muted);
     transform: translateY(-2px) rotate(45deg);
+    flex: none;
     pointer-events: none;
   }
 }
 
-.playground-select select {
-  appearance: none;
-  height: 100%;
+/*
+ * The visible value is a span; the real `<select>` is stretched invisibly over it.
+ *
+ * A native select is always as wide as its *longest* option, so with "Complementary" in the list
+ * the value sat in a box far wider than itself and the chevron ended up marooned at the far edge.
+ * Sizing from the selected label instead keeps caption, value and chevron together as one phrase,
+ * and the select stays a real focusable control underneath.
+ */
+.playground-select-value {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   min-width: 0;
+}
+
+.playground-select-text {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playground-select select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  appearance: none;
   padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: inherit;
+  font: inherit;
+  color: transparent;
+  opacity: 0;
   cursor: pointer;
 
   &:focus {
@@ -364,20 +497,9 @@ button.playground-tool--accent {
   }
 }
 
-.playground-stepper {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  height: var(--tool-height);
-  padding-left: 10px;
-}
-
-.playground-count {
-  min-width: 1.3rem;
-  text-align: center;
-  font-size: 0.86rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+.playground-select:has(select:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 /* --------------------------------------------------------------- preview --- */
@@ -1215,6 +1337,31 @@ button.ui-cta {
     padding: 6px 10px;
   }
 
+  .playground-swatch:first-child {
+    border-radius: 17px 17px 0 0;
+  }
+
+  .playground-swatch:last-child {
+    border-radius: 0 0 17px 17px;
+  }
+
+  /* The seam runs horizontally when the ramp is stacked, so the hot strip turns with it. */
+  .playground-insert-zone {
+    top: 0;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: 24px;
+    transform: translateY(-50%);
+  }
+
+  .playground-insert-zone--end {
+    top: auto;
+    bottom: 0;
+    transform: translateY(50%);
+  }
+
   .playground-swatch-label {
     flex-direction: row;
     align-items: baseline;
@@ -1252,12 +1399,7 @@ button.ui-cta {
   }
 
   .playground-select {
-    padding-inline: 8px 24px;
-    flex: 1 1 auto;
-  }
-
-  .playground-stepper {
-    padding-left: 4px;
+    padding-inline: 8px;
   }
 
   /* Labels off the two text buttons: the icons carry them, and their titles still spell them out. */
@@ -1311,13 +1453,7 @@ button.ui-cta {
     display: none;
   }
 
-  /* Natural width, so the chevron stays next to the harmony name instead of being pinned to the
-     far edge of a stretched field. */
   .playground-select {
     flex: 0 1 auto;
-  }
-
-  .playground-stepper {
-    margin-left: auto;
   }
 }

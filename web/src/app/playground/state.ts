@@ -147,12 +147,32 @@ export const setPlaygroundScene = (scene: string) => {
   persistPlayground();
 };
 
-export const addPlaygroundSwatch = () => {
+/**
+ * Insert a colour at `index`, blending its neighbours where it has two.
+ *
+ * A random colour dropped between two neighbours reads as a mistake; the midpoint of the pair
+ * either side is what someone reaching for the "+" between two swatches actually means.
+ */
+export const insertPlaygroundSwatch = (index: number) => {
   if (playgroundState.swatches.length >= MAX_COLORS) {
     return false;
   }
-  const [color] = generatePaletteColors(playgroundState.style, 1, resolveActiveNameFormat());
-  playgroundState.swatches.push(toSwatch(color));
+  const at = Math.max(0, Math.min(index, playgroundState.swatches.length));
+  const before = playgroundState.swatches[at - 1];
+  const after = playgroundState.swatches[at];
+  let rgb: [number, number, number];
+  if (before && after) {
+    rgb = [0, 1, 2].map((channel) => (before.rgb[channel] + after.rgb[channel]) / 2) as [number, number, number];
+  } else {
+    const [generated] = generatePaletteColors(playgroundState.style, 1, resolveActiveNameFormat());
+    rgb = generated.rgb;
+  }
+  playgroundState.swatches.splice(at, 0, {
+    id: createId(),
+    name: nameColor(rgbToHex(rgb).toUpperCase(), resolveActiveNameFormat(), at),
+    rgb,
+    locked: false,
+  });
   persistPlayground();
   commitPlaygroundHistory();
   return true;

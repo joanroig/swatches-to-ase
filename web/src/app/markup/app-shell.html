@@ -150,7 +150,9 @@
             <div class="playground-tool-group playground-tool-group--options">
               <label class="playground-select">
                 <span class="playground-tool-caption" data-i18n="playground.style">Harmony</span>
-                <select id="playground-style" aria-label="Harmony" data-i18n-aria-label="playground.style">
+                <span class="playground-select-value">
+                  <span class="playground-select-text" id="playground-style-text"></span>
+                  <select id="playground-style" aria-label="Harmony" data-i18n-aria-label="playground.style">
                   <option value="analogous" data-i18n="style.analogous">Analogous</option>
                   <option value="cold-pair" data-i18n="style.coldPair">Cold pair</option>
                   <option value="complementary" data-i18n="style.complementary">Complementary</option>
@@ -163,15 +165,9 @@
                   <option value="vivid-pair" data-i18n="style.vividPair">Vivid pair</option>
                   <option value="warm-cold" data-i18n="style.warmCold">Warm / Cold</option>
                   <option value="warm-pair" data-i18n="style.warmPair">Warm pair</option>
-                </select>
+                  </select>
+                </span>
               </label>
-
-              <div class="playground-stepper" role="group" data-i18n-aria-label="playground.count">
-                <span class="playground-tool-caption" data-i18n="playground.count">Colors</span>
-                <button class="playground-tool" id="playground-remove" type="button"></button>
-                <span class="playground-count" id="playground-count">5</span>
-                <button class="playground-tool" id="playground-add" type="button"></button>
-              </div>
             </div>
 
             <span class="playground-tool-divider" aria-hidden="true"></span>

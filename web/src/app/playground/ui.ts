@@ -1,13 +1,10 @@
 import { trackEvent } from "../cloud/analytics";
 import { openColorTools } from "../color/tools";
 import {
-  playgroundAddButton,
-  playgroundCountLabel,
   playgroundDetachButton,
   playgroundHint,
   playgroundRamp,
   playgroundRedoButton,
-  playgroundRemoveButton,
   playgroundSaveButton,
   playgroundSceneTabs,
   playgroundShuffleButton,
@@ -15,6 +12,7 @@ import {
   playgroundSourceText,
   playgroundStage,
   playgroundStyleSelect,
+  playgroundStyleText,
   playgroundUndoButton,
 } from "../dom";
 import { t } from "../i18n";
@@ -28,7 +26,7 @@ import { getContrastColor, rgbToHex } from "../utils/color";
 import { createId } from "../utils/id";
 import { SCENE_IDS, buildScene, isSceneId, type SceneId } from "./scenes";
 import {
-  addPlaygroundSwatch,
+  insertPlaygroundSwatch,
   canRedoPlayground,
   canUndoPlayground,
   detachPlaygroundSource,
@@ -75,12 +73,40 @@ const createSwatchButton = (icon: Parameters<typeof createIcon>[0], label: strin
   return button;
 };
 
+/**
+ * A "+" that inserts a colour at a position, revealed by hovering the seam between two swatches.
+ *
+ * Same affordance as the palette editor, and the reason the toolbar no longer carries a count
+ * stepper: adding a colour *somewhere specific* is what people actually want, and a bare "+1"
+ * could only ever append.
+ */
+const createInsertZone = (index: number, atEnd = false) => {
+  const zone = document.createElement("span");
+  zone.className = atEnd ? "playground-insert-zone playground-insert-zone--end" : "playground-insert-zone";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "playground-insert";
+  setButtonContent(button, "plus", t("action.insertColor"), true);
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (!insertPlaygroundSwatch(index)) {
+      showToast(t("playground.maxColors", { count: playgroundLimits.max }), "info");
+      return;
+    }
+    render();
+  });
+
+  zone.appendChild(button);
+  return zone;
+};
+
 const renderRamp = () => {
   if (!playgroundRamp) {
     return;
   }
   playgroundRamp.innerHTML = "";
-  playgroundState.swatches.forEach((swatch) => {
+  playgroundState.swatches.forEach((swatch, index) => {
     const hex = rgbToHex(swatch.rgb).toUpperCase();
     const ink = getContrastColor(swatch.rgb);
 
@@ -156,19 +182,12 @@ const renderRamp = () => {
       });
     });
 
-    column.append(actions, label);
+    column.append(actions, label, createInsertZone(index));
+    if (index === playgroundState.swatches.length - 1) {
+      column.appendChild(createInsertZone(index + 1, true));
+    }
     playgroundRamp.appendChild(column);
   });
-
-  if (playgroundCountLabel) {
-    playgroundCountLabel.textContent = String(playgroundState.swatches.length);
-  }
-  if (playgroundAddButton) {
-    playgroundAddButton.disabled = playgroundState.swatches.length >= playgroundLimits.max;
-  }
-  if (playgroundRemoveButton) {
-    playgroundRemoveButton.disabled = playgroundState.swatches.length <= playgroundLimits.min;
-  }
 };
 
 const renderSceneTabs = () => {
@@ -239,21 +258,20 @@ const render = () => {
  * it must keep. Re-adding it here is cheaper than teaching the shared helper about callers that
  * style their own buttons.
  */
-const TOOL_BUTTONS = [
-  playgroundShuffleButton,
-  playgroundUndoButton,
-  playgroundRedoButton,
-  playgroundAddButton,
-  playgroundRemoveButton,
-  playgroundSaveButton,
-];
+const TOOL_BUTTONS = [playgroundShuffleButton, playgroundUndoButton, playgroundRedoButton, playgroundSaveButton];
+
+/** Mirror the selected harmony into the span that gives the control its width. */
+const syncStyleText = () => {
+  if (playgroundStyleText) {
+    playgroundStyleText.textContent = playgroundStyleSelect?.selectedOptions[0]?.textContent?.trim() ?? "";
+  }
+};
 
 const syncPlaygroundLabels = () => {
+  syncStyleText();
   setButtonContent(playgroundShuffleButton, "refresh", t("playground.shuffle"));
   playgroundShuffleButton?.setAttribute("aria-keyshortcuts", "Space");
   playgroundShuffleButton?.classList.add("playground-tool--accent");
-  setButtonContent(playgroundAddButton, "plus", t("playground.addColor"), true);
-  setButtonContent(playgroundRemoveButton, "minus", t("playground.removeLast"), true);
   setButtonContent(playgroundSaveButton, "bookmark", t("playground.save"));
   setButtonContent(playgroundUndoButton, "undo", t("action.undo"), true);
   setButtonContent(playgroundRedoButton, "redo", t("action.redo"), true);
@@ -361,6 +379,7 @@ export const setupPlayground = () => {
     }
     playgroundStyleSelect.addEventListener("change", () => {
       setPlaygroundStyle(playgroundStyleSelect.value);
+      syncStyleText();
       shuffle();
     });
   }
@@ -368,16 +387,6 @@ export const setupPlayground = () => {
   syncPlaygroundLabels();
 
   playgroundShuffleButton?.addEventListener("click", shuffle);
-  playgroundAddButton?.addEventListener("click", () => {
-    if (addPlaygroundSwatch()) {
-      render();
-    }
-  });
-  playgroundRemoveButton?.addEventListener("click", () => {
-    if (removePlaygroundSwatch()) {
-      render();
-    }
-  });
   playgroundSaveButton?.addEventListener("click", saveToLibrary);
   playgroundUndoButton?.addEventListener("click", () => {
     if (undoPlayground()) {

@@ -49,15 +49,39 @@ test.describe("playground", () => {
     }
   });
 
-  test("the stepper adds and removes colours", async ({ page }) => {
+  test("the + between swatches inserts a colour at that seam", async ({ page }) => {
     await openPlayground(page);
-    await page.locator("#playground-add").click();
-    await expect(page.locator(SWATCH)).toHaveCount(6);
-    await expect(page.locator("#playground-count")).toHaveText("6");
+    const before = await hexes(page);
 
-    await page.locator("#playground-remove").click();
-    await page.locator("#playground-remove").click();
+    // The zone on a swatch's leading edge inserts before it, so the new colour lands at index 2.
+    await page.locator(`${SWATCH}`).nth(2).locator(".playground-insert").first().click({ force: true });
+
+    const after = await hexes(page);
+    expect(after).toHaveLength(before.length + 1);
+    expect(after.slice(0, 2)).toEqual(before.slice(0, 2));
+    expect(after.slice(3)).toEqual(before.slice(2));
+  });
+
+  test("a swatch can be removed from its own bin button", async ({ page }) => {
+    await openPlayground(page);
+    const first = page.locator(SWATCH).first();
+    await first.hover();
+    await first.locator(".playground-swatch-action").last().click();
     await expect(page.locator(SWATCH)).toHaveCount(4);
+  });
+
+  test("a locked swatch shows only its padlock", async ({ page }) => {
+    await openPlayground(page);
+    const swatch = page.locator(SWATCH).first();
+    await swatch.hover();
+    await swatch.locator(".playground-swatch-action").first().click();
+    await expect(swatch).toHaveClass(/is-locked/);
+
+    // Move the pointer away, then assert the grip and the bin are gone but the padlock remains.
+    await page.mouse.move(0, 0);
+    await expect(swatch.locator(".playground-swatch-grip")).toBeHidden();
+    await expect(swatch.locator(".playground-swatch-action.is-on")).toBeVisible();
+    await expect(swatch.locator(".playground-swatch-action:not(.is-on)")).toBeHidden();
   });
 
   test("every scene renders from the working palette", async ({ page }) => {
