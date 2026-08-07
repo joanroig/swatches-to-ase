@@ -247,7 +247,6 @@ const es: TranslationMap = {
   "editor.preview.empty": "Ninguna paleta seleccionada.",
   "editor.subtitle.empty": "Selecciona una paleta para comenzar.",
   "editor.preview.emptyColors": "Paleta vacía. Añade colores para previsualizar.",
-  "editor.dropTarget": "Suelta para colocar al final",
   "editor.drag": "Arrastra para reordenar",
   "editor.layout.label": "Diseño",
   "editor.layout.horizontal": "Horizontal",

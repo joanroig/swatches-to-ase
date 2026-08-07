@@ -17,11 +17,6 @@ export const viewState = {
   publicPaletteId: null as string | null,
 };
 
-export const dragState = {
-  paletteId: null as string | null,
-  colorId: null as string | null,
-};
-
 export const cloudState = {
   isConfigured: false,
   user: null as CloudUser | null,

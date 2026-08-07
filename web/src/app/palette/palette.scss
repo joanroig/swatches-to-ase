@@ -11,6 +11,7 @@
 }
 
 .palette-card {
+  position: relative;
   border-radius: 16px;
   border: 1px solid var(--stroke);
   padding: 18px;
@@ -20,15 +21,45 @@
   text-align: left;
   transition:
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease;
   cursor: pointer;
   container-type: inline-size;
   container-name: palette-card;
 
   &.is-active {
-    border-color: rgba(79, 70, 229, 0.6);
-    box-shadow: 0 12px 24px rgba(79, 70, 229, 0.18);
+    border-color: color-mix(in srgb, var(--accent-3) 55%, var(--stroke));
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--swatch-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Shared sortable feedback. The dragged element keeps its own grid slot and is only translated,
+   so siblings never resize and the container never gains or loses a track. */
+.is-sorting {
+  user-select: none;
+}
+
+.is-sort-dragging {
+  position: relative;
+  z-index: 5;
+  cursor: grabbing;
+  pointer-events: none;
+  transition: none;
+  will-change: transform;
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.28);
+}
+
+.palette-card.is-sort-dragging {
+  opacity: 0.92;
+}
+
+.color-row.is-sort-dragging {
+  opacity: 0.95;
 }
 
 .palette-title {
@@ -369,12 +400,6 @@
   flex: 1 1 auto;
   min-height: 0;
   align-content: stretch;
-
-  &.is-dragging .color-drop-target {
-    display: grid;
-    opacity: 1;
-    pointer-events: auto;
-  }
 }
 
 #palette-editor[data-layout="horizontal"] .color-list {
@@ -389,30 +414,6 @@
   grid-auto-columns: minmax(0, 1fr);
   grid-auto-rows: minmax(0, 1fr);
   overflow: hidden;
-}
-
-.color-drop-target {
-  border: 1px dashed var(--stroke);
-  border-radius: 14px;
-  padding: 8px 10px;
-  text-align: center;
-  font-size: 0.75rem;
-  color: var(--muted);
-  opacity: 0;
-  pointer-events: none;
-  display: none;
-  min-height: 0;
-  place-items: center;
-  height: 100%;
-  transition:
-    opacity 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
-
-  &.is-dragover {
-    border-color: rgba(79, 70, 229, 0.6);
-    color: var(--text, var(--ink));
-  }
 }
 
 .color-row {
@@ -430,19 +431,7 @@
   min-width: 0;
   height: 100%;
   overflow: hidden;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-
-  &.is-dragging {
-    opacity: 0.55;
-  }
-
-  &.is-dragover {
-    box-shadow:
-      inset 0 0 0 2px var(--swatch-ring),
-      0 18px 28px rgba(15, 23, 42, 0.18);
-  }
+  transition: box-shadow 0.2s ease;
 }
 
 .color-card-content {
