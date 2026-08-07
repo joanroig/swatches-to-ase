@@ -180,8 +180,10 @@
 /* ----------------------------------------------------------- colour list --- */
 
 .color-list {
+  /* Exposed so the insert affordance can centre itself in the gap. */
+  --color-gap: 8px;
   display: grid;
-  gap: 8px;
+  gap: var(--color-gap);
   flex: 1 1 auto;
   min-height: 0;
   align-content: stretch;
@@ -239,16 +241,23 @@
 }
 
 .color-insert {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   min-width: 0;
   min-height: 0;
   padding: 0;
   border-radius: 999px;
-  border: 1px solid var(--stroke);
+  border: none;
   background: var(--bg-elevated);
   color: var(--ink);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
+  /*
+   * A ring drawn from `--ink` rather than `--stroke`, so it is dark on light themes and light on
+   * dark ones. The button floats over arbitrary swatch colours, and a fixed hairline border simply
+   * disappeared against mid-tones.
+   */
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--ink) 55%, transparent),
+    0 4px 12px rgba(15, 23, 42, 0.35);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -259,8 +268,9 @@
     transform 0.14s ease;
 
   .icon {
-    width: 13px;
-    height: 13px;
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.4;
   }
 }
 
@@ -283,30 +293,30 @@
 /* Rows: a wide, shallow zone centred on the horizontal midpoint, clear of the grip and actions. */
 #palette-editor[data-layout="horizontal"] .color-insert-zone {
   left: 50%;
-  top: 0;
+  top: calc(var(--color-gap, 8px) / -2);
   width: min(40%, 240px);
-  height: 26px;
+  height: 30px;
   transform: translate(-50%, -50%);
 }
 
 #palette-editor[data-layout="horizontal"] .color-insert-zone--end {
   top: auto;
-  bottom: 0;
+  bottom: calc(var(--color-gap, 8px) / -2);
   transform: translate(-50%, 50%);
 }
 
 /* Columns: a tall, narrow zone centred on the vertical midpoint, clear of the grip and the label. */
 #palette-editor[data-layout="vertical"] .color-insert-zone {
   top: 50%;
-  left: 0;
-  width: 26px;
+  left: calc(var(--color-gap, 8px) / -2);
+  width: 30px;
   height: min(40%, 200px);
   transform: translate(-50%, -50%);
 }
 
 #palette-editor[data-layout="vertical"] .color-insert-zone--end {
   left: auto;
-  right: 0;
+  right: calc(var(--color-gap, 8px) / -2);
   transform: translate(50%, -50%);
 }
 
