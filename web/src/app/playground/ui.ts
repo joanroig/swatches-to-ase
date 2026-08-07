@@ -3,13 +3,18 @@ import { openColorTools } from "../color/tools";
 import {
   playgroundAddButton,
   playgroundCountLabel,
+  playgroundDetachButton,
   playgroundRamp,
+  playgroundRedoButton,
   playgroundRemoveButton,
   playgroundSaveButton,
   playgroundSceneTabs,
   playgroundShuffleButton,
+  playgroundSource,
+  playgroundSourceText,
   playgroundStage,
   playgroundStyleSelect,
+  playgroundUndoButton,
 } from "../dom";
 import { t } from "../i18n";
 import { syncActivePalette } from "../palette/mutations";
@@ -23,10 +28,15 @@ import { createId } from "../utils/id";
 import { SCENE_IDS, buildScene, isSceneId, type SceneId } from "./scenes";
 import {
   addPlaygroundSwatch,
+  canRedoPlayground,
+  canUndoPlayground,
+  detachPlaygroundSource,
+  loadPaletteIntoPlayground,
   movePlaygroundSwatch,
   persistPlayground,
   playgroundLimits,
   playgroundState,
+  redoPlayground,
   removePlaygroundSwatch,
   restorePlayground,
   setPlaygroundColor,
@@ -34,10 +44,21 @@ import {
   setPlaygroundStyle,
   shufflePlayground,
   togglePlaygroundLock,
+  undoPlayground,
 } from "./state";
 
 let sortable: ReturnType<typeof createSortable> | null = null;
 let isActive = false;
+
+/**
+ * Switching to the playground view lives in the shell, which already imports this module. Rather
+ * than import it back and create a cycle, the shell hands the switcher over at setup.
+ */
+let showPlaygroundView: (() => void) | null = null;
+
+export const setPlaygroundViewSwitcher = (switcher: () => void) => {
+  showPlaygroundView = switcher;
+};
 
 const currentHexes = () => playgroundState.swatches.map((swatch) => rgbToHex(swatch.rgb).toUpperCase());
 
@@ -81,14 +102,10 @@ const renderRamp = () => {
     grip.title = t("action.dragToReorder");
     grip.appendChild(createIcon("grip"));
 
-    const lock = createSwatchButton(
-      swatch.locked ? "lock" : "unlock",
-      t(swatch.locked ? "playground.unlock" : "playground.lock"),
-      () => {
-        togglePlaygroundLock(swatch.id);
-        renderRamp();
-      },
-    );
+    const lock = createSwatchButton(swatch.locked ? "lock" : "unlock", t(swatch.locked ? "playground.unlock" : "playground.lock"), () => {
+      togglePlaygroundLock(swatch.id);
+      renderRamp();
+    });
     lock.classList.toggle("is-on", swatch.locked);
 
     const remove = createSwatchButton("trash", t("playground.removeColor"), () => {
@@ -187,9 +204,27 @@ const renderStage = () => {
   playgroundStage.appendChild(buildScene(scene, currentHexes()));
 };
 
+const renderChrome = () => {
+  const linked = Boolean(playgroundState.sourcePaletteId);
+  playgroundSource?.classList.toggle("is-hidden", !linked);
+  if (playgroundSourceText && linked) {
+    playgroundSourceText.textContent = t("playground.editing", { name: playgroundState.sourceName ?? "" });
+  }
+  if (playgroundSaveButton) {
+    setButtonContent(playgroundSaveButton, "bookmark", t(linked ? "playground.update" : "playground.save"));
+  }
+  if (playgroundUndoButton) {
+    playgroundUndoButton.disabled = !canUndoPlayground();
+  }
+  if (playgroundRedoButton) {
+    playgroundRedoButton.disabled = !canRedoPlayground();
+  }
+};
+
 const render = () => {
   renderRamp();
   renderStage();
+  renderChrome();
 };
 
 /** The three chrome buttons whose icon + label are rebuilt on every language change. */
@@ -198,6 +233,8 @@ const syncPlaygroundLabels = () => {
   setButtonContent(playgroundAddButton, "plus", t("playground.addColor"), true);
   setButtonContent(playgroundRemoveButton, "minus", t("playground.removeLast"), true);
   setButtonContent(playgroundSaveButton, "bookmark", t("playground.save"));
+  setButtonContent(playgroundUndoButton, "undo", t("action.undo"), true);
+  setButtonContent(playgroundRedoButton, "redo", t("action.redo"), true);
 };
 
 const ensureSortable = () => {
@@ -216,23 +253,60 @@ const ensureSortable = () => {
   });
 };
 
+const currentColors = () =>
+  playgroundState.swatches.map((swatch) => ({
+    id: createId(),
+    name: swatch.name,
+    rgb: [...swatch.rgb] as [number, number, number],
+  }));
+
+/**
+ * Write the working set back to the library.
+ *
+ * When the playground was opened from a palette, this updates that palette in place rather than
+ * leaving a second near-identical copy behind. "Detach" is there for when a fresh palette is what
+ * you actually wanted.
+ */
 const saveToLibrary = () => {
+  const linked = playgroundState.sourcePaletteId ? state.palettes.find((entry) => entry.id === playgroundState.sourcePaletteId) : undefined;
+
+  if (linked) {
+    linked.colors = currentColors();
+    linked.lastModified = Date.now();
+    syncActivePalette(linked.id);
+    trackEvent("playground_palette_saved", { colors: linked.colors.length, style: playgroundState.style });
+    appendLog(t("playground.updated", { name: linked.name }), "success");
+    showToast(t("playground.updated", { name: linked.name }), "success");
+    return;
+  }
+
   const palette: Palette = {
     id: createId(),
     name: t("playground.paletteName", { style: playgroundStyleSelect?.selectedOptions[0]?.textContent ?? "" }).trim(),
-    colors: playgroundState.swatches.map((swatch) => ({
-      id: createId(),
-      name: swatch.name,
-      rgb: [...swatch.rgb] as [number, number, number],
-    })),
+    colors: currentColors(),
     lastModified: Date.now(),
     folderId: null,
   };
   state.palettes.unshift(palette);
   syncActivePalette(palette.id);
+  // The new palette becomes the link, so pressing save twice does not create two copies.
+  loadPaletteIntoPlayground(palette.id, palette.name, palette.colors);
+  render();
   trackEvent("playground_palette_saved", { colors: palette.colors.length, style: playgroundState.style });
   appendLog(t("playground.saved", { name: palette.name }), "success");
   showToast(t("playground.saved", { name: palette.name }), "success");
+};
+
+/** Open a library palette in the playground and switch to the tab. */
+export const openPaletteInPlayground = (paletteId: string) => {
+  const palette = state.palettes.find((entry) => entry.id === paletteId);
+  if (!palette) {
+    return;
+  }
+  loadPaletteIntoPlayground(palette.id, palette.name, palette.colors);
+  showPlaygroundView?.();
+  render();
+  trackEvent("playground_opened_from_library", { colors: palette.colors.length });
 };
 
 const shuffle = () => {
@@ -282,6 +356,20 @@ export const setupPlayground = () => {
     }
   });
   playgroundSaveButton?.addEventListener("click", saveToLibrary);
+  playgroundUndoButton?.addEventListener("click", () => {
+    if (undoPlayground()) {
+      render();
+    }
+  });
+  playgroundRedoButton?.addEventListener("click", () => {
+    if (redoPlayground()) {
+      render();
+    }
+  });
+  playgroundDetachButton?.addEventListener("click", () => {
+    detachPlaygroundSource();
+    renderChrome();
+  });
 
   document.addEventListener("keydown", (event) => {
     if (!isActive || event.code !== "Space" || event.metaKey || event.ctrlKey || event.altKey) {
@@ -289,10 +377,7 @@ export const setupPlayground = () => {
     }
     const target = event.target;
     // Never steal the space bar from a control that has its own meaning for it.
-    if (
-      target instanceof HTMLElement &&
-      (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(target.tagName))
-    ) {
+    if (target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(target.tagName))) {
       return;
     }
     if (document.querySelector(".modal.is-open")) {

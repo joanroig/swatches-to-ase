@@ -27,11 +27,25 @@
   gap: 18px;
 }
 
+/*
+ * Each folder is drawn as its own panel. Previously a group was only a heading with cards flowing
+ * underneath, and with more than one folder on screen there was nothing to say where one ended and
+ * the next began — the boundary read as extra whitespace rather than as a container.
+ */
 .library-group {
   display: grid;
   gap: 12px;
+  padding: 12px 14px 16px;
   border-radius: 18px;
-  transition: background 0.2s ease;
+  border: 1px solid var(--stroke);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.library-group:hover {
+  border-color: var(--stroke-strong);
 }
 
 .library-group-header {
@@ -39,6 +53,8 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--stroke);
 }
 
 .library-group-toggle {
@@ -71,6 +87,13 @@
   opacity: 0.7;
 }
 
+.library-group-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+
 .library-group-name {
   /* Grow into the free space so the badge stays at the end and the name is what truncates. */
   flex: 1 1 auto;
@@ -84,28 +107,16 @@
   flex: 0 0 auto;
 }
 
+/* Always visible. Hiding them until hover meant folders looked unmanageable at a glance, and on
+   the way to the rename button the pointer crossed cards that reacted to it. */
 .library-group-actions {
   display: flex;
   align-items: center;
   gap: 4px;
   flex: 0 0 auto;
-  opacity: 0;
-  transition: opacity 0.15s ease;
 
   button {
     padding: 6px;
-  }
-}
-
-.library-group:hover .library-group-actions,
-.library-group:focus-within .library-group-actions,
-.library-group.is-sort-dragging .library-group-actions {
-  opacity: 1;
-}
-
-@media (hover: none) {
-  .library-group-actions {
-    opacity: 1;
   }
 }
 
@@ -113,9 +124,23 @@
   display: none;
 }
 
-@media (max-width: 560px) {
-  .library-group-actions button {
-    padding: 5px;
+@media (max-width: 640px) {
+  /* Name on its own row. With the actions permanently visible there is not enough width for both,
+     and the folder name was the thing that lost — truncated to two characters. */
+  .library-group-header {
+    flex-wrap: wrap;
+  }
+
+  .library-group-toggle {
+    flex: 1 1 100%;
+  }
+
+  .library-group-actions {
+    margin-left: auto;
+
+    button {
+      padding: 5px;
+    }
   }
 }
 

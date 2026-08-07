@@ -41,6 +41,8 @@ const ICONS = {
   playground: "/icons/playground.svg#icon",
   lock: "/icons/lock.svg#icon",
   minus: "/icons/minus.svg#icon",
+  folder: "/icons/folder.svg#icon",
+  inbox: "/icons/inbox.svg#icon",
   unlock: "/icons/unlock.svg#icon",
 } as const;
 

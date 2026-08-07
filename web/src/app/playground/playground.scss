@@ -4,6 +4,43 @@
   gap: 18px;
 }
 
+.playground-source {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: -6px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.playground-source-text {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+button.playground-source-detach {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.playground-history {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+}
+
 /* ------------------------------------------------------------------ ramp --- */
 
 .playground-ramp {
@@ -176,8 +213,12 @@ button.playground-swatch-action.is-on {
 
 .playground-scenes {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
   min-width: 0;
+  min-height: 0;
+  /* The only child that should absorb the panel's spare height. */
+  flex: 1 1 auto;
 }
 
 .playground-scene-tabs {
@@ -212,7 +253,9 @@ button.playground-scene-tab {
 }
 
 .playground-stage {
+  display: grid;
   min-width: 0;
+  min-height: 320px;
   /* The container lives on the stage, not on `.scene`: a container query cannot style the element
      that declares the container, and the scenes themselves need to respond to their own width. */
   container-type: inline-size;
@@ -223,7 +266,17 @@ button.playground-scene-tab {
 }
 
 .scene {
-  min-height: 300px;
+  min-height: 320px;
+  height: 100%;
+
+  /* Scenes colour themselves from the palette, so nothing inside may keep an app text colour. A
+     `<p>` picking up `var(--muted)` was invisible on a dark scene surface. */
+  h3,
+  p,
+  span,
+  button {
+    color: inherit;
+  }
 }
 
 /* -- blend ------------------------------------------------------------------ */
@@ -271,36 +324,94 @@ button.playground-scene-tab {
 
 .scene-ui {
   display: grid;
-  grid-template-columns: 68px 1fr;
+  grid-template-columns: 190px 1fr;
   padding: 0;
+  min-height: 460px;
 }
 
 .ui-rail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 0;
+  display: grid;
+  align-content: start;
+  gap: 22px;
+  padding: 20px 16px;
 }
 
-.ui-logo {
+.ui-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ui-brand-mark {
   width: 26px;
   height: 26px;
   border-radius: 9px;
   background: currentColor;
-  opacity: 0.9;
+  opacity: 0.92;
+  flex: none;
 }
 
-.ui-rail-item {
-  width: 26px;
-  height: 10px;
-  border-radius: 5px;
-  background: currentColor;
-  opacity: 0.3;
+.ui-brand-name {
+  font-family: "Fraunces", serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-nav {
+  display: grid;
+  gap: 4px;
+}
+
+.ui-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.62;
 
   &.is-active {
-    opacity: 0.85;
+    opacity: 1;
+    background: rgb(255 255 255 / 18%);
   }
+}
+
+.ui-nav-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  background: currentColor;
+  flex: none;
+}
+
+.ui-nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-promo {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 14px;
+}
+
+.ui-promo-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ui-promo-body {
+  font-size: 0.72rem;
+  opacity: 0.85;
+  line-height: 1.35;
 }
 
 .ui-body {
@@ -313,24 +424,38 @@ button.playground-scene-tab {
 
 .ui-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
 
+.ui-heading {
+  min-width: 0;
+}
+
 .ui-title {
+  margin: 0;
   font-family: "Fraunces", serif;
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
-.ui-cta {
-  padding: 8px 18px;
+.ui-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+button.ui-cta {
+  padding: 9px 18px;
+  border: 0;
   border-radius: 999px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   white-space: nowrap;
+  /* Inert: this is a picture of a button, not a control. */
+  pointer-events: none;
 }
 
 .ui-cards {
@@ -341,50 +466,242 @@ button.playground-scene-tab {
 
 .ui-card {
   display: grid;
-  gap: 4px;
+  gap: 8px;
   padding: 14px;
   border-radius: 14px;
   min-width: 0;
 }
 
-.ui-card-value {
-  font-size: 1.5rem;
-  font-weight: 800;
-  line-height: 1;
+.ui-card-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .ui-card-label {
-  font-size: 0.75rem;
-  opacity: 0.8;
+  font-size: 0.72rem;
+  opacity: 0.85;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.ui-card-delta {
+  font-size: 0.68rem;
+  font-weight: 700;
+  opacity: 0.75;
+  flex: none;
+}
+
+.ui-card-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ui-card-track {
+  height: 5px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 26%);
+  overflow: hidden;
+}
+
+.ui-card-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.85;
+}
+
 .ui-panel {
-  border-radius: 14px;
-  padding: 14px;
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 12px;
+  border: 1px solid;
+  border-radius: 16px;
+}
+
+.ui-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ui-panel-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.ui-panel-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ui-legend-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+
+.ui-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex: none;
+}
+
+/* The gridlines and the bars share one grid cell so the bars sit *on* the baseline. */
+.ui-plot {
+  position: relative;
+  display: grid;
+  height: 132px;
+}
+
+.ui-grid {
+  position: absolute;
+  inset: 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.ui-gridline {
+  height: 1px;
 }
 
 .ui-bars {
+  position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 10px;
-  height: 110px;
 }
 
-.ui-bar {
+.ui-bar-slot {
+  display: flex;
   flex: 1 1 0;
-  border-radius: 8px 8px 4px 4px;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 5px;
   min-width: 0;
 }
 
-@container (max-width: 560px) {
+.ui-bar-stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  border-radius: 7px 7px 3px 3px;
+  overflow: hidden;
+}
+
+.ui-bar--upper {
+  opacity: 0.75;
+}
+
+.ui-bar-tick {
+  font-size: 0.62rem;
+  text-align: center;
+  height: 13px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ui-list {
+  display: grid;
+  border: 1px solid;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.ui-list-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.ui-avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  flex: none;
+}
+
+.ui-list-text {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ui-list-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-list-meta {
+  font-size: 0.7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex: none;
+}
+
+@container (max-width: 720px) {
   .ui-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .ui-cards .ui-card:last-child {
+    display: none;
+  }
+}
+
+@container (max-width: 560px) {
+  .scene-ui {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-rail {
+    grid-auto-flow: column;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+  }
+
+  .ui-nav,
+  .ui-promo {
+    display: none;
+  }
+
+  .ui-list {
     display: none;
   }
 }
@@ -472,27 +789,100 @@ button.playground-scene-tab {
 
 .scene-chart {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 24px;
-  padding: 24px;
+  grid-template-columns: auto minmax(0, 1fr) minmax(180px, 250px);
+  align-items: stretch;
+  gap: 14px;
+  padding: 18px;
   background: var(--card);
 }
 
+.chart-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--stroke);
+  border-radius: 16px;
+  background: var(--surface);
+  min-width: 0;
+}
+
+.chart-card-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.chart-card--donut {
+  justify-items: center;
+}
+
+.chart-donut-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 156px;
+  height: 156px;
+}
+
 .chart-donut {
-  width: 150px;
-  height: 150px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  mask: radial-gradient(circle, transparent 46%, #000 47%);
-  -webkit-mask: radial-gradient(circle, transparent 46%, #000 47%);
+  mask: radial-gradient(circle, transparent 58%, #000 59%);
+  -webkit-mask: radial-gradient(circle, transparent 58%, #000 59%);
+}
+
+.chart-donut-centre {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  pointer-events: none;
+}
+
+.chart-donut-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.chart-donut-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+}
+
+/* Gridlines sit behind the columns and stop at the tick row, so the bars have a baseline to stand
+   on. Without one they read as loose rectangles floating in the card. */
+.chart-plot {
+  position: relative;
+  height: 190px;
+}
+
+.chart-grid {
+  position: absolute;
+  inset: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.chart-gridline {
+  height: 1px;
+  background: var(--stroke);
 }
 
 .chart-columns {
+  position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 10px;
-  height: 170px;
-  min-width: 0;
+  height: 100%;
 }
 
 .chart-column {
@@ -500,39 +890,61 @@ button.playground-scene-tab {
   flex: 1 1 0;
   flex-direction: column;
   justify-content: flex-end;
-  align-items: center;
-  gap: 6px;
-  height: 100%;
+  gap: 5px;
   min-width: 0;
 }
 
 .chart-fill {
   width: 100%;
-  border-radius: 8px 8px 3px 3px;
+  border-radius: 7px 7px 2px 2px;
 }
 
 .chart-tick {
   font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: var(--muted);
+  text-align: center;
+  height: 11px;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
+}
+
+.chart-stack {
+  display: flex;
+  height: 16px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.chart-stack-segment {
+  flex-basis: 0;
 }
 
 .chart-legend {
   display: grid;
-  gap: 6px;
+  gap: 7px;
 }
 
 .chart-legend-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--muted);
+  min-width: 0;
+}
+
+.chart-legend-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.chart-legend-value {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.66rem;
+  flex: none;
 }
 
 .chart-dot {
@@ -542,24 +954,19 @@ button.playground-scene-tab {
   flex: none;
 }
 
-@container (max-width: 720px) {
+@container (max-width: 860px) {
   .scene-chart {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
-  .chart-legend {
-    display: none;
+  .chart-card--stack {
+    grid-column: 1 / -1;
   }
 }
 
-@container (max-width: 460px) {
+@container (max-width: 520px) {
   .scene-chart {
-    grid-template-columns: 1fr;
-    justify-items: center;
-  }
-
-  .chart-columns {
-    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

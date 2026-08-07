@@ -122,11 +122,22 @@
       <section class="panel panel-playground view-section view-playground" data-view-section="playground" style="--delay: 0.2s">
         <div class="playground-ramp" id="playground-ramp" aria-label="Working palette"></div>
 
+        <p class="playground-source is-hidden" id="playground-source">
+          <span class="playground-source-text" id="playground-source-text"></span>
+          <button class="playground-source-detach" id="playground-detach" type="button" data-i18n="playground.detach">
+            Detach
+          </button>
+        </p>
+
         <div class="playground-bar">
           <div class="playground-bar-group">
             <button class="primary playground-shuffle" id="playground-shuffle" type="button" data-i18n="playground.shuffle">
               Shuffle
             </button>
+            <div class="playground-history" role="group">
+              <button class="ghost icon-only" id="playground-undo" type="button"></button>
+              <button class="ghost icon-only" id="playground-redo" type="button"></button>
+            </div>
             <span class="playground-hint" data-i18n="playground.shuffleHint">or press space</span>
           </div>
           <div class="playground-bar-group playground-bar-group--settings">

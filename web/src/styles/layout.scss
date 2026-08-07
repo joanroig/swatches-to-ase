@@ -90,9 +90,18 @@
   display: flex;
 }
 
+/*
+ * Flex, not grid: the source note is only present when the playground is linked to a library
+ * palette, and a fixed `grid-template-rows` left an empty 320px track behind whenever it was
+ * hidden. A flex column grows whichever children are actually there.
+ *
+ * The min-height gives the scene something to expand into — without it the stage sat at its content
+ * height and the short scenes left a large dead area under the panel.
+ */
 .panel-playground.view-section.is-active {
-  display: grid;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
+  min-height: min(820px, calc(100vh - 160px));
 }
 
 .brand {

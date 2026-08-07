@@ -12,7 +12,7 @@ import {
   viewToggleButtons,
 } from "../dom";
 import { t } from "../i18n";
-import { setPlaygroundActive } from "../playground/ui";
+import { setPlaygroundActive, setPlaygroundViewSwitcher } from "../playground/ui";
 import { cloudState, discoveryState } from "../state";
 import { setButtonContent } from "./icons";
 import { showToast } from "./notifications";
@@ -192,6 +192,8 @@ export const setActiveView = (view: AppView) => {
 };
 
 export const setupShell = () => {
+  setPlaygroundViewSwitcher(() => setActiveView("playground"));
+
   viewToggleButtons.forEach((button) => {
     const target = isAppView(button.dataset.viewTarget) ? button.dataset.viewTarget : "library";
     button.addEventListener("click", () => setActiveView(target));
@@ -240,8 +242,7 @@ export const setupShell = () => {
     syncViewState(initialView);
   }
   const storedSidebar = readSidebarCollapsed();
-  const initialSidebar =
-    typeof storedSidebar === "boolean" ? storedSidebar : appShell?.dataset.sidebar === "collapsed";
+  const initialSidebar = typeof storedSidebar === "boolean" ? storedSidebar : appShell?.dataset.sidebar === "collapsed";
   setSidebarCollapsed(initialSidebar);
   if (appShell) {
     window.requestAnimationFrame(() => {

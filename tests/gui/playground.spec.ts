@@ -79,6 +79,80 @@ test.describe("playground", () => {
     expect(await hexes(page)).toEqual(before);
   });
 
+  test("undo and redo step through the shuffle history", async ({ page }) => {
+    await openPlayground(page);
+    const first = await hexes(page);
+    await page.locator("#playground-shuffle").click();
+    const second = await hexes(page);
+    expect(second).not.toEqual(first);
+
+    await page.locator("#playground-undo").click();
+    expect(await hexes(page)).toEqual(first);
+
+    await page.locator("#playground-redo").click();
+    expect(await hexes(page)).toEqual(second);
+  });
+
+  test("a palette opened from the library is edited in place", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => {
+      localStorage.clear();
+      localStorage.setItem("palette-studio.preferences", JSON.stringify({ colorNameFormat: "html", colorNotation: "hex" }));
+      localStorage.setItem(
+        "palette-studio.palettes",
+        JSON.stringify({
+          palettes: [
+            {
+              id: "p0",
+              name: "Sunset Ridge",
+              lastModified: 1,
+              folderId: null,
+              colors: [
+                { id: "c0", name: "a", rgb: [1, 0, 0] },
+                { id: "c1", name: "b", rgb: [0, 1, 0] },
+                { id: "c2", name: "c", rgb: [0, 0, 1] },
+              ],
+            },
+          ],
+          folders: [],
+          activePaletteId: "p0",
+        }),
+      );
+    });
+    await page.reload();
+    await expect(page.locator("body")).toHaveClass(/is-ready/);
+
+    await page.locator('.palette-card [data-action-key="playground"]').click();
+    await expect(page.locator(".panel-playground")).toBeVisible();
+    // The palette's own colours, not a fresh random set.
+    expect(await hexes(page)).toEqual(["FF0000", "00FF00", "0000FF"]);
+    await expect(page.locator("#playground-source")).toContainText("Sunset Ridge");
+
+    await page.locator("#playground-shuffle").click();
+    const shuffled = await hexes(page);
+    await page.locator("#playground-save").click();
+
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("palette-studio.palettes") ?? "{}"));
+    // Updated in place: still one palette, still the same id and name.
+    expect(stored.palettes).toHaveLength(1);
+    expect(stored.palettes[0].id).toBe("p0");
+    expect(stored.palettes[0].name).toBe("Sunset Ridge");
+    expect(stored.palettes[0].colors).toHaveLength(shuffled.length);
+  });
+
+  test("detaching makes the next save create a new palette", async ({ page }) => {
+    await openPlayground(page);
+    await page.locator("#playground-save").click();
+    await expect(page.locator("#playground-source")).toBeVisible();
+
+    await page.locator("#playground-detach").click();
+    await expect(page.locator("#playground-source")).toBeHidden();
+
+    await page.locator("#playground-save").click();
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("palette-studio.palettes") ?? "{}"));
+    expect(stored.palettes).toHaveLength(2);
+  });
+
   test("saving adds the working palette to the library", async ({ page }) => {
     await openPlayground(page);
     const colors = await hexes(page);

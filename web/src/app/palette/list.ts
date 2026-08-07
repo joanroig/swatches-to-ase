@@ -5,6 +5,7 @@ import { exportModal, libraryEmptySearch, paletteList } from "../dom";
 import { setExportMode, updateExportAvailability } from "../export/manager";
 import { t } from "../i18n";
 import { persistPalettes } from "../persistence";
+import { openPaletteInPlayground } from "../playground/ui";
 import { cloudState, libraryState, state } from "../state";
 import type { Folder, Palette } from "../types";
 import { createIcon, setButtonContent, type IconName } from "../ui/icons";
@@ -73,10 +74,17 @@ const ensureSortables = () => {
   });
 };
 
-const createIconButton = (icon: IconName, label: string, onClick: (event: MouseEvent) => void, iconOnly = false) => {
+/**
+ * `actionKey` is a stable, translation-independent hook. The buttons are icon-only, so without it
+ * the only way to address one is its localised title.
+ */
+const createIconButton = (icon: IconName, label: string, onClick: (event: MouseEvent) => void, iconOnly = false, actionKey?: string) => {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "ghost";
+  if (actionKey) {
+    button.dataset.actionKey = actionKey;
+  }
   setButtonContent(button, icon, label, iconOnly);
   button.setAttribute("aria-label", label);
   button.title = label;
@@ -171,6 +179,17 @@ const createPaletteActions = (palette: Palette) => {
     syncActivePalette(copy.id);
   });
 
+  const playgroundButton = createIconButton(
+    "playground",
+    t("action.openInPlayground"),
+    (event) => {
+      event.stopPropagation();
+      openPaletteInPlayground(palette.id);
+    },
+    false,
+    "playground",
+  );
+
   const exportButton = createIconButton("export", t("action.export"), (event) => {
     event.stopPropagation();
     syncActivePalette(palette.id);
@@ -201,7 +220,7 @@ const createPaletteActions = (palette: Palette) => {
     void removePalette(palette.id);
   });
 
-  actions.append(editButton, duplicateButton, exportButton, spacer, publishButton, removeButton);
+  actions.append(editButton, duplicateButton, playgroundButton, exportButton, spacer, publishButton, removeButton);
   return actions;
 };
 
@@ -349,13 +368,17 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
   toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
   const chevron = createIcon(collapsed ? "chevronDown" : "chevronUp");
   chevron.classList.add("library-group-chevron");
+  // A folder icon on real folders, a tray on Unfiled: the two are different kinds of thing, and the
+  // name alone did not say so.
+  const kind = createIcon(group.folder ? "folder" : "inbox");
+  kind.classList.add("library-group-icon");
   const label = document.createElement("span");
   label.className = "library-group-name";
   label.textContent = group.folder ? group.folder.name : t("folder.unfiled");
   const count = document.createElement("span");
   count.className = "palette-count";
   count.textContent = t("folder.count", { count: group.palettes.length });
-  toggle.append(chevron, label, count);
+  toggle.append(chevron, kind, label, count);
   toggle.addEventListener("click", () => {
     toggleFolderCollapsed(group.id);
     renderPaletteList();

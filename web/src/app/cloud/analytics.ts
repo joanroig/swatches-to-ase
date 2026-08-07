@@ -24,6 +24,7 @@ export type AnalyticsEvent =
   | "colors_extracted_from_image"
   | "discover_opened"
   | "playground_opened"
+  | "playground_opened_from_library"
   | "playground_shuffled"
   | "playground_scene_changed"
   | "playground_palette_saved"

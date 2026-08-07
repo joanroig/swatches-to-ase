@@ -41,11 +41,13 @@ const readableOn = (colors: string[], background: string, index: number) => {
   return ink(background);
 };
 
-const element = <K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className: string,
-  text?: string,
-): HTMLElementTagNameMap[K] => {
+/** A colour at partial opacity, for hairlines and tints that must work on any background. */
+const withAlpha = (hex: string, alpha: number) => {
+  const [r, g, b] = hexToRgb(hex);
+  return `rgb(${Math.round(r * 255)} ${Math.round(g * 255)} ${Math.round(b * 255)} / ${alpha})`;
+};
+
+const element = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text?: string): HTMLElementTagNameMap[K] => {
   const node = document.createElement(tag);
   node.className = className;
   if (text !== undefined) {
@@ -86,59 +88,173 @@ const buildBlend = (colors: string[]) => {
   return scene;
 };
 
+/**
+ * A product dashboard.
+ *
+ * The palette is mapped to interface *roles* rather than to slots in order — a surface, a primary,
+ * a pair of supporting accents — because that is how a palette actually gets used, and it is what
+ * makes an unusable combination obvious at a glance. Text colours are picked by contrast against
+ * whatever they sit on, never by index.
+ */
 const buildUi = (colors: string[]) => {
   const surface = pick(colors, 0);
-  const accent = pick(colors, 1);
-  const secondary = pick(colors, 2);
-  const tertiary = pick(colors, 3);
+  const primary = pick(colors, 1);
+  const support = pick(colors, 2);
+  const highlight = pick(colors, 3);
+  const surfaceInk = ink(surface);
 
   const scene = element("div", "scene scene-ui");
   scene.style.background = surface;
-  scene.style.color = ink(surface);
+  scene.style.color = surfaceInk;
 
+  /* -- rail -- */
   const rail = element("div", "ui-rail");
-  rail.style.background = accent;
-  rail.style.color = ink(accent);
-  rail.appendChild(element("div", "ui-logo"));
-  ["", "", "", ""].forEach((_, index) => {
-    const item = element("div", `ui-rail-item${index === 0 ? " is-active" : ""}`);
-    rail.appendChild(item);
+  rail.style.background = primary;
+  rail.style.color = ink(primary);
+
+  const brand = element("div", "ui-brand");
+  brand.appendChild(element("span", "ui-brand-mark"));
+  brand.appendChild(element("span", "ui-brand-name", t("playground.scene.ui.brand")));
+  rail.appendChild(brand);
+
+  const nav = element("div", "ui-nav");
+  [1, 2, 3, 4].forEach((slot, index) => {
+    const item = element("div", `ui-nav-item${index === 0 ? " is-active" : ""}`);
+    item.appendChild(element("span", "ui-nav-dot"));
+    item.appendChild(element("span", "ui-nav-label", t(`playground.scene.ui.nav${slot}`)));
+    nav.appendChild(item);
   });
+  rail.appendChild(nav);
+
+  const promo = element("div", "ui-promo");
+  promo.style.background = highlight;
+  promo.style.color = ink(highlight);
+  promo.appendChild(element("span", "ui-promo-title", t("playground.scene.ui.promoTitle")));
+  promo.appendChild(element("span", "ui-promo-body", t("playground.scene.ui.promoBody")));
+  rail.appendChild(promo);
+
   scene.appendChild(rail);
 
+  /* -- body -- */
   const body = element("div", "ui-body");
 
   const header = element("div", "ui-header");
-  header.appendChild(element("div", "ui-title", t("playground.scene.ui.title")));
-  const cta = element("div", "ui-cta", t("playground.scene.ui.action"));
-  cta.style.background = accent;
-  cta.style.color = ink(accent);
+  const heading = element("div", "ui-heading");
+  heading.appendChild(element("h3", "ui-title", t("playground.scene.ui.title")));
+  heading.appendChild(element("p", "ui-subtitle", t("playground.scene.ui.subtitle")));
+  header.appendChild(heading);
+
+  const cta = element("button", "ui-cta", t("playground.scene.ui.action"));
+  cta.type = "button";
+  cta.tabIndex = -1;
+  cta.style.background = primary;
+  cta.style.color = ink(primary);
   header.appendChild(cta);
   body.appendChild(header);
 
   const cards = element("div", "ui-cards");
-  [accent, secondary, tertiary].forEach((hex, index) => {
+  const METRICS = [
+    { value: "64%", delta: "+12%", tone: primary },
+    { value: "1,248", delta: "+7%", tone: support },
+    { value: "18", delta: "-3", tone: highlight },
+  ];
+  METRICS.forEach((metric, index) => {
     const card = element("div", "ui-card");
-    card.style.background = hex;
-    card.style.color = ink(hex);
-    card.appendChild(element("span", "ui-card-value", ["64%", "1.2k", "18"][index] ?? "—"));
-    card.appendChild(element("span", "ui-card-label", t(`playground.scene.ui.metric${index + 1}`)));
+    card.style.background = metric.tone;
+    card.style.color = ink(metric.tone);
+    const top = element("div", "ui-card-top");
+    top.appendChild(element("span", "ui-card-label", t(`playground.scene.ui.metric${index + 1}`)));
+    top.appendChild(element("span", "ui-card-delta", metric.delta));
+    card.appendChild(top);
+    card.appendChild(element("span", "ui-card-value", metric.value));
+    // A filled track reading as a share of the whole, drawn in the card's own ink so it works on
+    // any tone the palette happens to supply.
+    const track = element("div", "ui-card-track");
+    const fill = element("div", "ui-card-fill");
+    fill.style.width = ["64%", "78%", "35%"][index];
+    track.appendChild(fill);
+    card.appendChild(track);
     cards.appendChild(card);
   });
   body.appendChild(cards);
 
+  /* -- chart panel -- */
   const panel = element("div", "ui-panel");
-  panel.style.background = pick(colors, 4);
-  panel.style.color = ink(pick(colors, 4));
-  const bars = element("div", "ui-bars");
-  [0.9, 0.55, 0.75, 0.35, 0.62, 0.48].forEach((height, index) => {
-    const bar = element("div", "ui-bar");
-    bar.style.height = `${Math.round(height * 100)}%`;
-    bar.style.background = pick(colors, index + 1);
-    bars.appendChild(bar);
+  panel.style.borderColor = withAlpha(surfaceInk, 0.16);
+
+  const panelHead = element("div", "ui-panel-head");
+  panelHead.appendChild(element("span", "ui-panel-title", t("playground.scene.ui.chartTitle")));
+  const legend = element("div", "ui-panel-legend");
+  [primary, support].forEach((tone, index) => {
+    const entry = element("span", "ui-legend-entry");
+    const dot = element("span", "ui-legend-dot");
+    dot.style.background = tone;
+    entry.appendChild(dot);
+    entry.appendChild(element("span", "ui-legend-text", t(`playground.scene.ui.series${index + 1}`)));
+    legend.appendChild(entry);
   });
-  panel.appendChild(bars);
+  panelHead.appendChild(legend);
+  panel.appendChild(panelHead);
+
+  const plot = element("div", "ui-plot");
+  // Gridlines behind the bars: without a baseline to sit on, the columns read as loose floating
+  // rectangles rather than as a chart.
+  const grid = element("div", "ui-grid");
+  [0, 1, 2, 3].forEach(() => {
+    const line = element("div", "ui-gridline");
+    line.style.background = withAlpha(surfaceInk, 0.12);
+    grid.appendChild(line);
+  });
+  plot.appendChild(grid);
+
+  const bars = element("div", "ui-bars");
+  const HEIGHTS = [46, 62, 38, 84, 55, 71, 44];
+  HEIGHTS.forEach((height, index) => {
+    const slot = element("div", "ui-bar-slot");
+    const stack = element("div", "ui-bar-stack");
+    const lower = element("div", "ui-bar ui-bar--lower");
+    lower.style.height = `${Math.round(height * 0.62)}%`;
+    lower.style.background = primary;
+    const upper = element("div", "ui-bar ui-bar--upper");
+    upper.style.height = `${Math.round(height * 0.38)}%`;
+    upper.style.background = support;
+    stack.append(upper, lower);
+    slot.appendChild(stack);
+    const tick = element("span", "ui-bar-tick", t(`playground.scene.ui.day${(index % 7) + 1}`));
+    tick.style.color = withAlpha(surfaceInk, 0.6);
+    slot.appendChild(tick);
+    bars.appendChild(slot);
+  });
+  plot.appendChild(bars);
+  panel.appendChild(plot);
   body.appendChild(panel);
+
+  /* -- list -- */
+  const list = element("div", "ui-list");
+  list.style.borderColor = withAlpha(surfaceInk, 0.16);
+  [primary, support, highlight].forEach((tone, index) => {
+    const row = element("div", "ui-list-row");
+    row.style.borderColor = withAlpha(surfaceInk, 0.1);
+    const avatar = element("span", "ui-avatar");
+    avatar.style.background = tone;
+    avatar.style.color = ink(tone);
+    avatar.textContent = t(`playground.scene.ui.row${index + 1}`)
+      .slice(0, 1)
+      .toUpperCase();
+    row.appendChild(avatar);
+    const text = element("div", "ui-list-text");
+    text.appendChild(element("span", "ui-list-name", t(`playground.scene.ui.row${index + 1}`)));
+    const meta = element("span", "ui-list-meta", t(`playground.scene.ui.rowMeta${index + 1}`));
+    meta.style.color = withAlpha(surfaceInk, 0.6);
+    text.appendChild(meta);
+    row.appendChild(text);
+    const pill = element("span", "ui-pill", t(`playground.scene.ui.status${index + 1}`));
+    pill.style.background = withAlpha(tone, 0.24);
+    pill.style.color = readableOn(colors, surface, index + 1);
+    row.appendChild(pill);
+    list.appendChild(row);
+  });
+  body.appendChild(list);
 
   scene.appendChild(body);
   return scene;
@@ -185,28 +301,61 @@ const buildPoster = (colors: string[]) => {
   return scene;
 };
 
+/**
+ * A small chart set: a donut with a centre readout, a gridded column chart and a stacked bar.
+ *
+ * Equal slices and a fixed height ramp on purpose — this is a colour test, not a data viz, and the
+ * same palette must always draw the same chart so two shuffles can be compared.
+ */
 const buildChart = (colors: string[]) => {
   const scene = element("div", "scene scene-chart");
 
+  const donutCard = element("div", "chart-card chart-card--donut");
+  donutCard.appendChild(element("span", "chart-card-title", t("playground.scene.chart.share")));
+  const donutWrap = element("div", "chart-donut-wrap");
   const donut = element("div", "chart-donut");
-  // Equal slices: the point is to read the palette, not to plot real data.
   const slice = 360 / colors.length;
   const stops = colors.map((hex, index) => `${hex} ${index * slice}deg ${(index + 1) * slice}deg`);
   donut.style.backgroundImage = `conic-gradient(${stops.join(", ")})`;
-  scene.appendChild(donut);
+  donutWrap.appendChild(donut);
+  const centre = element("div", "chart-donut-centre");
+  centre.appendChild(element("span", "chart-donut-value", String(colors.length)));
+  centre.appendChild(element("span", "chart-donut-label", t("playground.scene.chart.colors")));
+  donutWrap.appendChild(centre);
+  donutCard.appendChild(donutWrap);
+  scene.appendChild(donutCard);
 
+  const barCard = element("div", "chart-card chart-card--bars");
+  barCard.appendChild(element("span", "chart-card-title", t("playground.scene.chart.byColor")));
+  const plot = element("div", "chart-plot");
+  const grid = element("div", "chart-grid");
+  [0, 1, 2, 3, 4].forEach(() => grid.appendChild(element("div", "chart-gridline")));
+  plot.appendChild(grid);
   const columns = element("div", "chart-columns");
   colors.forEach((hex, index) => {
     const column = element("div", "chart-column");
     const fill = element("div", "chart-fill");
-    // A deterministic pseudo-random ramp: the same palette always draws the same chart.
+    // Deterministic pseudo-random ramp: the same palette always draws the same chart.
     fill.style.height = `${30 + ((index * 37) % 65)}%`;
     fill.style.background = hex;
     column.appendChild(fill);
     column.appendChild(element("span", "chart-tick", hex.toUpperCase().replace("#", "")));
     columns.appendChild(column);
   });
-  scene.appendChild(columns);
+  plot.appendChild(columns);
+  barCard.appendChild(plot);
+  scene.appendChild(barCard);
+
+  const stackCard = element("div", "chart-card chart-card--stack");
+  stackCard.appendChild(element("span", "chart-card-title", t("playground.scene.chart.mix")));
+  const stack = element("div", "chart-stack");
+  colors.forEach((hex, index) => {
+    const segment = element("div", "chart-stack-segment");
+    segment.style.background = hex;
+    segment.style.flexGrow = String(1 + ((index * 3) % 4));
+    stack.appendChild(segment);
+  });
+  stackCard.appendChild(stack);
 
   const legend = element("div", "chart-legend");
   colors.forEach((hex, index) => {
@@ -215,9 +364,11 @@ const buildChart = (colors: string[]) => {
     dot.style.background = hex;
     row.appendChild(dot);
     row.appendChild(element("span", "chart-legend-label", t("playground.scene.chart.series", { index: index + 1 })));
+    row.appendChild(element("span", "chart-legend-value", hex.toUpperCase().replace("#", "")));
     legend.appendChild(row);
   });
-  scene.appendChild(legend);
+  stackCard.appendChild(legend);
+  scene.appendChild(stackCard);
 
   return scene;
 };
