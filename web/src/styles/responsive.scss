@@ -199,15 +199,9 @@
     grid-template-columns: 1fr;
   }
 
-  .editor-header {
-    grid-template-columns: 1fr;
-  }
-
   .export-actions,
-  .editor-header-actions,
   .modal-actions,
-  .panel-actions,
-  .editor-footer {
+  .panel-actions {
     flex-direction: column;
     align-items: stretch;
   }
@@ -234,41 +228,6 @@
     margin-right: auto;
   }
 
-  .editor-footer-actions {
-    width: 100%;
-    justify-content: stretch;
-  }
-
-  .editor-header-actions {
-    width: 100%;
-  }
-
-  .editor-header-actions > button,
-  .editor-layout-toggle {
-    width: 100%;
-  }
-
-  .editor-layout-toggle {
-    justify-content: space-between;
-  }
-
-  .editor-layout-toggle .segmented-option {
-    flex: 1 1 0;
-  }
-
-  .editor-layout-toggle .segmented-option span {
-    width: 100%;
-    justify-content: center;
-  }
-
-  #palette-editor[data-layout="horizontal"] .color-list {
-    grid-auto-columns: minmax(86vw, 1fr);
-  }
-
-  .color-row {
-    min-height: clamp(160px, 32vh, 220px);
-  }
-
   input[type="color"]:not(.color-swatch-input) {
     width: 48px;
     height: 48px;
@@ -277,14 +236,6 @@
   input.color-swatch-input {
     width: 40px;
     height: 40px;
-  }
-
-  .color-actions-secondary {
-    display: none;
-  }
-
-  .color-menu {
-    display: block;
   }
 
   .topbar-actions button {

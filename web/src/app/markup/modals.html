@@ -648,42 +648,49 @@
   <div class="modal-backdrop" data-close="true"></div>
   <div class="modal-card modal-editor" role="dialog" aria-modal="true">
     <div class="modal-header editor-header">
-      <div class="editor-name" id="editor-name">
-        <label class="sr-only" for="palette-name" data-i18n="editor.paletteName.label">Palette name</label>
-        <input type="text" id="palette-name" placeholder="Palette name" data-i18n-placeholder="editor.paletteName.placeholder" />
-      </div>
-      <div class="editor-header-actions">
-        <div class="segmented editor-layout-toggle" role="radiogroup" aria-label="Layout" data-i18n-aria-label="editor.layout.label">
-          <label class="segmented-option">
-            <input type="radio" name="editor-layout" value="horizontal" checked />
-            <span data-i18n="editor.layout.horizontal">Horizontal</span>
-          </label>
-          <label class="segmented-option">
-            <input type="radio" name="editor-layout" value="vertical" />
-            <span data-i18n="editor.layout.vertical">Vertical</span>
-          </label>
+      <div class="editor-title">
+        <div class="editor-name" id="editor-name">
+          <label class="sr-only" for="palette-name" data-i18n="editor.paletteName.label">Palette name</label>
+          <input type="text" id="palette-name" placeholder="Palette name" data-i18n-placeholder="editor.paletteName.placeholder" />
         </div>
+        <p class="hint" id="editor-subtitle"></p>
+      </div>
+      <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+    </div>
+    <div class="editor-toolbar">
+      <div class="segmented editor-layout-toggle" role="radiogroup" aria-label="Layout" data-i18n-aria-label="editor.layout.label">
+        <label class="segmented-option">
+          <input type="radio" name="editor-layout" value="horizontal" checked />
+          <span data-i18n="editor.layout.horizontal">Horizontal</span>
+        </label>
+        <label class="segmented-option">
+          <input type="radio" name="editor-layout" value="vertical" />
+          <span data-i18n="editor.layout.vertical">Vertical</span>
+        </label>
+      </div>
+      <div class="editor-toolbar-group">
         <button class="ghost" id="editor-undo" type="button" data-i18n="action.undo">Undo</button>
         <button class="ghost" id="editor-redo" type="button" data-i18n="action.redo">Redo</button>
+        <button class="ghost" id="open-view" type="button" data-i18n="action.view">View</button>
+      </div>
+      <span class="editor-toolbar-spacer" aria-hidden="true"></span>
+      <div class="editor-toolbar-group editor-toolbar-group--commit">
         <button class="ghost" id="editor-cancel" type="button" data-i18n="common.cancel">Cancel</button>
         <button class="primary" id="editor-save" type="button" data-i18n="action.save">Save</button>
-        <button class="ghost" id="open-view" type="button" data-i18n="action.view">View</button>
-        <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
       </div>
     </div>
     <div class="modal-body">
-      <div class="palette-preview" id="palette-preview"></div>
       <div class="editor" id="palette-editor">
         <p class="empty" data-i18n="editor.empty">Select a palette to preview and edit.</p>
       </div>
-      <div class="editor-footer is-hidden" id="editor-footer">
-        <div class="field">
-          <select id="color-notation-editor" aria-label="Color representation" data-i18n-aria-label="settings.colorNotation.label"></select>
-        </div>
-        <div class="editor-footer-actions">
-          <button class="ghost" id="editor-export" type="button" data-i18n="action.export">Export</button>
-          <button class="primary" id="add-color" data-i18n="action.addColor">Add color</button>
-        </div>
+    </div>
+    <div class="editor-footer is-hidden" id="editor-footer">
+      <div class="field">
+        <select id="color-notation-editor" aria-label="Color representation" data-i18n-aria-label="settings.colorNotation.label"></select>
+      </div>
+      <div class="editor-footer-actions">
+        <button class="ghost" id="editor-export" type="button" data-i18n="action.export">Export</button>
+        <button class="primary" id="add-color" data-i18n="action.addColor">Add color</button>
       </div>
     </div>
   </div>

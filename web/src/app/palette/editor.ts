@@ -7,7 +7,6 @@ import {
   editorSubtitle,
   paletteEditor,
   paletteNameInput,
-  palettePreview,
 } from "../dom";
 import { updateExportAvailability } from "../export/manager";
 import { t } from "../i18n";
@@ -112,54 +111,6 @@ const ensureColorListSortable = () => {
   });
 };
 
-const renderPreview = (palette: Palette, notation: string) => {
-  if (!palettePreview) {
-    return;
-  }
-  palettePreview.innerHTML = "";
-  if (palette.colors.length === 0) {
-    palettePreview.innerHTML = `<p class="empty">${t("editor.preview.emptyColors")}</p>`;
-    return;
-  }
-  palette.colors.forEach((color) => {
-    const swatch = document.createElement("div");
-    swatch.className = "preview-swatch";
-    swatch.dataset.colorId = color.id;
-    swatch.style.background = rgbToHex(color.rgb);
-    swatch.style.color = getContrastColor(color.rgb);
-    swatch.title = `${color.name} ${rgbToHex(color.rgb).toUpperCase()}`;
-
-    const name = document.createElement("span");
-    name.className = "preview-name";
-    name.textContent = color.name;
-    const hex = document.createElement("small");
-    hex.className = "preview-hex";
-    hex.textContent = formatColorValue(color, notation);
-
-    swatch.append(name, hex);
-    palettePreview.appendChild(swatch);
-  });
-};
-
-/** Live-update the matching preview swatch while a colour input is being dragged. */
-const syncPreviewSwatch = (color: PaletteColor, rgb: [number, number, number], name: string, notation: string) => {
-  const preview = palettePreview?.querySelector<HTMLDivElement>(`[data-color-id="${color.id}"]`);
-  if (!preview) {
-    return;
-  }
-  preview.style.background = rgbToHex(rgb);
-  preview.style.color = getContrastColor(rgb);
-  const previewHex = preview.querySelector<HTMLElement>(".preview-hex");
-  if (previewHex) {
-    previewHex.textContent = formatColorValue({ ...color, rgb, name }, notation);
-  }
-  const previewName = preview.querySelector<HTMLElement>(".preview-name");
-  if (previewName) {
-    previewName.textContent = name;
-  }
-  preview.title = `${name} ${rgbToHex(rgb).toUpperCase()}`;
-};
-
 const createColorRow = (palette: Palette, color: PaletteColor, index: number, notation: string, nameFormat: string) => {
   const row = document.createElement("div");
   row.className = "color-row";
@@ -184,10 +135,6 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
   const textGroup = document.createElement("div");
   textGroup.className = "color-card-text";
   textGroup.append(valueLabel, nameLabel);
-
-  const content = document.createElement("div");
-  content.className = "color-card-content";
-  content.append(dragHandle, textGroup);
 
   const swatch = document.createElement("input");
   swatch.type = "color";
@@ -253,7 +200,10 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
   });
 
   actions.append(copyButton, duplicateButton, removeButton);
-  row.append(content, actions, swatch);
+  // Flat children so each layout can order them independently: the row places the handle first and
+  // the actions last, the column pins the handle to the top, the label to the bottom and floats the
+  // actions in the middle.
+  row.append(dragHandle, textGroup, actions, swatch);
   applyRowVisuals(color.rgb, color.name);
 
   // `input` fires continuously while the OS picker is open: paint without re-rendering the list.
@@ -266,7 +216,6 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
       target.name = nextName;
     }
     applyRowVisuals(nextRgb, nextName);
-    syncPreviewSwatch(color, nextRgb, nextName, notation);
     renderViewModal();
     updateEditorDirtyState(palette);
   });
@@ -293,9 +242,6 @@ export const renderEditor = () => {
   const palette = state.palettes.find((item) => item.id === state.activePaletteId);
 
   paletteEditor.innerHTML = "";
-  if (palettePreview) {
-    palettePreview.innerHTML = "";
-  }
   editorFooter?.classList.toggle("is-hidden", !palette);
   if (addColorButton) {
     addColorButton.disabled = !palette;
@@ -306,9 +252,6 @@ export const renderEditor = () => {
 
   if (!palette) {
     paletteEditor.innerHTML = `<p class="empty">${t("editor.empty")}</p>`;
-    if (palettePreview) {
-      palettePreview.innerHTML = `<p class="empty">${t("editor.preview.empty")}</p>`;
-    }
     if (editorSubtitle) {
       editorSubtitle.textContent = t("editor.subtitle.empty");
     }
@@ -326,11 +269,8 @@ export const renderEditor = () => {
   syncEditorLayout();
 
   if (editorSubtitle) {
-    editorSubtitle.textContent = t("view.subtitle", {
-      name: palette.name,
-      count: palette.colors.length,
-      colors: t("palette.colors", { count: palette.colors.length }),
-    });
+    // The name is already the editable title right above, so only the count belongs here.
+    editorSubtitle.textContent = t("palette.colors", { count: palette.colors.length });
   }
 
   if (paletteNameInput) {
@@ -342,8 +282,6 @@ export const renderEditor = () => {
     paletteNameInput.disabled = false;
     paletteNameInput.dataset.paletteId = palette.id;
   }
-
-  renderPreview(palette, notation);
 
   const list = document.createElement("div");
   list.className = "color-list";

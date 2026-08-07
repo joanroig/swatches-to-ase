@@ -1,0 +1,543 @@
+/* Palette editor modal: shell, toolbar, footer and the colour list in both layouts. */
+
+.modal-card.modal-editor {
+  width: min(1040px, 96vw);
+  /* Claim the vertical space up front: the column layout needs real height for the hover actions,
+     and a content-sized modal collapses to a strip. */
+  height: min(820px, 88vh);
+  /* header · toolbar · scrolling body · footer */
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 12px;
+
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+    padding-right: 0;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .editor {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+/* ---------------------------------------------------------------- header --- */
+
+.modal-header.editor-header {
+  align-items: flex-start;
+}
+
+.editor-title {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.editor-name {
+  display: grid;
+  min-width: 0;
+
+  input[type="text"] {
+    font-size: 1.15rem;
+    font-weight: 600;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    min-width: 0;
+    width: 100%;
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 2px 0 0 rgba(148, 163, 184, 0.35);
+    }
+  }
+}
+
+#editor-subtitle {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------- toolbar --- */
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--stroke);
+}
+
+.editor-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.editor-toolbar-spacer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.editor-layout-toggle {
+  padding: 4px;
+  width: fit-content;
+  flex: 0 0 auto;
+
+  .segmented-option span {
+    padding: 5px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+.editor-toolbar button {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.editor-toolbar button.icon-only {
+  padding: 8px;
+}
+
+/* ---------------------------------------------------------------- footer --- */
+
+.editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--stroke);
+
+  .field {
+    min-width: 160px;
+    flex: 0 1 220px;
+  }
+}
+
+.editor-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* ----------------------------------------------------------- colour list --- */
+
+.color-list {
+  display: grid;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: stretch;
+}
+
+#palette-editor[data-layout="horizontal"] .color-list {
+  grid-auto-flow: row;
+  /* A floor rather than an unbounded 1fr: a long palette scrolls instead of collapsing into
+     unreadable slivers. */
+  grid-auto-rows: minmax(52px, 1fr);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+
+#palette-editor[data-layout="vertical"] .color-list {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(54px, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.color-row {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  text-align: left;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  container-type: inline-size;
+  container-name: color-row;
+  transition: box-shadow 0.2s ease;
+}
+
+.color-card-text {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.color-card-value,
+.color-card-name {
+  /* `display: block`, not the inherited `inline-flex` from the base button rule: `text-overflow`
+     has no effect on a flex container, so long names were being clipped mid-word instead of
+     ellipsised. The full name stays available via the row's tooltip. */
+  display: block;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+}
+
+.color-card-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.color-card-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.color-card-value:focus-visible,
+.color-card-name:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.color-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.color-actions .icon-only {
+  padding: 5px;
+  border-radius: 8px;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/*
+ * Deliberately unstyled as a button: the same quiet affordance as `.palette-card-grip`.
+ * Qualified with `button` so it outranks `button.icon-only`, which `setButtonContent` adds.
+ */
+button.drag-handle {
+  cursor: grab;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  min-width: 0;
+  min-height: 0;
+  border: none;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  touch-action: none;
+  transition: opacity 0.15s ease;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+/* Pointer devices keep the swatch clean and reveal the grip on hover or keyboard focus. */
+@media (hover: hover) {
+  button.drag-handle {
+    opacity: 0;
+  }
+
+  .color-row:hover .drag-handle,
+  .color-row:focus-within .drag-handle,
+  .color-row.is-sort-dragging .drag-handle {
+    opacity: 1;
+  }
+}
+
+/* The native picker is triggered by the value/name buttons, so keep it out of the layout. */
+input.color-swatch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Buttons sit on top of the swatch colour, so they follow its contrast. */
+.color-row .ghost {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.color-row[data-contrast="light"] .ghost {
+  background: rgba(248, 250, 252, 0.18);
+  color: #f8fafc;
+}
+
+.color-row[data-contrast="light"] .ghost:hover {
+  background: rgba(248, 250, 252, 0.32);
+}
+
+.color-row[data-contrast="dark"] .ghost {
+  background: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+.color-row[data-contrast="dark"] .ghost:hover {
+  background: rgba(15, 23, 42, 0.22);
+}
+
+/* ---------------------------------------------------- horizontal (rows) --- */
+
+#palette-editor[data-layout="horizontal"] .color-row {
+  flex-direction: row;
+  align-items: center;
+  padding: 8px 12px;
+
+  .color-card-text {
+    flex: 1 1 auto;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .color-actions {
+    margin-left: auto;
+  }
+}
+
+/* ------------------------------------------------- vertical (columns) --- */
+
+/*
+ * Modelled on Coolors: each colour is a full-height column with its value pinned to the bottom,
+ * and the actions stay out of the way until the column is hovered or focused.
+ */
+#palette-editor[data-layout="vertical"] .color-row {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 6px 14px;
+  gap: 8px;
+
+  /* Grip at the very top, then the actions and the label pinned together at the bottom. */
+  .drag-handle {
+    order: 1;
+    align-self: center;
+  }
+
+  .color-actions {
+    order: 2;
+    margin-top: auto;
+  }
+
+  .color-card-text {
+    order: 3;
+  }
+
+  /* Coolors-style emphasis: the value is the headline, the name is the caption underneath. */
+  .color-card-text {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-end;
+    gap: 3px;
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .color-card-value {
+    font-size: 0.86rem;
+    letter-spacing: 0.06em;
+  }
+
+  .color-card-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    opacity: 0.82;
+  }
+
+  /* In flow rather than absolutely positioned, so the space stays reserved and the label does not
+     jump when the actions fade in. */
+  .color-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease;
+  }
+
+  &:hover .color-actions,
+  &:focus-within .color-actions,
+  &.is-sort-dragging .color-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/*
+ * Narrow columns turn the label on its side instead of clipping it to a single glyph.
+ * Container queries measure the *content* box, so these thresholds exclude the 12px of horizontal
+ * column padding.
+ */
+@container color-row (max-width: 88px) {
+  #palette-editor[data-layout="vertical"] .color-card-text {
+    /* `column-reverse` packs from the bottom, so the value sits at the base of the column and the
+       name stacks just above it. `flex: 1 1 auto` rather than `height: 100%`: the latter overflows
+       past the drag handle and the clipped edge silently ate the name. */
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+    gap: 6px;
+    /* Must not grow: otherwise it eats the free space that `margin-top: auto` on the actions needs
+       in order to push the action stack down to the bottom of the column. */
+    flex: 0 1 auto;
+    min-height: 0;
+    padding-bottom: 2px;
+  }
+
+  #palette-editor[data-layout="vertical"] .color-card-value,
+  #palette-editor[data-layout="vertical"] .color-card-name {
+    writing-mode: sideways-lr;
+    text-orientation: mixed;
+    line-height: 1;
+    flex: 0 1 auto;
+    min-height: 0;
+  }
+
+  #palette-editor[data-layout="vertical"] .color-card-name {
+    font-size: 0.78rem;
+    opacity: 0.92;
+  }
+}
+
+/* Only when the column is genuinely too thin for two stacked labels. */
+@container color-row (max-width: 30px) {
+  #palette-editor[data-layout="vertical"] .color-card-name {
+    display: none;
+  }
+
+  #palette-editor[data-layout="vertical"] .color-actions {
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) #palette-editor[data-layout="vertical"] .color-actions {
+    transition: none;
+  }
+}
+
+body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
+  transition: none;
+}
+
+/*
+ * Touch devices have no hover, so the actions must always be reachable there. They get a neutral
+ * scrim so the icons stay legible on top of any swatch colour, whereas on desktop they only appear
+ * on hover or keyboard focus.
+ */
+@media (hover: none) {
+  #palette-editor[data-layout="vertical"] .color-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* A neutral chip behind each icon keeps it legible and tappable on any swatch colour. */
+  #palette-editor[data-layout="vertical"] .color-row .ghost {
+    background: rgba(15, 23, 42, 0.5);
+    color: #f8fafc;
+    padding: 7px;
+  }
+
+  #palette-editor[data-layout="vertical"] .color-row .drag-handle {
+    opacity: 0.9;
+  }
+}
+
+/* ------------------------------------------------------------ responsive --- */
+
+@media (max-width: 720px) {
+  .modal-card.modal-editor {
+    width: min(96vw, 640px);
+    gap: 10px;
+  }
+
+  .editor-toolbar {
+    gap: 6px;
+  }
+
+  .editor-layout-toggle {
+    flex: 1 1 100%;
+    width: 100%;
+    justify-content: space-between;
+
+    .segmented-option {
+      flex: 1 1 0;
+    }
+
+    .segmented-option span {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .editor-toolbar-group--commit {
+    margin-left: auto;
+  }
+
+  #open-view span {
+    display: none;
+  }
+
+  .editor-footer .field {
+    flex: 1 1 140px;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-toolbar button {
+    padding: 8px 10px;
+  }
+
+  .editor-footer-actions #editor-export span {
+    display: none;
+  }
+}

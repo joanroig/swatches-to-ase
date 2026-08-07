@@ -46,11 +46,7 @@ export const updatePaletteName = (paletteId: string, nextName: string) => {
   palette.lastModified = Date.now();
   renderPaletteList();
   if (editorSubtitle) {
-    editorSubtitle.textContent = t("view.subtitle", {
-      name: palette.name,
-      count: palette.colors.length,
-      colors: t("palette.colors", { count: palette.colors.length }),
-    });
+    editorSubtitle.textContent = t("palette.colors", { count: palette.colors.length });
   }
   renderViewModal();
   if (isEditorSessionActive(paletteId)) {

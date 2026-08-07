@@ -18,7 +18,6 @@ export const sidebarToggleButton = document.querySelector<HTMLButtonElement>('[d
 export const paletteList = document.querySelector<HTMLDivElement>("#palette-list");
 export const actionDock = document.querySelector<HTMLDivElement>(".action-dock");
 export const paletteEditor = document.querySelector<HTMLDivElement>("#palette-editor");
-export const palettePreview = document.querySelector<HTMLDivElement>("#palette-preview");
 export const editorName = document.querySelector<HTMLDivElement>("#editor-name");
 export const editorFooter = document.querySelector<HTMLDivElement>("#editor-footer");
 export const editorSubtitle = document.querySelector<HTMLParagraphElement>("#editor-subtitle");
