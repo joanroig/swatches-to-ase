@@ -94,8 +94,15 @@ const centerOf = (box: { x: number; y: number; width: number; height: number }) 
 });
 
 const boxOf = async (locator) => {
-  const box = await locator.boundingBox();
-  if (!box) {
+  // Wait for the element to actually be laid out: the shell fades sections in, so a box can be
+  // momentarily unavailable even after the cards exist.
+  await expect(locator).toBeVisible();
+  let box = await locator.boundingBox();
+  for (let attempt = 0; attempt < 20 && (!box || box.height === 0); attempt += 1) {
+    await locator.page().waitForTimeout(50);
+    box = await locator.boundingBox();
+  }
+  if (!box || box.height === 0) {
     throw new Error("Element has no bounding box");
   }
   return box;
@@ -350,5 +357,53 @@ test.describe("colour swatch reordering", () => {
     await expect
       .poll(() => getColorRowIds(page))
       .toEqual([idsBefore[1], idsBefore[2], idsBefore[0], idsBefore[3], idsBefore[4]]);
+  });
+});
+
+test.describe("inline colour insertion", () => {
+  const COLORS: SeedColor[] = [
+    { name: "One", hex: "#ff0000" },
+    { name: "Two", hex: "#00ff00" },
+    { name: "Three", hex: "#0000ff" },
+  ];
+
+  test("the + between swatches inserts at that position", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await seedPalettes(page, [{ name: "Palette", colors: COLORS }]);
+    await page.locator(".palette-card").first().getByRole("button", { name: "Edit" }).click();
+    await expect(page.locator(".color-row")).toHaveCount(3);
+    await waitForModalSettled(page, "#editor-modal .modal-card");
+
+    const idsBefore = await getColorRowIds(page);
+
+    // The "+" on the second row inserts before it, i.e. at index 1.
+    const secondRow = page.locator(".color-row").nth(1);
+    await secondRow.locator(".color-insert-zone").first().hover();
+    await secondRow.locator(".color-insert").first().click();
+
+    await expect(page.locator(".color-row")).toHaveCount(4);
+    const idsAfter = await getColorRowIds(page);
+    expect(idsAfter[0]).toBe(idsBefore[0]);
+    expect(idsAfter[2]).toBe(idsBefore[1]);
+    expect(idsAfter[3]).toBe(idsBefore[2]);
+    // The new colour is the one that was not there before.
+    expect(idsBefore).not.toContain(idsAfter[1]);
+  });
+
+  test("the trailing + on the last swatch appends", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await seedPalettes(page, [{ name: "Palette", colors: COLORS }]);
+    await page.locator(".palette-card").first().getByRole("button", { name: "Edit" }).click();
+    await expect(page.locator(".color-row")).toHaveCount(3);
+    await waitForModalSettled(page, "#editor-modal .modal-card");
+
+    const idsBefore = await getColorRowIds(page);
+    const lastRow = page.locator(".color-row").last();
+    await lastRow.locator(".color-insert-zone--end").hover();
+    await lastRow.locator(".color-insert-zone--end .color-insert").click();
+
+    await expect(page.locator(".color-row")).toHaveCount(4);
+    const idsAfter = await getColorRowIds(page);
+    expect(idsAfter.slice(0, 3)).toEqual(idsBefore);
   });
 });

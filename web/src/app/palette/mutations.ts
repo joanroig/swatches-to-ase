@@ -4,6 +4,7 @@ import { t } from "../i18n";
 import { persistPalettes } from "../persistence";
 import { state } from "../state";
 import type { Palette } from "../types";
+import { createId } from "../utils/id";
 import { getEditorPalette, isEditorDirty, isEditorSessionActive, recordEditorSnapshot } from "./editor-session";
 import { renderEditor } from "./editor";
 import { getColorName, resolveActiveNameFormat } from "./format";
@@ -74,6 +75,19 @@ export const syncPaletteColorNames = (formatOverride?: string) => {
   if (!isEditorDirty()) {
     persistPalettes();
   }
+};
+
+/** Insert a new colour at `index`, so the inline "+" affordances can add anywhere in a palette. */
+export const insertColorAt = (paletteId: string, index: number, rgb: [number, number, number] = [0.5, 0.5, 0.5]) => {
+  const nameFormat = resolveActiveNameFormat();
+  updatePalette(paletteId, (palette) => {
+    const bounded = Math.min(Math.max(index, 0), palette.colors.length);
+    palette.colors.splice(bounded, 0, {
+      id: createId(),
+      name: getColorName(rgb, nameFormat, bounded),
+      rgb: [...rgb] as [number, number, number],
+    });
+  });
 };
 
 /** Move a colour inside a palette. `toIndex` is the destination slot in the final array. */

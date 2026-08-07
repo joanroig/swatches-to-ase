@@ -650,9 +650,18 @@
           <label class="sr-only" for="palette-name" data-i18n="editor.paletteName.label">Palette name</label>
           <input type="text" id="palette-name" placeholder="Palette name" data-i18n-placeholder="editor.paletteName.placeholder" />
         </div>
-        <p class="hint" id="editor-subtitle"></p>
+        <span class="palette-count editor-count" id="editor-subtitle"></span>
+      </div>
+      <div class="editor-commit">
+        <button class="ghost" id="editor-cancel" type="button" data-i18n="common.cancel">Cancel</button>
+        <button class="primary" id="editor-save" type="button" data-i18n="action.save">Save</button>
       </div>
       <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="editor" id="palette-editor">
+        <p class="empty" data-i18n="editor.empty">Select a palette to preview and edit.</p>
+      </div>
     </div>
     <div class="editor-toolbar">
       <div class="segmented editor-layout-toggle" role="radiogroup" aria-label="Layout" data-i18n-aria-label="editor.layout.label">
@@ -668,26 +677,31 @@
       <div class="editor-toolbar-group">
         <button class="ghost" id="editor-undo" type="button" data-i18n="action.undo">Undo</button>
         <button class="ghost" id="editor-redo" type="button" data-i18n="action.redo">Redo</button>
-        <button class="ghost" id="open-view" type="button" data-i18n="action.view">View</button>
       </div>
       <span class="editor-toolbar-spacer" aria-hidden="true"></span>
-      <div class="editor-toolbar-group editor-toolbar-group--commit">
-        <button class="ghost" id="editor-cancel" type="button" data-i18n="common.cancel">Cancel</button>
-        <button class="primary" id="editor-save" type="button" data-i18n="action.save">Save</button>
-      </div>
-    </div>
-    <div class="modal-body">
-      <div class="editor" id="palette-editor">
-        <p class="empty" data-i18n="editor.empty">Select a palette to preview and edit.</p>
-      </div>
-    </div>
-    <div class="editor-footer is-hidden" id="editor-footer">
-      <div class="field">
-        <select id="color-notation-editor" aria-label="Color representation" data-i18n-aria-label="settings.colorNotation.label"></select>
-      </div>
-      <div class="editor-footer-actions">
-        <button class="ghost" id="editor-export" type="button" data-i18n="action.export">Export</button>
-        <button class="primary" id="add-color" data-i18n="action.addColor">Add color</button>
+      <div class="editor-toolbar-group editor-tools" id="editor-tools">
+        <button class="ghost editor-add-color" id="add-color" type="button" data-i18n="action.addColor">Add color</button>
+        <div class="overflow-group" id="editor-overflow">
+          <button
+            class="ghost icon-only overflow-trigger"
+            id="editor-tools-trigger"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="editor-tools-panel"
+            data-i18n-aria-label="action.moreActions"
+          ></button>
+          <div class="overflow-panel" id="editor-tools-panel">
+            <select
+              id="color-notation-editor"
+              class="editor-notation"
+              aria-label="Color representation"
+              data-i18n-aria-label="settings.colorNotation.label"
+            ></select>
+            <button class="ghost" id="open-view" type="button" data-i18n="action.view">View</button>
+            <button class="ghost" id="editor-export" type="button" data-i18n="action.export">Export</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

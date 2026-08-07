@@ -19,8 +19,11 @@ export const paletteList = document.querySelector<HTMLDivElement>("#palette-list
 export const actionDock = document.querySelector<HTMLDivElement>(".action-dock");
 export const paletteEditor = document.querySelector<HTMLDivElement>("#palette-editor");
 export const editorName = document.querySelector<HTMLDivElement>("#editor-name");
-export const editorFooter = document.querySelector<HTMLDivElement>("#editor-footer");
-export const editorSubtitle = document.querySelector<HTMLParagraphElement>("#editor-subtitle");
+export const editorTools = document.querySelector<HTMLDivElement>("#editor-tools");
+export const editorOverflow = document.querySelector<HTMLDivElement>("#editor-overflow");
+export const editorToolsTrigger = document.querySelector<HTMLButtonElement>("#editor-tools-trigger");
+export const editorToolsPanel = document.querySelector<HTMLDivElement>("#editor-tools-panel");
+export const editorSubtitle = document.querySelector<HTMLElement>("#editor-subtitle");
 export const editorLayoutOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="editor-layout"]'));
 export const editorUndoButton = document.querySelector<HTMLButtonElement>("#editor-undo");
 export const editorRedoButton = document.querySelector<HTMLButtonElement>("#editor-redo");

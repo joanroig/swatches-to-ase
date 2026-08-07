@@ -1,13 +1,13 @@
-/* Palette editor modal: shell, toolbar, footer and the colour list in both layouts. */
+/* Palette editor modal: shell, header, bottom toolbar and the colour list in both layouts. */
 
 .modal-card.modal-editor {
   width: min(1040px, 96vw);
   /* Claim the vertical space up front: the column layout needs real height for the hover actions,
      and a content-sized modal collapses to a strip. */
   height: min(820px, 88vh);
-  /* header · toolbar · scrolling body · footer */
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
-  gap: 12px;
+  /* header · list · toolbar */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
 
   .modal-body {
     display: flex;
@@ -30,21 +30,33 @@
   min-height: 0;
 }
 
-/* ---------------------------------------------------------------- header --- */
+/* ------------------------------------------------------- header (top row) --- */
 
 .modal-header.editor-header {
-  align-items: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
+/* Name and colour count share a line; the count is the same badge used on the library cards. */
 .editor-title {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
+  /* Small basis so the commit buttons stay on the title row rather than wrapping below it. */
+  flex: 1 1 140px;
+}
+
+.editor-count:empty {
+  display: none;
 }
 
 .editor-name {
   display: grid;
   min-width: 0;
+  flex: 0 1 auto;
 
   input[type="text"] {
     font-size: 1.15rem;
@@ -66,18 +78,31 @@
 
 #editor-subtitle {
   margin: 0;
-  overflow-wrap: anywhere;
+  flex: 0 0 auto;
 }
 
-/* --------------------------------------------------------------- toolbar --- */
+.editor-commit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-left: auto;
+
+  button {
+    padding: 8px 16px;
+    font-size: 0.88rem;
+  }
+}
+
+/* ---------------------------------------------------- toolbar (bottom row) --- */
 
 .editor-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--stroke);
+  padding-top: 12px;
+  border-top: 1px solid var(--stroke);
 }
 
 .editor-toolbar-group {
@@ -112,28 +137,52 @@
   padding: 8px;
 }
 
-/* ---------------------------------------------------------------- footer --- */
-
-.editor-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding-top: 12px;
-  border-top: 1px solid var(--stroke);
-
-  .field {
-    min-width: 160px;
-    flex: 0 1 220px;
-  }
+.editor-notation {
+  padding: 7px 10px;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  max-width: 104px;
 }
 
-.editor-footer-actions {
+/* The whole tools group disappears when there is no palette to act on. */
+.editor-tools.is-hidden {
+  display: none;
+}
+
+/*
+ * Overflow group. Wide enough, and the panel is simply an inline row of buttons. Once the toolbar
+ * runs out of room the same panel becomes a popover behind a "..." trigger — no duplicated markup,
+ * so there is only ever one instance of each control.
+ */
+.overflow-group {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-left: auto;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.overflow-trigger {
+  display: none;
+}
+
+.overflow-panel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Adding a colour is normally done with the inline "+" between swatches, so the toolbar button is
+   reserved for touch, where there is no hover to reveal them. */
+@media (hover: hover) {
+  .editor-add-color {
+    display: none;
+  }
+
+  /* An empty palette has no swatches to hover, so the toolbar button is the only way in. */
+  .editor-tools.is-empty-palette .editor-add-color {
+    display: inline-flex;
+  }
 }
 
 /* ----------------------------------------------------------- colour list --- */
@@ -148,6 +197,8 @@
 
 #palette-editor[data-layout="horizontal"] .color-list {
   grid-auto-flow: row;
+  /* Room for the insert buttons that straddle the outer edges of the first and last swatch. */
+  padding: 16px 0;
   /* A floor rather than an unbounded 1fr: a long palette scrolls instead of collapsing into
      unreadable slivers. */
   grid-auto-rows: minmax(52px, 1fr);
@@ -158,6 +209,7 @@
 
 #palette-editor[data-layout="vertical"] .color-list {
   grid-auto-flow: column;
+  padding: 0 16px;
   grid-auto-columns: minmax(54px, 1fr);
   grid-auto-rows: minmax(0, 1fr);
   overflow-x: auto;
@@ -175,11 +227,98 @@
   min-height: 0;
   min-width: 0;
   height: 100%;
-  overflow: hidden;
+  /* Visible, not hidden: the insert "+" straddles the gap between swatches. The labels clip
+     themselves, so nothing else spills. */
+  overflow: visible;
   container-type: inline-size;
   container-name: color-row;
   transition: box-shadow 0.2s ease;
 }
+
+/*
+ * Insert affordance. A hot zone straddles the boundary between two swatches (plus a trailing one
+ * after the last), and reveals a "+" only while the pointer is near that edge. Hovering the middle
+ * of a swatch leaves it hidden. Touch devices use the toolbar button instead.
+ */
+.color-insert-zone {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+}
+
+.color-insert {
+  width: 24px;
+  height: 24px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  color: var(--ink);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease;
+
+  .icon {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.color-insert-zone:hover .color-insert,
+.color-insert:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.color-insert-zone:hover .color-insert:hover {
+  transform: scale(1.12);
+}
+
+@media (hover: none) {
+  .color-insert-zone {
+    display: none;
+  }
+}
+
+/* Rows: a wide, shallow zone centred on the horizontal midpoint, clear of the grip and actions. */
+#palette-editor[data-layout="horizontal"] .color-insert-zone {
+  left: 50%;
+  top: 0;
+  width: min(40%, 240px);
+  height: 26px;
+  transform: translate(-50%, -50%);
+}
+
+#palette-editor[data-layout="horizontal"] .color-insert-zone--end {
+  top: auto;
+  bottom: 0;
+  transform: translate(-50%, 50%);
+}
+
+/* Columns: a tall, narrow zone centred on the vertical midpoint, clear of the grip and the label. */
+#palette-editor[data-layout="vertical"] .color-insert-zone {
+  top: 50%;
+  left: 0;
+  width: 26px;
+  height: min(40%, 200px);
+  transform: translate(-50%, -50%);
+}
+
+#palette-editor[data-layout="vertical"] .color-insert-zone--end {
+  left: auto;
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
 
 .color-card-text {
   display: flex;
@@ -494,14 +633,53 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
 
 /* ------------------------------------------------------------ responsive --- */
 
+@media (max-width: 820px) {
+  .overflow-trigger {
+    display: inline-flex;
+  }
+
+  .overflow-panel {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 10px);
+    z-index: 6;
+    display: grid;
+    gap: 6px;
+    min-width: 190px;
+    padding: 10px;
+    border-radius: 14px;
+    border: 1px solid var(--stroke);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow);
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition:
+      opacity 0.16s ease,
+      transform 0.16s ease;
+  }
+
+  .overflow-group.is-open .overflow-panel {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .overflow-panel button {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .overflow-panel .editor-notation {
+    max-width: none;
+    width: 100%;
+  }
+}
+
 @media (max-width: 720px) {
   .modal-card.modal-editor {
     width: min(96vw, 640px);
-    gap: 10px;
-  }
-
-  .editor-toolbar {
-    gap: 6px;
+    gap: 12px;
   }
 
   .editor-layout-toggle {
@@ -518,26 +696,24 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
       justify-content: center;
     }
   }
-
-  .editor-toolbar-group--commit {
-    margin-left: auto;
-  }
-
-  #open-view span {
-    display: none;
-  }
-
-  .editor-footer .field {
-    flex: 1 1 140px;
-  }
 }
 
 @media (max-width: 480px) {
+  .editor-commit button {
+    padding: 8px 12px;
+  }
+
   .editor-toolbar button {
     padding: 8px 10px;
   }
+}
 
-  .editor-footer-actions #editor-export span {
-    display: none;
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) .overflow-panel {
+    transition: none;
   }
+}
+
+body[data-motion="off"] .overflow-panel {
+  transition: none;
 }

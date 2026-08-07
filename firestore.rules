@@ -5,6 +5,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // The app gates publishing, liking and saving on a verified email; enforce the same rule here
+    // so the gate cannot be bypassed by talking to Firestore directly.
+    function verified() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+
     function isOwner(userId) {
       return signedIn() && request.auth.uid == userId;
     }
@@ -128,18 +134,23 @@ service cloud.firestore {
       allow delete: if isOwner(userId) && docId == 'avatar';
     }
 
+    // A like is recorded once and then only removed; there is no update path, which is what makes
+    // the counter increment idempotent.
     match /users/{userId}/likes/{paletteId} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId)
+        && verified()
         && request.resource.data.keys().hasOnly(['likedAt'])
         && request.resource.data.likedAt is timestamp
         && request.resource.data.likedAt == request.time;
       allow delete: if isOwner(userId);
     }
 
+    // Likewise for saves: create-only, so re-saving the same palette cannot bump savesCount again.
     match /users/{userId}/saves/{paletteId} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId)
+        && verified()
         && request.resource.data.keys().hasOnly(['savedAt'])
         && request.resource.data.savedAt is timestamp
         && request.resource.data.savedAt == request.time;
@@ -148,14 +159,14 @@ service cloud.firestore {
 
     match /publicPalettes/{paletteId} {
       allow read: if true;
-      allow create: if signedIn()
+      allow create: if verified()
         && request.resource.data.ownerId == request.auth.uid
         && isValidPublicPalette(request.resource.data)
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time
         && request.resource.data.likesCount == 0
         && request.resource.data.savesCount == 0;
-      allow update: if signedIn()
+      allow update: if verified()
         && request.resource.data.ownerId == resource.data.ownerId
         && (
           (
@@ -169,6 +180,8 @@ service cloud.firestore {
           )
           || isCountUpdate()
         );
+      // Deleting withdraws the palette from Discover. Copies that other users saved are their own
+      // documents and are unaffected.
       allow delete: if signedIn() && request.auth.uid == resource.data.ownerId;
     }
   }

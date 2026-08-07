@@ -1,7 +1,7 @@
 import {
   addColorButton,
   editorExportButton,
-  editorFooter,
+  editorTools,
   editorLayoutOptions,
   editorModal,
   editorSubtitle,
@@ -21,7 +21,7 @@ import { formatColorValue, getContrastColor, hexToRgb, rgbToHex } from "../utils
 import { createId } from "../utils/id";
 import { resetEditorSession, startEditorSession, updateEditorDirtyState } from "./editor-session";
 import { resolveActiveNameFormat } from "./format";
-import { moveColorToIndex, syncActivePalette, updatePalette } from "./mutations";
+import { insertColorAt, moveColorToIndex, syncActivePalette, updatePalette } from "./mutations";
 import { nameColor } from "./naming";
 import { renderViewModal } from "./view";
 
@@ -109,6 +109,30 @@ const ensureColorListSortable = () => {
       moveColorToIndex(state.activePaletteId, fromIndex, toIndex);
     },
   });
+};
+
+/**
+ * A "+" that inserts a colour at a specific position, shown on hover between swatches. It lives
+ * inside a row rather than as its own grid item, because an extra grid item would add a track and
+ * resize every swatch.
+ */
+const createInsertButton = (paletteId: string, index: number, atEnd = false) => {
+  // A small hot zone straddling the boundary, so the "+" only shows when the pointer is near the
+  // edge between two swatches rather than anywhere over a swatch.
+  const zone = document.createElement("span");
+  zone.className = atEnd ? "color-insert-zone color-insert-zone--end" : "color-insert-zone";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "color-insert";
+  setButtonContent(button, "plus", t("action.insertColor"), true);
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    insertColorAt(paletteId, index);
+  });
+
+  zone.appendChild(button);
+  return zone;
 };
 
 const createColorRow = (palette: Palette, color: PaletteColor, index: number, notation: string, nameFormat: string) => {
@@ -203,7 +227,10 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
   // Flat children so each layout can order them independently: the row places the handle first and
   // the actions last, the column pins the handle to the top, the label to the bottom and floats the
   // actions in the middle.
-  row.append(dragHandle, textGroup, actions, swatch);
+  row.append(dragHandle, textGroup, actions, swatch, createInsertButton(palette.id, index));
+  if (index === palette.colors.length - 1) {
+    row.appendChild(createInsertButton(palette.id, palette.colors.length, true));
+  }
   applyRowVisuals(color.rgb, color.name);
 
   // `input` fires continuously while the OS picker is open: paint without re-rendering the list.
@@ -242,7 +269,10 @@ export const renderEditor = () => {
   const palette = state.palettes.find((item) => item.id === state.activePaletteId);
 
   paletteEditor.innerHTML = "";
-  editorFooter?.classList.toggle("is-hidden", !palette);
+  editorTools?.classList.toggle("is-hidden", !palette);
+  // With no swatches there are no inline "+" affordances, so the toolbar button has to be the way
+  // in — on every device, not just touch.
+  editorTools?.classList.toggle("is-empty-palette", !palette || palette.colors.length === 0);
   if (addColorButton) {
     addColorButton.disabled = !palette;
   }

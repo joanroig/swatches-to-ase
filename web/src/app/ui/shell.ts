@@ -158,10 +158,14 @@ const ensureDiscoverReady = () => {
     discoveryState.loading = true;
     renderDiscovery();
   }
-  void fetchUserInteractions().then(() => {
-    listenToDiscovery();
-    renderDiscovery();
-  });
+  // `fetchUserInteractions` swallows its own errors, but never let a rejection here stop Discover
+  // from starting to listen.
+  void fetchUserInteractions()
+    .catch(() => undefined)
+    .then(() => {
+      listenToDiscovery();
+      renderDiscovery();
+    });
   return true;
 };
 

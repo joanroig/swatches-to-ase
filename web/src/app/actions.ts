@@ -11,7 +11,9 @@ import {
 } from "firebase/auth";
 import { firebaseClient } from "./cloud/context";
 import { deleteCloudAccount } from "./cloud/delete";
-import { savePublicPalette, setDiscoverySearch, setDiscoverySort, toggleLikePublicPalette } from "./cloud/discovery";
+import { renderDiscovery, setDiscoverySearch, setDiscoverySort } from "./cloud/discovery";
+import { reportAuthError } from "./cloud/errors";
+import { savePublicPalette, toggleLikePublicPalette } from "./cloud/interactions";
 import { resetCloudProfileDraft, setupCloudProfileControls } from "./cloud/profile";
 import {
   getRecaptchaToken,
@@ -56,6 +58,9 @@ import {
   editorModal,
   editorRedoButton,
   editorSaveButton,
+  editorOverflow,
+  editorToolsPanel,
+  editorToolsTrigger,
   editorUndoButton,
   exportActionButtons,
   exportActionIcons,
@@ -147,6 +152,7 @@ import { applyColorNotation, applyLanguagePreference, applyMotionPreference, app
 import { cloudState, discoveryState, state, viewState } from "./state";
 import { hydrateExportActionIcons, setButtonContent } from "./ui/icons";
 import { closeOpenModals, setModalOpen, setupModal } from "./ui/modals";
+import { setupPopover } from "./ui/popover";
 import { appendLog, showToast } from "./ui/notifications";
 import { rgbToHex } from "./utils/color";
 import { createId } from "./utils/id";
@@ -185,6 +191,7 @@ export const applyActionLabels = () => {
   setButtonContent(editorUndoButton, "undo", t("action.undo"), true);
   setButtonContent(editorRedoButton, "redo", t("action.redo"), true);
   setButtonContent(addColorButton, "plus", t("action.addColor"));
+  setButtonContent(editorCancelButton, "x", t("common.cancel"));
   setButtonContent(exportAllButton, "download", t("action.download"));
   setButtonContent(generateHistoryBackButton, "undo", t("action.back"), true);
   setButtonContent(generateHistoryForwardButton, "redo", t("action.forward"), true);
@@ -195,6 +202,7 @@ export const applyActionLabels = () => {
   setButtonContent(cloudEmailSignUpButton, "plus", t("action.signUpEmail"));
   setButtonContent(cloudSignOutButton, "logout", t("action.signOut"));
   setButtonContent(cloudSyncButton, "cloud", t("action.syncNow"));
+  setButtonContent(editorToolsTrigger, "more", t("action.moreActions"), true);
 };
 
 export const setupActions = () => {
@@ -477,17 +485,19 @@ export const setupActions = () => {
     });
   });
 
+  /** The public palette currently shown in the view modal, if it is a Discover one. */
+  const getViewedPublicPalette = () =>
+    viewState.mode === "discover"
+      ? (discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId) ?? null)
+      : null;
+
   viewSaveEditButton?.addEventListener("click", () => {
-    if (viewState.mode === "discover") {
-      const publicPalette = discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId);
-      if (!publicPalette) {
-        return;
-      }
-      if (cloudState.user && publicPalette.ownerId === cloudState.user.uid) {
-        return;
-      }
-      void savePublicPalette(publicPalette).then((copy) => {
+    const publicPalette = getViewedPublicPalette();
+    if (publicPalette) {
+      void savePublicPalette(publicPalette).then(({ copy }) => {
+        renderDiscovery();
         if (!copy) {
+          renderViewModal();
           return;
         }
         setModalOpen(viewModal, false);
@@ -504,34 +514,24 @@ export const setupActions = () => {
   });
 
   viewLikeButton?.addEventListener("click", () => {
-    if (viewState.mode !== "discover") {
-      return;
-    }
-    const publicPalette = discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId);
+    const publicPalette = getViewedPublicPalette();
     if (!publicPalette) {
       return;
     }
-    if (cloudState.user && publicPalette.ownerId === cloudState.user.uid) {
-      return;
-    }
-    void toggleLikePublicPalette(publicPalette).then(() => {
+    void toggleLikePublicPalette(publicPalette).finally(() => {
       renderViewModal();
+      renderDiscovery();
     });
   });
 
   viewSaveButton?.addEventListener("click", () => {
-    if (viewState.mode !== "discover") {
-      return;
-    }
-    const publicPalette = discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId);
+    const publicPalette = getViewedPublicPalette();
     if (!publicPalette) {
       return;
     }
-    if (cloudState.user && publicPalette.ownerId === cloudState.user.uid) {
-      return;
-    }
-    void savePublicPalette(publicPalette).then(() => {
+    void savePublicPalette(publicPalette).finally(() => {
       renderViewModal();
+      renderDiscovery();
     });
   });
 
@@ -543,8 +543,7 @@ export const setupActions = () => {
     try {
       await signInWithPopup(firebaseClient.auth, firebaseClient.provider);
     } catch (error) {
-      console.error(error);
-      showToast(t("toast.signInFailed"), "error");
+      reportAuthError("Google sign-in", error, "toast.signInFailed");
     }
   });
 
@@ -585,8 +584,7 @@ export const setupActions = () => {
         cloudPasswordInput.value = "";
       }
     } catch (error) {
-      console.error(error);
-      showToast(t("toast.signInFailed"), "error");
+      reportAuthError("Email sign-in", error, "toast.signInFailed");
     } finally {
       resetRecaptcha();
     }
@@ -613,12 +611,10 @@ export const setupActions = () => {
         await sendEmailVerification(credential.user);
         showToast(t("toast.verifyEmailSent"), "success");
       } catch (error) {
-        console.error(error);
-        showToast(t("toast.verifyEmailFailed"), "error");
+        reportAuthError("Send verification email", error, "toast.verifyEmailFailed");
       }
     } catch (error) {
-      console.error(error);
-      showToast(t("toast.signUpFailed"), "error");
+      reportAuthError("Email sign-up", error, "toast.signUpFailed");
     } finally {
       resetRecaptcha();
     }
@@ -637,8 +633,7 @@ export const setupActions = () => {
       await sendPasswordResetEmail(firebaseClient.auth, email);
       showToast(t("toast.passwordResetSent"), "success");
     } catch (error) {
-      console.error(error);
-      showToast(t("toast.passwordResetFailed"), "error");
+      reportAuthError("Password reset", error, "toast.passwordResetFailed");
     }
   });
 
@@ -660,8 +655,7 @@ export const setupActions = () => {
       await sendEmailVerification(currentUser);
       showToast(t("toast.verifyEmailSent"), "success");
     } catch (error) {
-      console.error(error);
-      showToast(t("toast.verifyEmailFailed"), "error");
+      reportAuthError("Resend verification email", error, "toast.verifyEmailFailed");
     }
   });
 
@@ -671,21 +665,21 @@ export const setupActions = () => {
     }
     try {
       if (state.palettes.length > 0) {
-        const keepLocal = window.confirm(t("cloud.signOutKeepLocalConfirm", { count: state.palettes.length }));
-        if (keepLocal) {
+        // Phrased so that dismissing the dialog keeps the palettes. It used to be the other way
+        // round: cancelling the "keep them?" prompt silently wiped the whole local library.
+        const clearLocal = window.confirm(t("cloud.signOutClearLocalConfirm", { count: state.palettes.length }));
+        cloudState.applyingRemote = true;
+        if (clearLocal) {
+          state.palettes = [];
+          syncActivePalette(null);
+        } else {
           state.palettes.forEach((palette) => {
             palette.isPublic = false;
             palette.publicId = null;
           });
-          cloudState.applyingRemote = true;
           syncActivePalette(state.activePaletteId);
-          cloudState.applyingRemote = false;
-        } else {
-          state.palettes = [];
-          cloudState.applyingRemote = true;
-          syncActivePalette(null);
-          cloudState.applyingRemote = false;
         }
+        cloudState.applyingRemote = false;
       }
       await signOut(firebaseClient.auth);
       if (cloudEmailInput && options.prefillEmail) {
@@ -702,8 +696,7 @@ export const setupActions = () => {
       }
       resetRecaptcha();
     } catch (error) {
-      console.error(error);
-      showToast(t("toast.signOutFailed"), "error");
+      reportAuthError("Sign out", error, "toast.signOutFailed");
     }
   };
 
@@ -875,6 +868,9 @@ export const setupActions = () => {
   setupModal(viewModal);
   setupModal(discoverProfileModal);
   setupEditorLayout();
+  if (editorOverflow) {
+    setupPopover({ root: editorOverflow, trigger: editorToolsTrigger, panel: editorToolsPanel });
+  }
   setupCloudProfileControls();
 
   window.desktopApi?.onOpenLegal?.(() => {

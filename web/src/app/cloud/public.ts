@@ -60,14 +60,21 @@ export const unlinkPublicPalette = (palette: Palette) => {
   palette.publicId = null;
 };
 
+/**
+ * Withdraw a palette from Discover.
+ *
+ * The remote document is deleted *before* the local link is cleared. Clearing first meant that a
+ * failed delete orphaned the public copy forever: the owner no longer held its id, so they could
+ * never retry. Anyone who saved the palette keeps their own copy either way — saves are
+ * independent duplicates, not references to this document.
+ */
 export const unpublishPalette = async (palette: Palette, options: { persist?: boolean } = {}) => {
   const publicId = palette.publicId ?? null;
+  if (firebaseClient && cloudState.user && publicId) {
+    await deleteDoc(doc(firebaseClient.db, "publicPalettes", publicId));
+  }
   unlinkPublicPalette(palette);
   if (options.persist !== false) {
     persistPalettes();
   }
-  if (!firebaseClient || !cloudState.user || !publicId) {
-    return;
-  }
-  await deleteDoc(doc(firebaseClient.db, "publicPalettes", publicId));
 };

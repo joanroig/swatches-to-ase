@@ -82,20 +82,33 @@ test("test account can sync to firestore", async ({ page }) => {
   const userCard = page.locator("#cloud-user");
   await expect(userCard).not.toHaveClass(/is-hidden/);
 
+  // Sync is gated on a verified email, so an unverified test account cannot exercise this path.
+  // Skip with an actionable message rather than failing on a disabled button.
+  const needsVerification = await page
+    .locator("#cloud-verification")
+    .evaluate((element: Element) => !element.classList.contains("is-hidden"))
+    .catch(() => false);
+  test.skip(
+    needsVerification,
+    `The account ${cloudTestEmail} has not verified its email address, so cloud sync stays disabled. Verify it (or point CLOUD_TEST_EMAIL at a verified account) to run this test.`,
+  );
+
   const syncButton = page.locator("#cloud-sync");
   await expect(syncButton).toBeEnabled();
   await syncButton.click();
 
+  // The timestamp lives in #cloud-sync-status; #cloud-status only carries sign-in/verification
+  // messaging.
   const synced = await page
     .waitForFunction(() => {
-      const status = document.querySelector("#cloud-status")?.textContent ?? "";
+      const status = document.querySelector("#cloud-sync-status")?.textContent ?? "";
       return status.includes("Last synced at") || status.includes("Última sincronización");
     }, null, { timeout: 20_000 })
     .then(() => true)
     .catch(() => false);
 
   if (!synced) {
-    const statusText = await page.locator("#cloud-status").innerText();
+    const statusText = await page.locator("#cloud-sync-status").innerText();
     const logOutput = issues.length > 0 ? `\n\nConsole output:\n- ${issues.join("\n- ")}` : "";
     throw new Error(`Cloud sync did not complete. Status: "${statusText}".${logOutput}`);
   }

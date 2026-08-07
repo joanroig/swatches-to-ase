@@ -34,6 +34,7 @@ import { showToast } from "../ui/notifications";
 import { createId } from "../utils/id";
 import { ensureAppCheckToken, firebaseClient, firebaseConfigStatus } from "./context";
 import { fetchUserInteractions, renderDiscovery } from "./discovery";
+import { getFirebaseErrorCode, logCloudError } from "./errors";
 import { syncCloudProfileForm } from "./profile";
 import { ensureUserAvatar } from "./profile-store";
 import { unpublishPalette, upsertPublicPalette } from "./public";
@@ -65,14 +66,6 @@ const wasRecentlyUpserted = (paletteId: string) => {
     return false;
   }
   return true;
-};
-
-const getErrorInfo = (error: unknown) => {
-  if (error && typeof error === "object") {
-    const candidate = error as { code?: string; message?: string; name?: string };
-    return { code: candidate.code, message: candidate.message, name: candidate.name };
-  }
-  return { code: undefined, message: String(error), name: undefined };
 };
 
 const isManualSyncCoolingDown = () => Date.now() < manualSyncCooldownUntil;
@@ -120,12 +113,11 @@ const startVerificationPolling = () => {
   }, VERIFICATION_POLL_INTERVAL_MS);
 };
 
-const logCloudError = (context: string, error: unknown, meta: Record<string, unknown> = {}) => {
-  const info = getErrorInfo(error);
-  console.error(`[cloud] ${context} failed`, { ...info, ...meta }, error);
-  if (info.code === "permission-denied") {
+const logSyncError = (context: string, error: unknown, meta: Record<string, unknown> = {}) => {
+  logCloudError(context, error, meta);
+  if (getFirebaseErrorCode(error) === "permission-denied") {
     console.warn(
-      "[cloud] permission-denied hints: check Firestore rules for /users/{uid}/state/app and /publicPalettes, App Check enforcement, palette limits (sync palettes <= 200, public palette colors <= 16, name <= 80), and legacy fields when using merge writes.",
+      "[cloud] permission-denied hints: check Firestore rules for /users/{uid}/state/app and /publicPalettes, App Check enforcement, a verified email, palette limits (sync palettes <= 200, public palette colors <= 16, name <= 80), and legacy fields when using merge writes.",
     );
   }
 };
@@ -570,7 +562,7 @@ export const syncToCloud = async (source: "manual" | "auto" | "init" = "auto"): 
       .filter((entry): entry is { palette: Palette; error: unknown } => !!entry);
     if (failures.length > 0) {
       failures.forEach(({ palette, error }) => {
-        logCloudError("Public palette sync", error, {
+        logSyncError("Public palette sync", error, {
           paletteId: palette.id,
           publicId: palette.publicId ?? null,
           nameLength: palette.name.length,
@@ -582,7 +574,7 @@ export const syncToCloud = async (source: "manual" | "auto" | "init" = "auto"): 
     }
     cloudState.lastSyncedAt = new Date().toLocaleTimeString();
   } catch (error) {
-    logCloudError(`Cloud sync (${stage})`, error, {
+    logSyncError(`Cloud sync (${stage})`, error, {
       paletteCount: payload.palettes.length,
       publicPaletteCount: publicPalettes.length,
     });
