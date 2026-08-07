@@ -1,3 +1,4 @@
+import { trackEvent } from "../cloud/analytics";
 import { fetchUserInteractions, listenToDiscovery, renderDiscovery } from "../cloud/discovery";
 import {
   appShell,
@@ -150,6 +151,7 @@ const setSidebarCollapsed = (collapsed: boolean) => {
 };
 
 const ensureDiscoverReady = () => {
+  trackEvent("discover_opened");
   if (!cloudState.isConfigured) {
     showToast(t("toast.firebaseDiscoveryMissing"), "info");
     return false;

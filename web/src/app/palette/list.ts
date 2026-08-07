@@ -1,3 +1,4 @@
+import { trackEvent } from "../cloud/analytics";
 import { firebaseClient } from "../cloud/context";
 import { unpublishPalette, upsertPublicPalette } from "../cloud/public";
 import { isCloudUserVerified, requireVerifiedCloudUser } from "../cloud/verification";
@@ -249,6 +250,7 @@ export const togglePaletteVisibility = async (paletteId: string) => {
   if (palette.isPublic) {
     try {
       await unpublishPalette(palette);
+      trackEvent("palette_unpublished");
       showToast(t("toast.paletteUnpublished"), "success");
     } catch (error) {
       console.error(error);
@@ -261,6 +263,7 @@ export const togglePaletteVisibility = async (paletteId: string) => {
     try {
       await upsertPublicPalette(palette);
       cloudState.recentPublicUpserts.set(palette.id, Date.now());
+      trackEvent("palette_published", { colors: palette.colors.length });
       showToast(t("toast.palettePublished"), "success");
     } catch (error) {
       console.error(error);

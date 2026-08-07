@@ -1,5 +1,6 @@
 import { readPaletteFile } from "@core/palette";
 
+import { trackEvent } from "./cloud/analytics";
 import { dropzone, fileInput, formatSelect } from "./dom";
 import { updateExportAvailability } from "./export/manager";
 import { nameColor, resolveNameFormat } from "./palette/naming";
@@ -45,6 +46,7 @@ export const handleFiles = async (fileList: FileList | null) => {
           lastModified: Date.now(),
         };
         state.palettes.push(palette);
+        trackEvent("palette_imported", { format: file.name.split(".").pop() ?? "unknown", colors: palette.colors.length });
         appendLog(t("import.loadedFile", { file: file.name }), "success");
       } catch (error) {
         appendLog(t("import.failedFile", { file: file.name, message: (error as Error).message }), "error");

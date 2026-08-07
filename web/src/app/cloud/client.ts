@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, type FirebaseApp } from "firebase/app";
 import { getToken, initializeAppCheck, ReCaptchaV3Provider, type AppCheck } from "firebase/app-check";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
@@ -17,6 +17,7 @@ type FirebaseConfig = {
   appId: string;
   storageBucket?: string;
   messagingSenderId?: string;
+  measurementId?: string;
 };
 
 const firebaseConfig: FirebaseConfig = {
@@ -26,6 +27,7 @@ const firebaseConfig: FirebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID ?? "",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 const appCheckDisabled =
   import.meta.env.VITE_DISABLE_APP_CHECK === "true" || import.meta.env.VITE_DISABLE_APP_CHECK === "1";
@@ -41,6 +43,10 @@ export const getFirebaseConfigStatus = () => {
 };
 
 let cachedClient: FirebaseClient | null = null;
+let cachedApp: FirebaseApp | null = null;
+
+/** The initialised app, for lazily loaded add-ons such as Analytics. */
+export const getFirebaseApp = () => cachedApp;
 
 export const getFirebaseClient = (): FirebaseClient | null => {
   const { isConfigured } = getFirebaseConfigStatus();
@@ -51,6 +57,7 @@ export const getFirebaseClient = (): FirebaseClient | null => {
     return cachedClient;
   }
   const app = initializeApp(firebaseConfig);
+  cachedApp = app;
   let appCheck: AppCheck | null = null;
   const appCheckKey = import.meta.env.VITE_FIREBASE_APP_CHECK_KEY ?? "";
   if (appCheckKey && typeof window !== "undefined") {

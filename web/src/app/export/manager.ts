@@ -16,6 +16,7 @@ import { buildCompleteShareUrl, buildSharedPaletteUrl } from "../share";
 import { cloudState, exportState, state } from "../state";
 import type { ExportMode, Palette, SharedWorkspacePayload } from "../types";
 import { t } from "../i18n";
+import { trackEvent } from "../cloud/analytics";
 import { appendLog, showToast } from "../ui/notifications";
 import { rgbToHex } from "../utils/color";
 import { sanitizeFileName } from "../utils/text";
@@ -311,6 +312,7 @@ export const exportPalettesSmart = async (palettes: Palette[]) => {
     return;
   }
   const format = getSelectedExportFormat();
+  trackEvent("palette_exported", { format, count: palettes.length });
   if (palettes.length > 1 || format === "all") {
     await exportPalettes(palettes);
     return;
@@ -323,6 +325,7 @@ export const handleExportAction = async (action: string | undefined) => {
   if (!palette || !action) {
     return;
   }
+  trackEvent("palette_shared", { action });
   const cleanName = sanitizeFileName(palette.name);
   const coolorsUrl = `https://coolors.co/${getPaletteHexes(palette).join("-")}`;
   const shareUrl = buildSharedPaletteUrl(palette);

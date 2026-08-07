@@ -9,6 +9,7 @@ import type { Palette, PublicPalette } from "../types";
 import { showToast } from "../ui/notifications";
 import { rgbToHex } from "../utils/color";
 import { createId } from "../utils/id";
+import { trackEvent } from "./analytics";
 import { firebaseClient } from "./context";
 import { logCloudError, reportCloudError } from "./errors";
 import { requireVerifiedCloudUser } from "./verification";
@@ -115,6 +116,7 @@ export const savePublicPalette = async (palette: PublicPalette): Promise<{ resul
 
   try {
     const copy = createLocalPaletteCopy(palette);
+    trackEvent("palette_saved_from_discover", { colors: palette.colors.length });
     state.palettes.unshift(copy);
     syncActivePalette(copy.id);
     showToast(t("toast.paletteSaved"), "success");
@@ -162,6 +164,7 @@ export const toggleLikePublicPalette = async (palette: PublicPalette) => {
   inFlight.add(guardKey);
 
   const wasLiked = discoveryState.likedIds.has(palette.id);
+  trackEvent("palette_liked", { liked: !discoveryState.likedIds.has(palette.id) });
   const previousCount = palette.likesCount ?? 0;
 
   // Optimistic: flip locally first so the UI responds immediately, then roll back on failure.

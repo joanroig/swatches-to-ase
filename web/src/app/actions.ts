@@ -12,6 +12,7 @@ import {
 import { firebaseClient } from "./cloud/context";
 import { deleteCloudAccount } from "./cloud/delete";
 import { renderDiscovery, setDiscoverySearch, setDiscoverySort } from "./cloud/discovery";
+import { trackEvent } from "./cloud/analytics";
 import { reportAuthError } from "./cloud/errors";
 import { savePublicPalette, toggleLikePublicPalette } from "./cloud/interactions";
 import { resetCloudProfileDraft, setupCloudProfileControls } from "./cloud/profile";
@@ -469,6 +470,7 @@ export const setupActions = () => {
 
   saveGeneratedPaletteButton?.addEventListener("click", () => {
     const palette = saveGeneratedPaletteFromPreview();
+    trackEvent("palette_created", { colors: palette.colors.length, style: generateStyleSelect?.value ?? "unknown" });
     state.palettes.unshift(palette);
     syncActivePalette(palette.id);
     appendLog(t(palette.colors.length === 0 ? "log.generatedEmpty" : "log.generated"), "success");
@@ -547,6 +549,7 @@ export const setupActions = () => {
     }
     try {
       await signInWithPopup(firebaseClient.auth, firebaseClient.provider);
+      trackEvent("sign_in", { method: "google" });
     } catch (error) {
       reportAuthError("Google sign-in", error, "toast.signInFailed");
     }
@@ -585,6 +588,7 @@ export const setupActions = () => {
     }
     try {
       await signInWithEmailAndPassword(firebaseClient.auth, payload.email, payload.password);
+      trackEvent("sign_in", { method: "password" });
       if (cloudPasswordInput) {
         cloudPasswordInput.value = "";
       }
@@ -609,6 +613,7 @@ export const setupActions = () => {
     }
     try {
       const credential = await createUserWithEmailAndPassword(firebaseClient.auth, payload.email, payload.password);
+      trackEvent("sign_up", { method: "password" });
       if (cloudPasswordInput) {
         cloudPasswordInput.value = "";
       }
@@ -859,6 +864,7 @@ export const setupActions = () => {
 
   createFolderButton?.addEventListener("click", () => {
     const folder = createFolder();
+    trackEvent("folder_created");
     // A brand new folder is empty, so make sure it is expanded and visible.
     libraryState.collapsedFolderIds.delete(folder.id);
     renderPaletteList();
