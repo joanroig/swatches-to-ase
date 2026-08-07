@@ -134,7 +134,6 @@
             <button class="primary playground-shuffle" id="playground-shuffle" type="button" data-i18n="playground.shuffle">
               Shuffle
             </button>
-            <kbd class="playground-kbd" data-i18n="playground.shuffleKey">Space</kbd>
             <div class="playground-history" role="group">
               <button class="ghost icon-only" id="playground-undo" type="button"></button>
               <button class="ghost icon-only" id="playground-redo" type="button"></button>
@@ -142,7 +141,7 @@
           </div>
 
           <div class="playground-group playground-group--options">
-            <label class="playground-field">
+            <label class="playground-field playground-field--select">
               <span class="playground-field-label" data-i18n="playground.style">Harmony</span>
               <select id="playground-style" aria-label="Harmony" data-i18n-aria-label="playground.style">
                 <option value="analogous" data-i18n="style.analogous">Analogous</option>
@@ -160,7 +159,7 @@
               </select>
             </label>
 
-            <div class="playground-field">
+            <div class="playground-field playground-field--stepper">
               <span class="playground-field-label" data-i18n="playground.count">Colors</span>
               <div class="playground-stepper" role="group" data-i18n-aria-label="playground.count">
                 <button class="ghost icon-only" id="playground-remove" type="button"></button>

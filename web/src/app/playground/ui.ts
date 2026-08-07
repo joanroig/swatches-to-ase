@@ -230,6 +230,16 @@ const render = () => {
 /** The three chrome buttons whose icon + label are rebuilt on every language change. */
 const syncPlaygroundLabels = () => {
   setButtonContent(playgroundShuffleButton, "refresh", t("playground.shuffle"));
+  // Appended after `setButtonContent`, which clears the button. Inside the button rather than
+  // beside it: as a sibling the key cap was a sixth control shape sitting loose on the bar.
+  if (playgroundShuffleButton) {
+    const key = document.createElement("kbd");
+    key.className = "playground-kbd";
+    key.textContent = t("playground.shuffleKey");
+    key.setAttribute("aria-hidden", "true");
+    playgroundShuffleButton.appendChild(key);
+    playgroundShuffleButton.setAttribute("aria-keyshortcuts", "Space");
+  }
   setButtonContent(playgroundAddButton, "plus", t("playground.addColor"), true);
   setButtonContent(playgroundRemoveButton, "minus", t("playground.removeLast"), true);
   setButtonContent(playgroundSaveButton, "bookmark", t("playground.save"));

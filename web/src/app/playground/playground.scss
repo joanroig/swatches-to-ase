@@ -177,25 +177,28 @@ button.playground-swatch-action.is-on {
 /*
  * One bar, three zones: generate on the left, options in the middle, save on the right.
  *
- * These controls used to float directly on the panel — a pill button, a bare hint, a select with a
- * stacked label, a stepper and a ghost button, all at different heights and none of their baselines
- * agreeing. Grouping them onto a single surface with a shared control height is most of what makes
- * the view read as organised.
+ * Every control in here is the same object — same height, same radius, same border and fill — and
+ * that uniformity is the whole point. The previous version mixed a pill button, a 7px key cap, a
+ * 12px select and two pill groups at three different heights, and no amount of spacing could make
+ * five different shapes look deliberate.
+ *
+ * Captions live *inside* their control's chrome rather than floating beside it, so a labelled field
+ * is still one shape rather than two things that happen to be adjacent.
  */
 .playground-toolbar {
-  --control-height: 38px;
+  --control-height: 40px;
+  --control-radius: 999px;
 
   /* Grid, not wrapping flex: the bar stays one row until the stacked layout takes over at a known
      width, instead of re-wrapping into a different shape at every size. The slack lives in the
-     last column so the harmony name is never squeezed while there is room to spare. */
+     last track — with a `minmax(0, 1fr)` zero floor it shrank under its content and wrapped
+     "Save to library" onto three lines. */
   display: grid;
-  /* `1fr`, not `minmax(0, 1fr)`: the zero floor let the last track shrink under its content and
-     wrapped "Save to library" onto three lines. */
   grid-template-columns: auto auto 1fr;
   align-items: center;
-  gap: 10px 18px;
+  gap: 10px 14px;
   padding: 10px 12px;
-  border-radius: 16px;
+  border-radius: 20px;
   border: 1px solid var(--stroke);
   background: var(--surface);
 }
@@ -203,12 +206,8 @@ button.playground-swatch-action.is-on {
 .playground-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
-}
-
-.playground-group--options {
-  gap: 16px;
 }
 
 .playground-group--save {
@@ -219,94 +218,133 @@ button.playground-swatch-action.is-on {
   }
 }
 
-.playground-toolbar button {
+/* The shared control shell: primary button, history group and both fields. */
+.playground-toolbar > .playground-group > button,
+.playground-history,
+.playground-field {
   height: var(--control-height);
+  border-radius: var(--control-radius);
+}
+
+.playground-history,
+.playground-field {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+}
+
+.playground-toolbar > .playground-group > button {
+  padding-inline: 18px;
+  font-weight: 600;
 }
 
 button.playground-shuffle {
-  padding-inline: 20px;
+  gap: 10px;
+  padding-inline: 18px 8px;
   font-weight: 700;
 }
 
+/* Sits inside the button it describes, so the hint is not a stray control of its own. */
 .playground-kbd {
-  padding: 3px 8px;
-  border-radius: 7px;
-  border: 1px solid var(--stroke-strong);
-  border-bottom-width: 2px;
-  background: var(--bg-elevated);
-  font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 0.66rem;
-  font-weight: 600;
-  color: var(--muted);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 22%);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: inherit;
   white-space: nowrap;
 }
 
 .playground-history {
-  display: inline-flex;
-  align-items: center;
   gap: 2px;
-  padding: 3px;
-  border-radius: 999px;
-  border: 1px solid var(--stroke);
-  background: var(--bg-elevated);
+  padding: 0 4px;
 
   button {
     height: 30px;
     width: 30px;
     padding: 0;
+    border: 0;
+    background: transparent;
   }
 }
 
-/* Label beside the control, not above it: stacked labels were what knocked every other control in
-   the row out of vertical alignment. */
 .playground-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
+  gap: 10px;
+  padding-inline: 14px;
 }
 
 .playground-field-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--muted);
   white-space: nowrap;
 }
 
+/* The field is the chrome, so the control inside it carries none of its own. */
 .playground-field select {
-  height: var(--control-height);
-  /* Shrinkable, so the harmony name is what gives way when the bar runs out of room. */
-  min-width: 96px;
-  flex: 0 1 auto;
-  padding: 0 32px 0 12px;
-  border-radius: 10px;
-  border: 1px solid var(--stroke);
-  background-color: var(--bg-elevated);
+  appearance: none;
+  height: 100%;
+  min-width: 0;
+  padding: 0 20px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   font-size: 0.88rem;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+
+  &:focus {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+/* `appearance: none` removes the native arrow, so the field draws its own. */
+.playground-field--select {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: 14px;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: translateY(-2px) rotate(45deg);
+    pointer-events: none;
+  }
+}
+
+.playground-field--stepper {
+  gap: 4px;
+  padding-inline: 14px 4px;
 }
 
 .playground-stepper {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  height: var(--control-height);
-  padding: 0 4px;
-  border-radius: 999px;
-  border: 1px solid var(--stroke);
-  background: var(--bg-elevated);
 
   button {
-    height: 28px;
-    width: 28px;
+    height: 30px;
+    width: 30px;
     padding: 0;
+    border: 0;
+    background: transparent;
   }
 }
 
 .playground-count {
-  min-width: 1.5rem;
+  min-width: 1.4rem;
   text-align: center;
+  font-size: 0.88rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -1117,11 +1155,12 @@ button.ui-cta {
     grid-column: 2;
   }
 
+  /* Left-aligned, not stretched edge to edge: `space-between` on a two-item row opened a gutter
+     wide enough to read as a mistake. */
   .playground-group--options {
     grid-row: 2;
     grid-column: 1 / -1;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
   }
 }
 
@@ -1153,12 +1192,12 @@ button.ui-cta {
   }
 
   /* The harmony field takes whatever the stepper leaves, so the style name is not clipped. */
-  .playground-field:first-child {
+  .playground-field--select {
     flex: 1 1 auto;
     min-width: 0;
   }
 
-  .playground-field:first-child select {
+  .playground-field--select select {
     flex: 1 1 auto;
     width: 100%;
   }
@@ -1186,8 +1225,12 @@ button.ui-cta {
     display: none;
   }
 
-  .playground-field select {
-    padding-inline: 10px 26px;
+  .playground-field {
+    padding-inline: 12px;
+  }
+
+  .playground-field--stepper {
+    padding-inline: 4px;
   }
 
   /* The keyboard hint is desktop-only advice. */
