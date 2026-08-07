@@ -129,21 +129,22 @@
           </button>
         </p>
 
-        <div class="playground-bar">
-          <div class="playground-bar-group">
+        <div class="playground-toolbar">
+          <div class="playground-group playground-group--generate">
             <button class="primary playground-shuffle" id="playground-shuffle" type="button" data-i18n="playground.shuffle">
               Shuffle
             </button>
+            <kbd class="playground-kbd" data-i18n="playground.shuffleKey">Space</kbd>
             <div class="playground-history" role="group">
               <button class="ghost icon-only" id="playground-undo" type="button"></button>
               <button class="ghost icon-only" id="playground-redo" type="button"></button>
             </div>
-            <span class="playground-hint" data-i18n="playground.shuffleHint">or press space</span>
           </div>
-          <div class="playground-bar-group playground-bar-group--settings">
-            <div class="field compact">
-              <label for="playground-style" data-i18n="playground.style">Harmony</label>
-              <select id="playground-style">
+
+          <div class="playground-group playground-group--options">
+            <label class="playground-field">
+              <span class="playground-field-label" data-i18n="playground.style">Harmony</span>
+              <select id="playground-style" aria-label="Harmony" data-i18n-aria-label="playground.style">
                 <option value="analogous" data-i18n="style.analogous">Analogous</option>
                 <option value="cold-pair" data-i18n="style.coldPair">Cold pair</option>
                 <option value="complementary" data-i18n="style.complementary">Complementary</option>
@@ -157,20 +158,30 @@
                 <option value="warm-cold" data-i18n="style.warmCold">Warm / Cold</option>
                 <option value="warm-pair" data-i18n="style.warmPair">Warm pair</option>
               </select>
+            </label>
+
+            <div class="playground-field">
+              <span class="playground-field-label" data-i18n="playground.count">Colors</span>
+              <div class="playground-stepper" role="group" data-i18n-aria-label="playground.count">
+                <button class="ghost icon-only" id="playground-remove" type="button"></button>
+                <span class="playground-count" id="playground-count">5</span>
+                <button class="ghost icon-only" id="playground-add" type="button"></button>
+              </div>
             </div>
-            <div class="playground-stepper" role="group" data-i18n-aria-label="playground.count">
-              <button class="ghost icon-only" id="playground-remove" type="button"></button>
-              <span class="playground-count" id="playground-count">5</span>
-              <button class="ghost icon-only" id="playground-add" type="button"></button>
-            </div>
+          </div>
+
+          <div class="playground-group playground-group--save">
             <button class="ghost" id="playground-save" type="button" data-i18n="playground.save">Save to library</button>
           </div>
         </div>
 
-        <div class="playground-scenes">
-          <div class="playground-scene-tabs" id="playground-scene-tabs" role="tablist"></div>
+        <section class="playground-preview">
+          <header class="playground-preview-head">
+            <h2 class="playground-preview-title" data-i18n="playground.preview">Preview</h2>
+            <div class="playground-scene-tabs" id="playground-scene-tabs" role="tablist"></div>
+          </header>
           <div class="playground-stage" id="playground-stage"></div>
-        </div>
+        </section>
       </section>
     </main>
 

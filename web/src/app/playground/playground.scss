@@ -2,6 +2,12 @@
 
 .panel-playground {
   gap: 18px;
+  /*
+   * Named container. A viewport media query cannot describe this panel's width: the sidebar takes
+   * ~250px above 960px and nothing below it, so 1000px of viewport is a *narrower* panel than
+   * 940px is. Every layout switch below is driven by the panel's own width instead.
+   */
+  container: playground / inline-size;
 }
 
 .playground-source {
@@ -166,81 +172,205 @@ button.playground-swatch-action.is-on {
   white-space: nowrap;
 }
 
-/* ------------------------------------------------------------------- bar --- */
+/* --------------------------------------------------------------- toolbar --- */
 
-.playground-bar {
-  display: flex;
-  flex-wrap: wrap;
+/*
+ * One bar, three zones: generate on the left, options in the middle, save on the right.
+ *
+ * These controls used to float directly on the panel — a pill button, a bare hint, a select with a
+ * stacked label, a stepper and a ghost button, all at different heights and none of their baselines
+ * agreeing. Grouping them onto a single surface with a shared control height is most of what makes
+ * the view read as organised.
+ */
+.playground-toolbar {
+  --control-height: 38px;
+
+  /* Grid, not wrapping flex: the bar stays one row until the stacked layout takes over at a known
+     width, instead of re-wrapping into a different shape at every size. The slack lives in the
+     last column so the harmony name is never squeezed while there is room to spare. */
+  display: grid;
+  /* `1fr`, not `minmax(0, 1fr)`: the zero floor let the last track shrink under its content and
+     wrapped "Save to library" onto three lines. */
+  grid-template-columns: auto auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px 18px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
 }
 
-.playground-bar-group {
+.playground-group {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
-.playground-bar-group--settings {
+.playground-group--options {
+  gap: 16px;
+}
+
+.playground-group--save {
   justify-content: flex-end;
+
+  button {
+    white-space: nowrap;
+  }
 }
 
-.playground-hint {
-  font-size: 0.8rem;
+.playground-toolbar button {
+  height: var(--control-height);
+}
+
+button.playground-shuffle {
+  padding-inline: 20px;
+  font-weight: 700;
+}
+
+.playground-kbd {
+  padding: 3px 8px;
+  border-radius: 7px;
+  border: 1px solid var(--stroke-strong);
+  border-bottom-width: 2px;
+  background: var(--bg-elevated);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.66rem;
+  font-weight: 600;
   color: var(--muted);
+  white-space: nowrap;
+}
+
+.playground-history {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+
+  button {
+    height: 30px;
+    width: 30px;
+    padding: 0;
+  }
+}
+
+/* Label beside the control, not above it: stacked labels were what knocked every other control in
+   the row out of vertical alignment. */
+.playground-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.playground-field-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.playground-field select {
+  height: var(--control-height);
+  /* Shrinkable, so the harmony name is what gives way when the bar runs out of room. */
+  min-width: 96px;
+  flex: 0 1 auto;
+  padding: 0 32px 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--stroke);
+  background-color: var(--bg-elevated);
+  font-size: 0.88rem;
 }
 
 .playground-stepper {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px;
+  gap: 2px;
+  height: var(--control-height);
+  padding: 0 4px;
   border-radius: 999px;
   border: 1px solid var(--stroke);
-  background: var(--surface);
+  background: var(--bg-elevated);
+
+  button {
+    height: 28px;
+    width: 28px;
+    padding: 0;
+  }
 }
 
 .playground-count {
-  min-width: 1.6rem;
+  min-width: 1.5rem;
   text-align: center;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------------------------------------------------------------- scenes --- */
+/* --------------------------------------------------------------- preview --- */
 
-.playground-scenes {
+/* The scene tabs used to be a second free-floating toolbar with nothing tying them to the thing
+   they switch. They are now the preview card's own header. */
+.playground-preview {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 12px;
   min-width: 0;
   min-height: 0;
-  /* The only child that should absorb the panel's spare height. */
   flex: 1 1 auto;
+  border-radius: 18px;
+  border: 1px solid var(--stroke-strong);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.playground-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--stroke);
+  background: var(--surface);
+}
+
+.playground-preview-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .playground-scene-tabs {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 6px;
+  display: flex;
+  gap: 4px;
+  padding: 3px;
   border-radius: 999px;
-  border: 1px solid var(--stroke);
-  background: var(--surface);
-  justify-self: start;
-  max-width: 100%;
+  background: var(--bg-elevated);
+  /* Scrolls rather than wraps: a wrapped tab row pushed the stage down and looked broken. */
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 button.playground-scene-tab {
-  padding: 6px 16px;
+  padding: 6px 15px;
   border-radius: 999px;
   border: 0;
   background: transparent;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     background 0.2s ease,
@@ -255,18 +385,15 @@ button.playground-scene-tab {
 .playground-stage {
   display: grid;
   min-width: 0;
-  min-height: 320px;
+  min-height: 300px;
   /* The container lives on the stage, not on `.scene`: a container query cannot style the element
      that declares the container, and the scenes themselves need to respond to their own width. */
   container-type: inline-size;
-  border-radius: 18px;
   overflow: hidden;
-  border: 1px solid var(--stroke-strong);
-  background: var(--surface-2);
 }
 
 .scene {
-  min-height: 320px;
+  min-height: 300px;
   height: 100%;
 
   /* Scenes colour themselves from the palette, so nothing inside may keep an app text colour. A
@@ -972,7 +1099,33 @@ button.ui-cta {
 
 /* ------------------------------------------------------------ responsive --- */
 
-@media (max-width: 720px) {
+@container playground (max-width: 900px) {
+  /*
+   * Two tidy rows instead of one overflowing one: generate + save on top, options underneath.
+   * Left to itself the bar wrapped into a different shape at almost every width.
+   */
+  .playground-toolbar {
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+  }
+
+  /* Explicit placement. Auto-placement follows DOM order, and the full-width options row pushed
+     save down to a third row of its own, which is exactly the orphaned-control look this layout
+     exists to avoid. */
+  .playground-group--save {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .playground-group--options {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    justify-content: space-between;
+    gap: 12px;
+  }
+}
+
+@container playground (max-width: 620px) {
   /* Columns get unreadably narrow past a handful of colours, so the ramp turns into rows. */
   .playground-ramp {
     grid-auto-flow: row;
@@ -995,15 +1148,66 @@ button.ui-cta {
     width: auto;
   }
 
-  .playground-bar-group {
+  .playground-group--generate {
+    min-width: 0;
+  }
+
+  /* The harmony field takes whatever the stepper leaves, so the style name is not clipped. */
+  .playground-field:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .playground-field:first-child select {
+    flex: 1 1 auto;
     width: 100%;
   }
 
-  .playground-bar-group--settings {
-    justify-content: flex-start;
+  .playground-preview-title {
+    display: none;
+  }
+
+  .playground-scene-tabs {
+    width: 100%;
   }
 
   .scene-ui {
     grid-template-columns: 54px 1fr;
+  }
+}
+
+@container playground (max-width: 460px) {
+  /*
+   * Drop the captions. There is not enough width for both them and a harmony name like
+   * "Complementary", and the controls read fine without them — the select carries an `aria-label`
+   * and the stepper an `aria-label` on its group, so nothing is lost to assistive tech.
+   */
+  .playground-field-label {
+    display: none;
+  }
+
+  .playground-field select {
+    padding-inline: 10px 26px;
+  }
+
+  /* The keyboard hint is desktop-only advice. */
+  .playground-kbd {
+    display: none;
+  }
+
+  button.playground-shuffle {
+    flex: 1 1 auto;
+    padding-inline: 12px;
+  }
+
+  /* Full width on its own row, below the options. Without the explicit row it inherited the
+     `grid-row: 1` from the wider layout and jumped above Shuffle. */
+  .playground-group--save {
+    grid-row: 3;
+    grid-column: 1 / -1;
+
+    button {
+      width: 100%;
+    }
   }
 }
