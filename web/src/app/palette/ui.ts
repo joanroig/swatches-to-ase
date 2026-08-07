@@ -10,12 +10,7 @@
  */
 
 export { openEditorForPalette, renderEditor, setupEditorLayout, syncEditorLayout } from "./editor";
-export {
-  confirmEditorClose,
-  redoEditorChange,
-  saveEditorChanges,
-  undoEditorChange,
-} from "./editor-session";
+export { confirmEditorClose, redoEditorChange, saveEditorChanges, undoEditorChange } from "./editor-session";
 export { removePalette, renderPaletteList, togglePaletteVisibility } from "./list";
 export {
   getPaletteById,

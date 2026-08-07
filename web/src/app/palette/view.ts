@@ -103,9 +103,7 @@ export const renderViewModal = () => {
     return;
   }
   const isDiscoverView = viewState.mode === "discover" && Boolean(viewState.publicPaletteId);
-  const publicPalette = isDiscoverView
-    ? discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId)
-    : null;
+  const publicPalette = isDiscoverView ? discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId) : null;
   const palette = isDiscoverView ? null : getPaletteById(viewState.paletteId ?? state.activePaletteId);
 
   viewValues.innerHTML = "";
@@ -140,9 +138,7 @@ export const renderViewModal = () => {
   const colorCountLabel = t("palette.colors", { count: viewPaletteColors.length });
 
   if (isDiscoverView && publicPalette) {
-    const authorLabel = publicPalette.ownerName
-      ? t("discover.by", { name: publicPalette.ownerName })
-      : t("discover.shared");
+    const authorLabel = publicPalette.ownerName ? t("discover.by", { name: publicPalette.ownerName }) : t("discover.shared");
     viewSubtitle.textContent = t("view.subtitleAuthor", {
       name: viewPaletteName,
       colors: colorCountLabel,

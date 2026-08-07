@@ -4,6 +4,7 @@ import { nameColor } from "../palette/naming";
 import type { PaletteColor } from "../types";
 import { getHueFromHex, rgbToHex } from "../utils/color";
 import { createId } from "../utils/id";
+import { readStoredJson, writeStoredJson } from "../utils/storage";
 
 /**
  * The playground's working set.
@@ -241,23 +242,19 @@ export const movePlaygroundSwatch = (fromIndex: number, toIndex: number) => {
 };
 
 export const persistPlayground = () => {
-  try {
-    const payload: Persisted = {
-      style: playgroundState.style,
-      scene: playgroundState.scene,
-      swatches: playgroundState.swatches.map((swatch) => ({
-        hex: rgbToHex(swatch.rgb).toUpperCase(),
-        name: swatch.name,
-        locked: swatch.locked,
-      })),
-      zoom: playgroundState.zoom,
-      sourcePaletteId: playgroundState.sourcePaletteId,
-      sourceName: playgroundState.sourceName,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  } catch {
-    // Storage can be unavailable (private mode, quota). The playground still works in memory.
-  }
+  const payload: Persisted = {
+    style: playgroundState.style,
+    scene: playgroundState.scene,
+    swatches: playgroundState.swatches.map((swatch) => ({
+      hex: rgbToHex(swatch.rgb).toUpperCase(),
+      name: swatch.name,
+      locked: swatch.locked,
+    })),
+    zoom: playgroundState.zoom,
+    sourcePaletteId: playgroundState.sourcePaletteId,
+    sourceName: playgroundState.sourceName,
+  };
+  writeStoredJson(STORAGE_KEY, payload);
 };
 
 const parseHex = (hex: string): [number, number, number] | null => {
@@ -270,29 +267,26 @@ const parseHex = (hex: string): [number, number, number] | null => {
 };
 
 export const restorePlayground = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const stored = raw ? (JSON.parse(raw) as Partial<Persisted>) : null;
-    if (stored?.style) {
-      playgroundState.style = stored.style;
-    }
-    if (stored?.scene) {
-      playgroundState.scene = stored.scene;
-    }
-    playgroundState.zoom = ZOOM_STEPS.includes(Number(stored?.zoom)) ? Number(stored?.zoom) : 1;
-    playgroundState.sourcePaletteId = stored?.sourcePaletteId ?? null;
-    playgroundState.sourceName = stored?.sourceName ?? null;
-    const swatches = Array.isArray(stored?.swatches) ? stored.swatches : [];
-    playgroundState.swatches = swatches
-      .map((entry) => {
-        const rgb = parseHex(String(entry?.hex ?? ""));
-        return rgb ? { id: createId(), name: String(entry?.name ?? ""), rgb, locked: Boolean(entry?.locked) } : null;
-      })
-      .filter((swatch): swatch is PlaygroundSwatch => swatch !== null)
-      .slice(0, MAX_COLORS);
-  } catch {
-    playgroundState.swatches = [];
+  const stored = readStoredJson<Partial<Persisted> | null>(STORAGE_KEY, null);
+  if (stored?.style) {
+    playgroundState.style = stored.style;
   }
+  if (stored?.scene) {
+    playgroundState.scene = stored.scene;
+  }
+  playgroundState.zoom = ZOOM_STEPS.includes(Number(stored?.zoom)) ? Number(stored?.zoom) : 1;
+  playgroundState.sourcePaletteId = stored?.sourcePaletteId ?? null;
+  playgroundState.sourceName = stored?.sourceName ?? null;
+
+  const swatches = Array.isArray(stored?.swatches) ? stored.swatches : [];
+  playgroundState.swatches = swatches
+    .map((entry) => {
+      const rgb = parseHex(String(entry?.hex ?? ""));
+      return rgb ? { id: createId(), name: String(entry?.name ?? ""), rgb, locked: Boolean(entry?.locked) } : null;
+    })
+    .filter((swatch): swatch is PlaygroundSwatch => swatch !== null)
+    .slice(0, MAX_COLORS);
+
   if (playgroundState.swatches.length < MIN_COLORS) {
     playgroundState.swatches = [];
     shufflePlayground();

@@ -1,5 +1,6 @@
 import { t } from "../i18n";
 import { persistPalettes } from "../persistence";
+import { readStoredJson, writeStoredJson } from "../utils/storage";
 import { libraryState, state } from "../state";
 import type { Folder, Palette } from "../types";
 import { createId } from "../utils/id";
@@ -18,8 +19,7 @@ export const resolveFolderId = (folderId: string | null | undefined) => {
   return getFolderById(folderId) ? folderId : null;
 };
 
-export const getPalettesInFolder = (folderId: string | null) =>
-  state.palettes.filter((palette) => (palette.folderId ?? null) === folderId);
+export const getPalettesInFolder = (folderId: string | null) => state.palettes.filter((palette) => (palette.folderId ?? null) === folderId);
 
 const uniqueFolderName = (base: string) => {
   const existing = new Set(state.folders.map((folder) => folder.name));
@@ -94,23 +94,12 @@ export const moveFolderToIndex = (fromIndex: number, toIndex: number) => {
 const COLLAPSED_STORAGE_KEY = "palette-studio.collapsed-folders";
 
 const persistCollapsedFolders = () => {
-  try {
-    localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify([...libraryState.collapsedFolderIds]));
-  } catch {
-    // Storage can be unavailable (private mode, quota). The state still works for this session.
-  }
+  writeStoredJson(COLLAPSED_STORAGE_KEY, [...libraryState.collapsedFolderIds]);
 };
 
 export const restoreCollapsedFolders = () => {
-  try {
-    const raw = localStorage.getItem(COLLAPSED_STORAGE_KEY);
-    const stored: unknown = raw ? JSON.parse(raw) : [];
-    if (Array.isArray(stored)) {
-      libraryState.collapsedFolderIds = new Set(stored.filter((id): id is string => typeof id === "string"));
-    }
-  } catch {
-    libraryState.collapsedFolderIds = new Set();
-  }
+  const stored = readStoredJson<unknown[]>(COLLAPSED_STORAGE_KEY, [], (value): value is unknown[] => Array.isArray(value));
+  libraryState.collapsedFolderIds = new Set(stored.filter((id): id is string => typeof id === "string"));
 };
 
 export const isFolderCollapsed = (folderId: string) => libraryState.collapsedFolderIds.has(folderId);

@@ -15,6 +15,7 @@ import { state } from "../state";
 import type { Palette, PaletteColor } from "../types";
 import { setButtonContent } from "../ui/icons";
 import { closeColorTools, openColorTools } from "../color/tools";
+import { readStoredText, writeStoredText } from "../utils/storage";
 import { setModalOpen } from "../ui/modals";
 import { showToast } from "../ui/notifications";
 import { createSortable } from "../ui/sortable";
@@ -41,20 +42,12 @@ let editorLayout: EditorLayout = DEFAULT_LAYOUT;
 let colorListSortable: ReturnType<typeof createSortable> | null = null;
 
 const readStoredLayout = (): EditorLayout | null => {
-  try {
-    const stored = localStorage.getItem(LAYOUT_STORAGE_KEY);
-    return stored === "horizontal" || stored === "vertical" ? stored : null;
-  } catch {
-    return null;
-  }
+  const stored = readStoredText(LAYOUT_STORAGE_KEY);
+  return stored === "horizontal" || stored === "vertical" ? stored : null;
 };
 
 const persistLayout = (layout: EditorLayout) => {
-  try {
-    localStorage.setItem(LAYOUT_STORAGE_KEY, layout);
-  } catch {
-    // Ignore storage errors (private mode, storage disabled, etc.).
-  }
+  writeStoredText(LAYOUT_STORAGE_KEY, layout);
 };
 
 const applyEditorLayout = (layout: EditorLayout) => {
@@ -284,7 +277,6 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
       item.colors = item.colors.filter((entry) => entry.id !== color.id);
     });
   });
-
 
   actions.append(copyButton, duplicateButton, removeButton);
   // Flat children so each layout can order them independently: the row places the handle first and

@@ -29,11 +29,7 @@ export type UpdatePaletteOptions = {
   rerenderEditor?: boolean;
 };
 
-export const updatePalette = (
-  paletteId: string,
-  updater: (palette: Palette) => void,
-  options: UpdatePaletteOptions = {},
-) => {
+export const updatePalette = (paletteId: string, updater: (palette: Palette) => void, options: UpdatePaletteOptions = {}) => {
   const palette = getPaletteById(paletteId);
   if (!palette) {
     return;
@@ -105,23 +101,22 @@ export const insertColorAt = (paletteId: string, index: number, rgb: [number, nu
 };
 
 /** Move a colour inside a palette. `toIndex` is the destination slot in the final array. */
-export const moveColorToIndex = (
-  paletteId: string,
-  fromIndex: number,
-  toIndex: number,
-  options: UpdatePaletteOptions = {},
-) => {
-  updatePalette(paletteId, (palette) => {
-    if (fromIndex < 0 || fromIndex >= palette.colors.length) {
-      return;
-    }
-    const bounded = Math.min(Math.max(toIndex, 0), palette.colors.length - 1);
-    if (bounded === fromIndex) {
-      return;
-    }
-    const [moved] = palette.colors.splice(fromIndex, 1);
-    palette.colors.splice(bounded, 0, moved);
-  }, options);
+export const moveColorToIndex = (paletteId: string, fromIndex: number, toIndex: number, options: UpdatePaletteOptions = {}) => {
+  updatePalette(
+    paletteId,
+    (palette) => {
+      if (fromIndex < 0 || fromIndex >= palette.colors.length) {
+        return;
+      }
+      const bounded = Math.min(Math.max(toIndex, 0), palette.colors.length - 1);
+      if (bounded === fromIndex) {
+        return;
+      }
+      const [moved] = palette.colors.splice(fromIndex, 1);
+      palette.colors.splice(bounded, 0, moved);
+    },
+    options,
+  );
 };
 
 /** Move a palette inside the library. `toIndex` is the destination slot in the final array. */

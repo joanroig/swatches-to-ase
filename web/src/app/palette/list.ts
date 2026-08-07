@@ -8,7 +8,8 @@ import { persistPalettes } from "../persistence";
 import { openPaletteInPlayground } from "../playground/ui";
 import { cloudState, libraryState, state } from "../state";
 import type { Folder, Palette } from "../types";
-import { createIcon, setButtonContent, type IconName } from "../ui/icons";
+import { createIconButton } from "../ui/buttons";
+import { createIcon, setButtonContent } from "../ui/icons";
 import { setModalOpen } from "../ui/modals";
 import { showToast } from "../ui/notifications";
 import { createSortable, isSortableClickSuppressed, isSortableDragActive, runAfterSortableDrag } from "../ui/sortable";
@@ -72,24 +73,6 @@ const ensureSortables = () => {
       renderPaletteList();
     },
   });
-};
-
-/**
- * `actionKey` is a stable, translation-independent hook. The buttons are icon-only, so without it
- * the only way to address one is its localised title.
- */
-const createIconButton = (icon: IconName, label: string, onClick: (event: MouseEvent) => void, iconOnly = false, actionKey?: string) => {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "ghost";
-  if (actionKey) {
-    button.dataset.actionKey = actionKey;
-  }
-  setButtonContent(button, icon, label, iconOnly);
-  button.setAttribute("aria-label", label);
-  button.title = label;
-  button.addEventListener("click", onClick);
-  return button;
 };
 
 const createPaletteHeader = (palette: Palette) => {
@@ -163,47 +146,62 @@ const createPaletteActions = (palette: Palette) => {
   const actions = document.createElement("div");
   actions.className = "palette-actions";
 
-  const editButton = createIconButton("edit", t("action.edit"), (event) => {
-    event.stopPropagation();
-    openEditorForPalette(palette.id);
+  const editButton = createIconButton({
+    icon: "edit",
+    label: t("action.edit"),
+    onClick: (event) => {
+      event.stopPropagation();
+      openEditorForPalette(palette.id);
+    },
   });
 
-  const duplicateButton = createIconButton("duplicate", t("action.duplicate"), (event) => {
-    event.stopPropagation();
-    const copy = duplicatePalette(
-      palette,
-      state.palettes.map((item) => item.name),
-    );
-    copy.folderId = palette.folderId ?? null;
-    state.palettes.unshift(copy);
-    syncActivePalette(copy.id);
+  const duplicateButton = createIconButton({
+    icon: "duplicate",
+    label: t("action.duplicate"),
+    onClick: (event) => {
+      event.stopPropagation();
+      const copy = duplicatePalette(
+        palette,
+        state.palettes.map((item) => item.name),
+      );
+      copy.folderId = palette.folderId ?? null;
+      state.palettes.unshift(copy);
+      syncActivePalette(copy.id);
+    },
   });
 
-  const playgroundButton = createIconButton(
-    "playground",
-    t("action.openInPlayground"),
-    (event) => {
+  const playgroundButton = createIconButton({
+    icon: "playground",
+    label: t("action.openInPlayground"),
+    onClick: (event) => {
       event.stopPropagation();
       openPaletteInPlayground(palette.id);
     },
-    false,
-    "playground",
-  );
+    actionKey: "playground",
+  });
 
-  const exportButton = createIconButton("export", t("action.export"), (event) => {
-    event.stopPropagation();
-    syncActivePalette(palette.id);
-    setExportMode("single");
-    setModalOpen(exportModal, true);
+  const exportButton = createIconButton({
+    icon: "export",
+    label: t("action.export"),
+    onClick: (event) => {
+      event.stopPropagation();
+      syncActivePalette(palette.id);
+      setExportMode("single");
+      setModalOpen(exportModal, true);
+    },
   });
 
   const spacer = document.createElement("span");
   spacer.className = "palette-actions-spacer";
 
   const publishLabel = palette.isPublic ? t("action.unpublish") : t("action.publish");
-  const publishButton = createIconButton("globe", publishLabel, (event) => {
-    event.stopPropagation();
-    void togglePaletteVisibility(palette.id);
+  const publishButton = createIconButton({
+    icon: "globe",
+    label: publishLabel,
+    onClick: (event) => {
+      event.stopPropagation();
+      void togglePaletteVisibility(palette.id);
+    },
   });
   // The globe itself carries the published state, so there is no separate "PUBLIC" badge.
   publishButton.classList.toggle("is-published", Boolean(palette.isPublic));
@@ -215,9 +213,13 @@ const createPaletteActions = (palette: Palette) => {
     : t("palette.signInToPublish");
   publishButton.disabled = !cloudState.isConfigured || !cloudState.user || !isCloudUserVerified();
 
-  const removeButton = createIconButton("trash", t("action.remove"), (event) => {
-    event.stopPropagation();
-    void removePalette(palette.id);
+  const removeButton = createIconButton({
+    icon: "trash",
+    label: t("action.remove"),
+    onClick: (event) => {
+      event.stopPropagation();
+      void removePalette(palette.id);
+    },
   });
 
   actions.append(editButton, duplicateButton, playgroundButton, exportButton, spacer, publishButton, removeButton);
@@ -448,20 +450,20 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
   };
 
   // Icon-only: the labels are long enough to crowd the name out of a narrow header.
-  const renameButton = createIconButton(
-    "edit",
-    t("folder.rename"),
-    (event) => {
+  const renameButton = createIconButton({
+    icon: "edit",
+    label: t("folder.rename"),
+    onClick: (event) => {
       event.stopPropagation();
       startRename();
     },
-    true,
-  );
+    iconOnly: true,
+  });
 
-  const removeButton = createIconButton(
-    "trash",
-    t("folder.delete"),
-    (event) => {
+  const removeButton = createIconButton({
+    icon: "trash",
+    label: t("folder.delete"),
+    onClick: (event) => {
       event.stopPropagation();
       if (!window.confirm(t("folder.deleteConfirm", { name: folder.name, count: group.palettes.length }))) {
         return;
@@ -469,8 +471,8 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
       deleteFolder(folder.id);
       renderPaletteList();
     },
-    true,
-  );
+    iconOnly: true,
+  });
 
   actions.append(grip, renameButton, removeButton);
   header.appendChild(actions);

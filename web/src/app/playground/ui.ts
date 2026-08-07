@@ -24,7 +24,8 @@ import { t } from "../i18n";
 import { syncActivePalette } from "../palette/mutations";
 import { state } from "../state";
 import type { Palette } from "../types";
-import { createIcon, setButtonContent } from "../ui/icons";
+import { createIconButton } from "../ui/buttons";
+import { createIcon, setButtonContent, type IconName } from "../ui/icons";
 import { appendLog, showToast } from "../ui/notifications";
 import { createSelectChip } from "../ui/select-chip";
 import { createSortable, isSortableClickSuppressed } from "../ui/sortable";
@@ -73,17 +74,18 @@ export const setPlaygroundViewSwitcher = (switcher: () => void) => {
 
 const currentHexes = () => playgroundState.swatches.map((swatch) => rgbToHex(swatch.rgb).toUpperCase());
 
-const createSwatchButton = (icon: Parameters<typeof createIcon>[0], label: string, onClick: () => void) => {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "ghost icon-only playground-swatch-action";
-  setButtonContent(button, icon, label, true);
-  button.addEventListener("click", (event) => {
-    event.stopPropagation();
-    onClick();
+const createSwatchButton = (icon: IconName, label: string, onClick: () => void) =>
+  createIconButton({
+    icon,
+    label,
+    iconOnly: true,
+    className: "ghost icon-only playground-swatch-action",
+    // The swatch itself is a click target, so its controls must not also trigger it.
+    onClick: (event) => {
+      event.stopPropagation();
+      onClick();
+    },
   });
-  return button;
-};
 
 /**
  * A "+" that inserts a colour at a position, revealed by hovering the seam between two swatches.
@@ -96,17 +98,19 @@ const createInsertZone = (index: number, atEnd = false) => {
   const zone = document.createElement("span");
   zone.className = atEnd ? "playground-insert-zone playground-insert-zone--end" : "playground-insert-zone";
 
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "playground-insert";
-  setButtonContent(button, "plus", t("action.insertColor"), true);
-  button.addEventListener("click", (event) => {
-    event.stopPropagation();
-    if (!insertPlaygroundSwatch(index)) {
-      showToast(t("playground.maxColors", { count: playgroundLimits.max }), "info");
-      return;
-    }
-    render();
+  const button = createIconButton({
+    icon: "plus",
+    label: t("action.insertColor"),
+    iconOnly: true,
+    className: "playground-insert",
+    onClick: (event) => {
+      event.stopPropagation();
+      if (!insertPlaygroundSwatch(index)) {
+        showToast(t("playground.maxColors", { count: playgroundLimits.max }), "info");
+        return;
+      }
+      render();
+    },
   });
 
   zone.appendChild(button);
@@ -481,7 +485,7 @@ export const setupPlayground = () => {
     }
     playgroundStyleSelect.addEventListener("change", () => {
       setPlaygroundStyle(playgroundStyleSelect.value);
-          shuffle();
+      shuffle();
     });
   }
 

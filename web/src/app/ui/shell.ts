@@ -14,6 +14,7 @@ import {
 import { t } from "../i18n";
 import { setPlaygroundActive, setPlaygroundViewSwitcher } from "../playground/ui";
 import { cloudState, discoveryState } from "../state";
+import { readStoredText, writeStoredText } from "../utils/storage";
 import { setButtonContent } from "./icons";
 import { showToast } from "./notifications";
 
@@ -29,27 +30,20 @@ let isSidebarCollapsed = false;
 
 const SIDEBAR_STORAGE_KEY = "palette-studio.sidebar";
 
+/** `null` means "never chosen", which falls back to the markup's default rather than to expanded. */
 const readSidebarCollapsed = () => {
-  try {
-    const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-    if (stored === "collapsed" || stored === "true") {
-      return true;
-    }
-    if (stored === "expanded" || stored === "false") {
-      return false;
-    }
-  } catch {
-    return null;
+  const stored = readStoredText(SIDEBAR_STORAGE_KEY);
+  if (stored === "collapsed" || stored === "true") {
+    return true;
+  }
+  if (stored === "expanded" || stored === "false") {
+    return false;
   }
   return null;
 };
 
 const persistSidebarCollapsed = (collapsed: boolean) => {
-  try {
-    localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? "collapsed" : "expanded");
-  } catch {
-    // Ignore storage errors (private mode, storage disabled, etc.).
-  }
+  writeStoredText(SIDEBAR_STORAGE_KEY, collapsed ? "collapsed" : "expanded");
 };
 
 let actionDockRaf = 0;

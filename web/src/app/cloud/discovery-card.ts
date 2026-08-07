@@ -1,6 +1,6 @@
 import { t } from "../i18n";
 import type { PublicPalette } from "../types";
-import { setButtonContent } from "../ui/icons";
+import { createIconButton } from "../ui/buttons";
 import { rgbToHex } from "../utils/color";
 import { isOwnPalette, isPaletteLiked, isPaletteSaved, savePublicPalette, toggleLikePublicPalette } from "./interactions";
 
@@ -125,33 +125,34 @@ export const createDiscoveryCard = (palette: PublicPalette, options: DiscoveryCa
     strip.appendChild(chip);
   });
 
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.className = "ghost icon-only discover-action";
-  setButtonContent(saveButton, "bookmark", saved ? t("action.saved") : t("action.save"), true);
-  saveButton.classList.toggle("is-active", saved);
-  // Saving is one-shot: once saved it stays saved and the count never moves again.
-  saveButton.disabled = isOwner || saved;
-  if (!saveButton.disabled) {
-    saveButton.addEventListener("click", (event) => {
+  const saveButton = createIconButton({
+    icon: "bookmark",
+    label: saved ? t("action.saved") : t("action.save"),
+    iconOnly: true,
+    className: "ghost icon-only discover-action",
+    onClick: (event) => {
+      // The whole card opens the palette, so its buttons must not also trigger that.
       event.stopPropagation();
       saveButton.disabled = true;
       void savePublicPalette(palette).finally(options.onChanged);
-    });
-  }
+    },
+  });
+  saveButton.classList.toggle("is-active", saved);
+  // Saving is one-shot: once saved it stays saved and the count never moves again.
+  saveButton.disabled = isOwner || saved;
 
-  const likeButton = document.createElement("button");
-  likeButton.type = "button";
-  likeButton.className = "ghost icon-only discover-action";
-  setButtonContent(likeButton, "heart", liked ? t("action.liked") : t("action.like"), true);
-  likeButton.classList.toggle("is-active", liked);
-  likeButton.disabled = isOwner;
-  if (!isOwner) {
-    likeButton.addEventListener("click", (event) => {
+  const likeButton = createIconButton({
+    icon: "heart",
+    label: liked ? t("action.liked") : t("action.like"),
+    iconOnly: true,
+    className: "ghost icon-only discover-action",
+    onClick: (event) => {
       event.stopPropagation();
       void toggleLikePublicPalette(palette).finally(options.onChanged);
-    });
-  }
+    },
+  });
+  likeButton.classList.toggle("is-active", liked);
+  likeButton.disabled = isOwner;
 
   const likeCount = document.createElement("span");
   likeCount.className = "discover-like-count";
