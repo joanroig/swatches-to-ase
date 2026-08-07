@@ -102,6 +102,12 @@ const centerOf = (box: { x: number; y: number; width: number; height: number }) 
   y: box.y + box.height / 2,
 });
 
+/** Palette cards are dragged by their grip, not by the card body. */
+const gripOf = async (page, index: number) => {
+  const box = await boxOf(page.locator(".palette-card").nth(index).locator(".palette-card-grip"));
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+};
+
 const boxOf = async (locator) => {
   // Wait for the element to actually be laid out: the shell fades sections in, so a box can be
   // momentarily unavailable even after the cards exist.
@@ -132,7 +138,7 @@ test.describe("palette card reordering", () => {
 
     await dragTo(
       page,
-      { x: first.x + first.width / 2, y: first.y + 24 },
+      await gripOf(page, 0),
       // Push just past the last slot's centre along whichever axis the list flows.
       isSameRow ? { x: target.x + last.width * 0.3, y: target.y } : { x: target.x, y: target.y + last.height * 0.3 },
     );
@@ -156,7 +162,7 @@ test.describe("palette card reordering", () => {
     // Release just below the third card's centre: "One" must land at index 2, not overshoot.
     await dragTo(
       page,
-      { x: first.x + first.width / 2, y: first.y + 24 },
+      await gripOf(page, 0),
       { x: third.x + third.width / 2, y: third.y + third.height * 0.6 },
     );
 
@@ -172,7 +178,7 @@ test.describe("palette card reordering", () => {
 
     await dragTo(
       page,
-      { x: first.x + first.width / 2, y: first.y + 24 },
+      await gripOf(page, 0),
       { x: last.x + last.width / 2, y: last.y + last.height * 0.6 },
     );
 
@@ -202,7 +208,7 @@ test.describe("palette card reordering", () => {
     const target = layout[5];
     const preview = await dragTo(
       page,
-      { x: source.x + source.width / 2, y: source.y + 24 },
+      await gripOf(page, 0),
       { x: target.x + target.width * 0.75, y: target.y + target.height / 2 },
       24,
     );
@@ -234,7 +240,7 @@ test.describe("palette card reordering", () => {
     const target = layout[0];
     const preview = await dragTo(
       page,
-      { x: source.x + source.width / 2, y: source.y + 24 },
+      await gripOf(page, 8),
       { x: target.x + target.width * 0.25, y: target.y + target.height / 2 },
       24,
     );

@@ -28,16 +28,16 @@ import { renderViewModal } from "./view";
 type EditorLayout = "horizontal" | "vertical";
 
 const LAYOUT_STORAGE_KEY = "palette-studio.editor-layout";
+const DEFAULT_LAYOUT: EditorLayout = "horizontal";
 
-const editorLayoutState = {
-  /**
-   * `auto` picks a layout from the window's aspect ratio, and keeps following it as the window is
-   * resized. As soon as the toggle is used the choice becomes sticky — and is remembered across
-   * sessions — so the editor never silently flips layout underneath you again.
-   */
-  mode: "auto" as "auto" | "manual",
-  value: "horizontal" as EditorLayout,
-};
+/**
+ * The layout is only ever changed by the toggle. It used to be derived from the window's aspect
+ * ratio and re-derived on every resize, which meant the editor silently flipped from rows to
+ * columns while the window was being resized.
+ */
+let editorLayout: EditorLayout = DEFAULT_LAYOUT;
+
+let colorListSortable: ReturnType<typeof createSortable> | null = null;
 
 const readStoredLayout = (): EditorLayout | null => {
   try {
@@ -56,12 +56,8 @@ const persistLayout = (layout: EditorLayout) => {
   }
 };
 
-let colorListSortable: ReturnType<typeof createSortable> | null = null;
-
-const getAutoEditorLayout = (): EditorLayout => (window.innerWidth >= window.innerHeight ? "horizontal" : "vertical");
-
 const applyEditorLayout = (layout: EditorLayout) => {
-  editorLayoutState.value = layout;
+  editorLayout = layout;
   if (paletteEditor) {
     paletteEditor.dataset.layout = layout;
   }
@@ -79,31 +75,17 @@ const applyEditorLayout = (layout: EditorLayout) => {
 };
 
 export const syncEditorLayout = () => {
-  applyEditorLayout(editorLayoutState.mode === "auto" ? getAutoEditorLayout() : editorLayoutState.value);
+  applyEditorLayout(editorLayout);
 };
 
 export const setupEditorLayout = () => {
-  const stored = readStoredLayout();
-  if (stored) {
-    editorLayoutState.mode = "manual";
-    editorLayoutState.value = stored;
-  }
+  applyEditorLayout(readStoredLayout() ?? DEFAULT_LAYOUT);
 
   editorLayoutToggle?.addEventListener("click", () => {
-    const next: EditorLayout = editorLayoutState.value === "vertical" ? "horizontal" : "vertical";
-    editorLayoutState.mode = "manual";
+    const next: EditorLayout = editorLayout === "vertical" ? "horizontal" : "vertical";
     persistLayout(next);
     applyEditorLayout(next);
   });
-
-  const handleResize = () => {
-    if (editorLayoutState.mode === "auto") {
-      applyEditorLayout(getAutoEditorLayout());
-    }
-  };
-
-  window.addEventListener("resize", handleResize);
-  handleResize();
 };
 
 export const openEditorForPalette = (paletteId: string) => {

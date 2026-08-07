@@ -196,7 +196,6 @@
   grid-auto-rows: minmax(52px, 1fr);
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-gutter: stable;
 }
 
 #palette-editor[data-layout="vertical"] .color-list {

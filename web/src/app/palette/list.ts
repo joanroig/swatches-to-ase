@@ -44,6 +44,9 @@ const ensureSortables = () => {
   paletteSortable = createSortable({
     root: paletteList,
     itemSelector: ".palette-card[data-palette-id]",
+    // Grip only: the card body is a click target that opens the palette, so dragging from anywhere
+    // on it made the two intents easy to confuse.
+    handleSelector: ".palette-card-grip",
     // Cards may cross between folder grids, which is how a palette is filed.
     containerSelector: ".palette-grid[data-folder-id]",
     onDrop: ({ item, toContainer, toIndex }) => {
@@ -100,7 +103,8 @@ const createPaletteHeader = (palette: Palette) => {
   // reorderable at all.
   const grip = document.createElement("span");
   grip.className = "palette-card-grip";
-  grip.setAttribute("aria-hidden", "true");
+  grip.setAttribute("role", "button");
+  grip.setAttribute("aria-label", t("action.dragToReorder"));
   grip.title = t("action.dragToReorder");
   grip.appendChild(createIcon("grip"));
 

@@ -69,12 +69,13 @@ test("dragging a palette into a folder files it, and it survives a reload", asyn
   expect(folderId).not.toBe("");
   expect(folderId).not.toBe("__unfiled__");
 
-  const card = await boxOf(page.locator(".palette-card").first());
+  // Cards are dragged by their grip, not by the card body.
+  const grip = await boxOf(page.locator(".palette-card").first().locator(".palette-card-grip"));
   const target = await boxOf(page.locator(`.palette-grid[data-folder-id="${folderId}"]`));
 
-  await page.mouse.move(card.x + card.width / 2, card.y + 24);
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
   await page.mouse.down();
-  await page.mouse.move(card.x + card.width / 2 + 8, card.y + 32, { steps: 3 });
+  await page.mouse.move(grip.x + grip.width / 2 + 8, grip.y + grip.height / 2 + 8, { steps: 3 });
   await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 20 });
   await page.mouse.up();
 

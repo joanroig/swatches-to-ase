@@ -61,6 +61,12 @@ const stopOrderRecorder = (page) =>
     return scope.__orderRecord;
   });
 
+/** Palette cards are dragged by their grip, not by the card body. */
+const gripCentre = async (page, index: number) => {
+  const box = await boxOf(page.locator(".palette-card").nth(index).locator(".palette-card-grip"));
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+};
+
 const boxOf = async (locator) => {
   const box = await locator.boundingBox();
   if (!box) {
@@ -89,10 +95,10 @@ test("holding the pointer still never keeps reshuffling the grid", async ({ page
   const columns = new Set(layout.map((box) => Math.round(box.x))).size;
   expect(columns).toBeGreaterThan(1);
 
-  const source = layout[0];
-  await page.mouse.move(source.x + source.width / 2, source.y + 20);
+  const grip = await gripCentre(page, 0);
+  await page.mouse.move(grip.x, grip.y);
   await page.mouse.down();
-  await page.mouse.move(source.x + source.width / 2 + 10, source.y + 30, { steps: 4 });
+  await page.mouse.move(grip.x + 10, grip.y + 10, { steps: 4 });
 
   // Probe centres, edges and the gutters between slots.
   const probes: Array<{ x: number; y: number; label: string }> = [];
@@ -130,16 +136,16 @@ test("a slow drag across a wrapping grid reorders once per slot, not repeatedly"
 
   await startOrderRecorder(page, PALETTE_GRID);
 
-  const source = layout[0];
   const target = layout[7];
-  await page.mouse.move(source.x + source.width / 2, source.y + 24);
+  const grip = await gripCentre(page, 0);
+  await page.mouse.move(grip.x, grip.y);
   await page.mouse.down();
-  await page.mouse.move(source.x + source.width / 2 + 10, source.y + 34, { steps: 4 });
+  await page.mouse.move(grip.x + 10, grip.y + 10, { steps: 4 });
 
   // Crawl to the target in many tiny increments — the worst case for an unstable hit test.
   const steps = 60;
-  const fromX = source.x + source.width / 2 + 10;
-  const fromY = source.y + 34;
+  const fromX = grip.x + 10;
+  const fromY = grip.y + 10;
   const toX = target.x + target.width / 2;
   const toY = target.y + target.height / 2;
   for (let step = 1; step <= steps; step += 1) {
@@ -161,16 +167,16 @@ test("a slow vertical drag in a single-column list reorders monotonically", asyn
 
   await startOrderRecorder(page, PALETTE_GRID);
 
-  const first = await boxOf(page.locator(".palette-card").nth(0));
   const last = await boxOf(page.locator(".palette-card").nth(5));
+  const grip = await gripCentre(page, 0);
 
-  await page.mouse.move(first.x + first.width / 2, first.y + 24);
+  await page.mouse.move(grip.x, grip.y);
   await page.mouse.down();
-  await page.mouse.move(first.x + first.width / 2, first.y + 34, { steps: 4 });
+  await page.mouse.move(grip.x, grip.y + 10, { steps: 4 });
   const steps = 80;
   for (let step = 1; step <= steps; step += 1) {
-    const y = first.y + 34 + ((last.y + last.height / 2 - (first.y + 34)) * step) / steps;
-    await page.mouse.move(first.x + first.width / 2, y);
+    const y = grip.y + 10 + ((last.y + last.height / 2 - (grip.y + 10)) * step) / steps;
+    await page.mouse.move(grip.x, y);
   }
   await page.mouse.up();
 

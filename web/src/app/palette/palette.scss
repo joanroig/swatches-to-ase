@@ -131,17 +131,50 @@
 /* Each folder body is its own sortable container, which is what lets a card be dragged from one
    folder into another. */
 .palette-grid {
+  position: relative;
   display: grid;
   gap: 16px;
   grid-template-columns: minmax(0, 1fr);
   /* Keep an empty folder tall enough to be a comfortable drop target. */
   min-height: 72px;
   border-radius: 16px;
-  transition: background 0.15s ease;
 }
 
-.palette-grid.is-sorting {
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+/*
+ * The drop zone is drawn on a pseudo-element inset *outwards*, so its edge does not coincide with
+ * the card edges. Flush against them it was almost impossible to see which folder you were over.
+ * It is always present but transparent, so it can fade in and out as the drag moves between
+ * folders rather than snapping.
+ */
+.palette-grid::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  z-index: 0;
+  border-radius: 22px;
+  border: 2px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.985);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.palette-grid.is-sorting::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) .palette-grid::before {
+    transition: none;
+  }
+}
+
+body[data-motion="off"] .palette-grid::before {
+  transition: none;
 }
 
 @media (min-width: 960px) {
@@ -341,27 +374,42 @@
   width: 100%;
 }
 
+/* The only drag affordance on a card, so it is a real target rather than a hint. */
 .palette-card-grip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
+  margin-left: -4px;
   flex: 0 0 auto;
+  border-radius: 7px;
   color: var(--muted);
-  opacity: 0.35;
+  opacity: 0.55;
   cursor: grab;
-  transition: opacity 0.15s ease;
+  touch-action: none;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease;
 
   .icon {
     width: 14px;
     height: 14px;
   }
+
+  &:hover {
+    opacity: 1;
+    background: var(--surface-2);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
 }
 
 .palette-card:hover .palette-card-grip,
 .palette-card:focus-within .palette-card-grip {
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .palette-card.is-sort-dragging .palette-card-grip {
