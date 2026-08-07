@@ -43,6 +43,8 @@ const ICONS = {
   minus: "/icons/minus.svg#icon",
   folder: "/icons/folder.svg#icon",
   inbox: "/icons/inbox.svg#icon",
+  expand: "/icons/expand.svg#icon",
+  collapse: "/icons/collapse.svg#icon",
   unlock: "/icons/unlock.svg#icon",
 } as const;
 

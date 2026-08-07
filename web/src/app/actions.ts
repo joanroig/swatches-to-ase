@@ -7,7 +7,6 @@ import {
   renderDiscovery,
   resetCloudProfileDraft,
   savePublicPalette,
-  setDiscoveryFollowingOnly,
   setDiscoverySearch,
   setDiscoverySort,
   setupCloudProfileControls,
@@ -16,6 +15,7 @@ import {
   unpublishPalette,
 } from "./cloud/lazy";
 import { setupCloudAuthBindings } from "./cloud/auth-bindings";
+import { createSelectChip } from "./ui/select-chip";
 import { resetRecaptcha, setupRecaptcha } from "./cloud/recaptcha";
 import {
   addBwToggle,
@@ -39,7 +39,6 @@ import {
   generateBaseColorInput,
   generateHistoryBackButton,
   generateHistoryForwardButton,
-  discoverFollowingOnlyToggle,
   discoverProfileModal,
   discoverSearchInput,
   discoverSortSelect,
@@ -545,6 +544,13 @@ export const setupActions = () => {
     });
   }
 
+  if (discoverSearchInput) {
+    discoverSearchInput.value = discoveryState.search;
+    discoverSearchInput.addEventListener("input", () => {
+      setDiscoverySearch(discoverSearchInput.value);
+    });
+  }
+
   if (librarySearchInput) {
     librarySearchInput.value = libraryState.search;
     librarySearchInput.addEventListener("input", () => {
@@ -561,19 +567,6 @@ export const setupActions = () => {
     renderPaletteList();
   });
 
-  if (discoverFollowingOnlyToggle) {
-    discoverFollowingOnlyToggle.checked = discoveryState.followingOnly;
-    discoverFollowingOnlyToggle.addEventListener("change", () => {
-      setDiscoveryFollowingOnly(discoverFollowingOnlyToggle.checked);
-    });
-  }
-
-  if (discoverSearchInput) {
-    discoverSearchInput.value = discoveryState.search;
-    discoverSearchInput.addEventListener("input", () => {
-      setDiscoverySearch(discoverSearchInput.value);
-    });
-  }
 
   setupModal(importModal);
   setupModal(settingsModal);
@@ -595,6 +588,7 @@ export const setupActions = () => {
   if (editorOverflow) {
     setupPopover({ root: editorOverflow, trigger: editorToolsTrigger, panel: editorToolsPanel });
   }
+  createSelectChip(discoverSortSelect);
   setupCloudAuthBindings();
   setupCloudProfileControls();
   setupDiscoveryProfileControls();
@@ -633,7 +627,6 @@ export const setupActions = () => {
         editorModal,
         exportModal,
         viewModal,
-        discoverFollowingOnlyToggle,
         discoverProfileModal,
       ]);
     }

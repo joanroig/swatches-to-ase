@@ -25,9 +25,12 @@ const HISTORY_LIMIT = 40;
 
 type StoredSwatch = { hex: string; name: string; locked: boolean };
 
+export const ZOOM_STEPS = [0.6, 0.75, 0.9, 1, 1.15, 1.35, 1.6, 2];
+
 type Persisted = {
   style: string;
   scene: string;
+  zoom: number;
   swatches: StoredSwatch[];
   sourcePaletteId: string | null;
   sourceName: string | null;
@@ -36,6 +39,8 @@ type Persisted = {
 export const playgroundState = {
   style: "analogous",
   scene: "blend",
+  /** Preview magnification, an index into `ZOOM_STEPS`. */
+  zoom: 1,
   swatches: [] as PlaygroundSwatch[],
   /** The library palette this working set came from, if any. Drives "Update" vs "Save as new". */
   sourcePaletteId: null as string | null,
@@ -147,6 +152,23 @@ export const setPlaygroundScene = (scene: string) => {
   persistPlayground();
 };
 
+/** Step the preview magnification. Returns false when already at the end of the range. */
+export const stepPlaygroundZoom = (direction: 1 | -1) => {
+  const current = ZOOM_STEPS.indexOf(playgroundState.zoom);
+  const index = Math.max(0, Math.min((current < 0 ? ZOOM_STEPS.indexOf(1) : current) + direction, ZOOM_STEPS.length - 1));
+  if (ZOOM_STEPS[index] === playgroundState.zoom) {
+    return false;
+  }
+  playgroundState.zoom = ZOOM_STEPS[index];
+  persistPlayground();
+  return true;
+};
+
+export const canStepPlaygroundZoom = (direction: 1 | -1) => {
+  const index = ZOOM_STEPS.indexOf(playgroundState.zoom);
+  return direction < 0 ? index > 0 : index >= 0 && index < ZOOM_STEPS.length - 1;
+};
+
 /**
  * Insert a colour at `index`, blending its neighbours where it has two.
  *
@@ -228,6 +250,7 @@ export const persistPlayground = () => {
         name: swatch.name,
         locked: swatch.locked,
       })),
+      zoom: playgroundState.zoom,
       sourcePaletteId: playgroundState.sourcePaletteId,
       sourceName: playgroundState.sourceName,
     };
@@ -256,6 +279,7 @@ export const restorePlayground = () => {
     if (stored?.scene) {
       playgroundState.scene = stored.scene;
     }
+    playgroundState.zoom = ZOOM_STEPS.includes(Number(stored?.zoom)) ? Number(stored?.zoom) : 1;
     playgroundState.sourcePaletteId = stored?.sourcePaletteId ?? null;
     playgroundState.sourceName = stored?.sourceName ?? null;
     const swatches = Array.isArray(stored?.swatches) ? stored.swatches : [];

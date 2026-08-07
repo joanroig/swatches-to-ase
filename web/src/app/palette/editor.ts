@@ -178,18 +178,22 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
   dragHandle.draggable = false;
   setButtonContent(dragHandle, "grip", t("action.dragToReorder"), true);
 
-  const valueLabel = document.createElement("button");
-  valueLabel.type = "button";
+  // The hex and the name are spans inside one button, not two buttons side by side: hovering
+  // either half offers the same thing, and a single control gives one hover target, one tooltip
+  // and one focus stop instead of two.
+  const valueLabel = document.createElement("span");
   valueLabel.className = "color-card-value";
   valueLabel.textContent = formatColorValue(color, notation);
 
-  const nameLabel = document.createElement("button");
-  nameLabel.type = "button";
+  const nameLabel = document.createElement("span");
   nameLabel.className = "color-card-name";
   nameLabel.textContent = color.name;
 
-  const textGroup = document.createElement("div");
+  const textGroup = document.createElement("button");
+  textGroup.type = "button";
   textGroup.className = "color-card-text";
+  textGroup.title = t("action.changeColor");
+  textGroup.setAttribute("aria-label", t("action.changeColor"));
   textGroup.append(valueLabel, nameLabel);
 
   const applyRowVisuals = (rgb: [number, number, number], name: string) => {
@@ -239,8 +243,7 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
     });
   };
 
-  valueLabel.addEventListener("click", () => openPicker(valueLabel));
-  nameLabel.addEventListener("click", () => openPicker(nameLabel));
+  textGroup.addEventListener("click", () => openPicker(textGroup));
 
   const actions = document.createElement("div");
   actions.className = "color-actions";
@@ -282,13 +285,8 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
     });
   });
 
-  const tuneButton = document.createElement("button");
-  tuneButton.type = "button";
-  tuneButton.className = "ghost";
-  setButtonContent(tuneButton, "edit", t("editor.colorPicker"), true);
-  tuneButton.addEventListener("click", () => openPicker(tuneButton));
 
-  actions.append(tuneButton, copyButton, duplicateButton, removeButton);
+  actions.append(copyButton, duplicateButton, removeButton);
   // Flat children so each layout can order them independently: the row places the handle first and
   // the actions last, the column pins the handle to the top, the label to the bottom and floats the
   // actions in the middle.

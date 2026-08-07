@@ -222,19 +222,21 @@
   --action-color: #4d61fc;
 }
 
+/* X's mark is black on white. A grey tile with a white glyph was neither. */
 .export-action[data-export-action="x"] {
-  --action-color: #1f2937;
+  --action-color: #000;
 }
 
 .export-action[data-export-action="pinterest"] {
   --action-color: #e60023;
 }
 
-/* The X mark is near-black, which disappears on a dark surface. */
-:root[data-theme="noir"] .export-action[data-export-action="x"],
-:root[data-theme="graphite"] .export-action[data-export-action="x"],
-:root[data-theme="aurora"] .export-action[data-export-action="x"] {
-  --action-color: #4b5563;
+/* Inverted on the dark themes: a black tile on a near-black surface is invisible. */
+:root[data-theme="noir"] .export-action[data-export-action="x"] .action-icon,
+:root[data-theme="graphite"] .export-action[data-export-action="x"] .action-icon,
+:root[data-theme="aurora"] .export-action[data-export-action="x"] .action-icon {
+  background: #fff;
+  color: #000;
 }
 
 .export-action:disabled {

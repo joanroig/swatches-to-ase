@@ -86,7 +86,7 @@ export const renderDiscovery = () => {
   const searchQuery = discoveryState.search.trim().toLowerCase();
   const palettes = sortDiscoveryPalettes(discoveryState.palettes);
   const bySearch = searchQuery ? palettes.filter((palette) => matchesDiscoverySearch(palette, searchQuery)) : palettes;
-  const filtered = discoveryState.followingOnly ? bySearch.filter((palette) => discoveryState.followingIds.has(palette.ownerId)) : bySearch;
+  const filtered = bySearch;
 
   discoverEmpty.textContent = hasLoadError
     ? t("toast.discoveryLoadFailed")

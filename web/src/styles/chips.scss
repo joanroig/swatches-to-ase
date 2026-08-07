@@ -1,0 +1,205 @@
+/*
+ * Chips and chip groups.
+ *
+ * The app's compact control language, shared by the playground tool strip, the Discover sort and
+ * anywhere else a small control belongs on a toolbar. A group is a rounded bubble with its own
+ * surface; the chips inside it are flat until hovered, and the one representing the current value
+ * is filled with the accent gradient — the same relationship the preview tabs use.
+ *
+ * Everything here is presentation only. The behaviour that keeps a select chip sized to its value
+ * lives in `app/ui/select-chip.ts`.
+ */
+
+.chip-group {
+  --chip-height: 32px;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  min-width: 0;
+  height: 40px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+}
+
+/* A group whose first child is a caption rather than a chip needs room before it. */
+.chip-group--labelled {
+  padding-left: 12px;
+  cursor: pointer;
+}
+
+.chip-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--muted);
+  white-space: nowrap;
+  flex: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--chip-height);
+  min-height: 0;
+  min-width: 0;
+  padding-inline: 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+  /* Not `1`. At exactly the font size the line box clips descenders — the "g" in "Analogous"
+     turned into a "q". Centring is flexbox's job, not the line box's. */
+  line-height: 1.5;
+  white-space: nowrap;
+  flex: none;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  .icon {
+    width: 17px;
+    height: 17px;
+    flex: none;
+  }
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+/* The current value, drawn exactly as the active preview tab is. */
+.chip--primary {
+  background: linear-gradient(130deg, var(--accent), var(--accent-3));
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(130deg, var(--accent), var(--accent-3));
+    filter: brightness(1.06);
+  }
+}
+
+.chip--icon {
+  width: var(--chip-height);
+  padding-inline: 0;
+}
+
+/* ------------------------------------------------------------- select chip --- */
+
+/*
+ * A chip that opens a styled option list. The native `<select>` stays in the markup as the value
+ * store — see `app/ui/select-chip.ts` — but is hidden: its dropdown is drawn by the operating
+ * system, so it ignored the theme entirely, and it forced the chip to be as wide as the longest
+ * option rather than the selected one.
+ */
+.chip--select {
+  position: relative;
+  padding-inline: 14px 30px;
+  /* The designated give: everything else on a toolbar is `flex: none`. */
+  flex: 0 1 auto;
+  min-width: 0;
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: 13px;
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 0.18s ease;
+    pointer-events: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.chip-group.is-open .chip--select::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+.chip-select-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The native control is the value store only. `display: none` would drop it from the form and from
+   `selectedOptions`; keeping it laid out but invisible keeps both working. */
+.chip--select select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip-group {
+  position: relative;
+}
+
+.chip-select-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 14;
+  display: none;
+  min-width: 100%;
+  max-height: min(320px, 60vh);
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.chip-group.is-open .chip-select-list {
+  display: grid;
+  gap: 2px;
+}
+
+button.chip-select-option {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+
+  &[aria-selected="true"] {
+    background: linear-gradient(130deg, var(--accent), var(--accent-3));
+    color: #fff;
+  }
+}

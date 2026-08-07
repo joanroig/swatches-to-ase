@@ -63,7 +63,6 @@ export const renderDiscovery = () => run((cloud) => cloud.renderDiscovery());
 export const listenToDiscovery = () => run((cloud) => cloud.listenToDiscovery());
 export const setDiscoverySort = (value: string) => run((cloud) => cloud.setDiscoverySort(value));
 export const setDiscoverySearch = (value: string) => run((cloud) => cloud.setDiscoverySearch(value));
-export const setDiscoveryFollowingOnly = (value: boolean) => run((cloud) => cloud.setDiscoveryFollowingOnly(value));
 export const fetchUserInteractions = async () => {
   const cloud = await loadCloud();
   return cloud.fetchUserInteractions();

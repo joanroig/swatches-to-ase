@@ -1,6 +1,6 @@
 @media (min-width: 960px) {
   .shell {
-    grid-template-columns: var(--sidebar-width, 240px) minmax(0, 1fr);
+    grid-template-columns: var(--sidebar-width, 178px) minmax(0, 1fr);
     grid-template-areas: "sidebar main";
     transition: grid-template-columns 0.25s ease;
   }
@@ -15,7 +15,7 @@
     align-self: start;
     min-height: calc(100vh - 104px);
     justify-content: flex-start;
-    width: var(--sidebar-width, 240px);
+    width: var(--sidebar-width, 178px);
     transition: width 0.25s ease;
   }
 

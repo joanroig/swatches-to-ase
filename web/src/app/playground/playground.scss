@@ -267,113 +267,82 @@ button.playground-insert {
 /* ---------------------------------------------------------------- top bar --- */
 
 /*
- * A flat tool strip above the palette, in the manner of Coolors: a hint on the left, then the
- * actions on the right as evenly sized icon buttons separated into groups by hairline dividers.
+ * The tool strip above the palette.
  *
- * Flat is the point. The previous version gave every control its own pill — border, fill and all —
- * which turned a row of five actions into a row of five competing boxes. Here the chrome belongs to
- * the bar, and the controls are just marks on it until you hover one.
+ * Three clusters, borrowed wholesale from the preview tabs below it: each is a rounded bubble with
+ * its own surface, holding chips, and the *current* chip inside it is filled with the accent
+ * gradient. The previous version had six loose controls separated by hairline dividers, which left
+ * things like "Harmony", its value and its chevron reading as three unrelated marks that happened
+ * to be near each other rather than as one control.
+ *
+ * **It is always exactly one line.** Fixed height, `nowrap`, and the only thing that may shrink is
+ * the harmony value, which ellipsises.
  */
 .playground-topbar {
-  --tool-height: 34px;
+  --chip-height: 32px;
 
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 52px;
-  padding: 6px 8px 6px 14px;
-  border-radius: 14px;
-  /* The strong stroke, not the hairline: on the dark themes a `--stroke` border against `--surface`
-     inside an already dark panel left the bar with no visible edge at all. */
+  gap: 12px;
+  height: 56px;
+  padding-inline: 10px;
+  border-radius: 16px;
+  /* The strong stroke: on the dark themes a hairline against `--surface` inside an already dark
+     panel left the bar with no visible edge at all. */
   border: 1px solid var(--stroke-strong);
-  background: var(--bg-elevated);
+  background: var(--surface);
 }
 
-.playground-topbar-lead {
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.playground-hint {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.playground-source {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 0;
-  font-size: 0.88rem;
-}
-
-.playground-source-text {
-  font-weight: 600;
-  color: var(--ink);
-}
-
-button.playground-source-detach {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--accent);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.playground-tools {
+.playground-cluster {
   display: flex;
   align-items: center;
   gap: 4px;
-  /* Wraps as a safety net. The width the tools need depends on the *selected* harmony — "Analogous"
-     against "Complementary" is some 70px — so no fixed breakpoint can guarantee they fit. Wrapping
-     turns an overflow into a second row instead of clipping the last control off the edge. */
-  flex-wrap: wrap;
-  row-gap: 6px;
+  flex: none;
   min-width: 0;
+  height: 40px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
 }
 
-.playground-tool-group {
-  display: flex;
-  align-items: center;
-  gap: 2px;
+.playground-cluster--harmony {
+  /* The only cluster allowed to give ground, and only through the value inside it. */
+  flex: 0 1 auto;
+  padding-left: 12px;
+  cursor: pointer;
 }
 
-.playground-tool-divider {
-  width: 1px;
-  height: 22px;
-  margin-inline: 6px;
-  background: currentColor;
+.playground-cluster-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.5;
   color: var(--muted);
-  opacity: 0.45;
+  white-space: nowrap;
   flex: none;
 }
 
-/* One button style for the whole bar: no border, no fill, a wash on hover. */
-button.playground-tool {
+/* One chip shape for everything in the bar. */
+.playground-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: var(--tool-height);
+  height: var(--chip-height);
   min-height: 0;
-  padding-inline: 10px;
+  min-width: 0;
+  padding-inline: 14px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 999px;
   background: transparent;
   color: var(--ink);
-  font-size: 0.86rem;
+  font-size: 0.85rem;
   font-weight: 600;
+  /* Not `line-height: 1`. That makes the line box exactly the font size, and anything with a
+     descender — the "g" in "Analogous" — has its tail clipped by the overflow, which reads as a
+     different letter. Centring is flexbox's job, not the line box's. */
+  line-height: 1.5;
   white-space: nowrap;
+  flex: none;
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -382,130 +351,184 @@ button.playground-tool {
   .icon {
     width: 17px;
     height: 17px;
+    flex: none;
   }
 
   &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--ink) 12%, transparent);
+    background: color-mix(in srgb, var(--ink) 10%, transparent);
   }
 
   &:disabled {
-    opacity: 0.32;
+    opacity: 0.3;
     cursor: not-allowed;
   }
-
-  /* Icon-only buttons stay square so the group reads as an even row. */
-  &.icon-only {
-    width: var(--tool-height);
-    padding-inline: 0;
-  }
 }
 
-/* The one action worth colouring. Still flat — a tint, not a filled pill. */
-button.playground-tool--accent {
-  color: var(--accent);
+/* The current selection, exactly as the active preview tab is drawn. */
+.playground-chip--primary {
+  background: linear-gradient(130deg, var(--accent), var(--accent-3));
+  color: #fff;
 
   &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    background: linear-gradient(130deg, var(--accent), var(--accent-3));
+    filter: brightness(1.06);
   }
 }
 
-.playground-tool-caption {
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.playground-hint {
-  color: var(--muted);
+.playground-chip--icon {
+  width: var(--chip-height);
+  padding-inline: 0;
 }
 
 /*
- * Caption, value and chevron sit together as one phrase. The chevron used to be pinned to the far
- * right of a stretched field, which read as an arrow belonging to whatever came after it rather
- * than to the harmony picker.
+ * Holds the space-bar hint, or the "Editing <palette>" note when the playground is linked to a
+ * library palette — never both. `data-mode` says which, so the hint can be dropped on a narrow bar
+ * without also dropping the note, and so the slot collapses completely rather than leaving an
+ * empty box reserving a third of the bar.
  */
-.playground-select {
+.playground-topbar-lead {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: var(--tool-height);
-  padding-inline: 10px;
-  border-radius: 9px;
+  flex: 1 1 auto;
   min-width: 0;
-  transition: background 0.15s ease;
+}
+
+/* `p.`, not `.`: `.panel p` in the shared layout is (0,1,1) and was winning, adding a 12px top
+   margin that pushed the text 6px below the bar's centre line. */
+p.playground-hint {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* `:not(.is-hidden)` because the element-qualified selector is (0,1,1) and would otherwise beat
+   the (0,1,0) `.is-hidden` utility — the note stayed on screen in its hidden state. */
+p.playground-source:not(.is-hidden) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  min-width: 0;
+  font-size: 0.86rem;
+}
+
+.playground-source-text {
+  min-width: 0;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.playground-source-detach {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
-
-  &:hover {
-    background: color-mix(in srgb, var(--ink) 12%, transparent);
-  }
-
-  /* `appearance: none` removes the native arrow, so the field draws its own — right after the
-     value, not at the far edge. */
-  &::after {
-    content: "";
-    width: 6px;
-    height: 6px;
-    margin-left: -2px;
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
-    color: var(--muted);
-    transform: translateY(-2px) rotate(45deg);
-    flex: none;
-    pointer-events: none;
-  }
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /*
- * The visible value is a span; the real `<select>` is stretched invisibly over it.
- *
+ * The right-hand pair. The `auto` margin lives on the *first* of the two so they stay together at
+ * the end of the bar whether or not the lead is on screen — with it on the save cluster instead,
+ * hiding the lead let the harmony collapse leftward and the control appeared to jump sides as the
+ * window was resized.
+ */
+.playground-cluster--harmony {
+  margin-left: auto;
+}
+
+/* ------------------------------------------------------- the harmony chip --- */
+
+/*
  * A native select is always as wide as its *longest* option, so with "Complementary" in the list
  * the value sat in a box far wider than itself and the chevron ended up marooned at the far edge.
- * Sizing from the selected label instead keeps caption, value and chevron together as one phrase,
- * and the select stays a real focusable control underneath.
+ *
+ * The chip is sized by a hidden twin holding the selected label, with the real select absolutely
+ * positioned over it — absolutely positioned elements contribute nothing to intrinsic sizing, which
+ * is what stops the longest option dictating the width. The select stays fully visible and native:
+ * an earlier attempt flattened it with `color: transparent; opacity: 0` and the transparency leaked
+ * into the dropdown, which opened as a white box with every option invisible but the hovered one.
  */
-.playground-select-value {
+.playground-chip--select {
   position: relative;
-  display: inline-flex;
-  align-items: center;
+  padding-inline: 14px 30px;
+  /* The one chip that may shrink. `.playground-chip` is `flex: none`, which is right for every
+     other chip and wrong for this one — it is the bar's designated give. */
+  flex: 0 1 auto;
   min-width: 0;
 }
 
-.playground-select-text {
+.playground-select-sizer {
+  visibility: hidden;
+  line-height: 1.5;
+  pointer-events: none;
   min-width: 0;
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: var(--ink);
+  /* A little slack for sub-pixel rounding between the twin and the select. */
+  padding-inline-end: 4px;
+  font: inherit;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.playground-select select {
+.playground-chip--select::after {
+  content: "";
+  position: absolute;
+  right: 13px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  pointer-events: none;
+}
+
+.playground-chip--select select {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  min-width: 0;
   appearance: none;
-  padding: 0;
+  /* All four sides. The shared `select { padding: 10px 12px }` kept its 10px block padding through
+     a `padding-inline`-only override, leaving a 32px border-box with a 12px content area — not
+     enough for a 20.4px line, so every descender was sliced off. */
+  padding: 0 30px 0 14px;
   border: 0;
-  border-radius: 0;
+  border-radius: inherit;
   background: transparent;
   box-shadow: none;
   font: inherit;
-  color: transparent;
-  opacity: 0;
+  color: inherit;
+  text-overflow: ellipsis;
   cursor: pointer;
 
   &:focus {
     background: transparent;
     box-shadow: none;
   }
-}
 
-.playground-select:has(select:focus-visible) {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  &:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  /* The popup is drawn by the browser and inherits nothing useful from the flattened control. */
+  option {
+    color: var(--ink);
+    background: var(--bg-elevated);
+    font-weight: 500;
+  }
 }
 
 /* --------------------------------------------------------------- preview --- */
@@ -513,35 +536,84 @@ button.playground-tool--accent {
 /* The scene tabs used to be a second free-floating toolbar with nothing tying them to the thing
    they switch. They are now the preview card's own header. */
 .playground-preview {
-  display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  min-width: 0;
   min-height: 0;
   flex: 1 1 auto;
-  border-radius: 18px;
-  border: 1px solid var(--stroke-strong);
-  background: var(--surface-2);
-  overflow: hidden;
 }
 
-.playground-preview-head {
+.playground-preview-controls {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--stroke);
-  background: var(--surface);
+  gap: 8px;
+  min-width: 0;
 }
 
-.playground-preview-title {
-  margin: 0;
+.playground-zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  flex: none;
+}
+
+button.playground-zoom-button {
+  width: 26px;
+  height: 26px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+
+  .icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  &:disabled {
+    opacity: 0.32;
+  }
+}
+
+.playground-zoom-value {
+  min-width: 3.1rem;
+  text-align: center;
   font-size: 0.72rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
-  white-space: nowrap;
+}
+
+button.playground-fullscreen {
+  flex: none;
+  padding: 7px;
+}
+
+/*
+ * Full screen is a fixed-position takeover rather than the Fullscreen API: the scenes are ordinary
+ * DOM, so keeping them in the page means the theme, the tab strip and the escape key all keep
+ * working, and it degrades to nothing where a real fullscreen request would be refused.
+ */
+/* Native: the element is already sized to the display, so this only strips the card treatment. */
+.playground-preview:fullscreen {
+  border-radius: 0;
+  border: 0;
+  background: var(--card);
+}
+
+/* Fallback: pinned over the page. */
+.playground-preview.is-fullscreen-fallback {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  border-radius: 0;
+  border: 0;
+  background: var(--card);
+}
+
+body.has-playground-fullscreen {
+  overflow: hidden;
 }
 
 .playground-scene-tabs {
@@ -580,13 +652,29 @@ button.playground-scene-tab {
 }
 
 .playground-stage {
+  --scene-zoom: 1;
+
   display: grid;
   min-width: 0;
   min-height: 300px;
+  overflow: auto;
   /* The container lives on the stage, not on `.scene`: a container query cannot style the element
      that declares the container, and the scenes themselves need to respond to their own width. */
   container-type: inline-size;
   overflow: hidden;
+}
+
+/*
+ * `zoom`, not `transform: scale()`: zoom reflows, so a bigger preview means bigger *content* laid
+ * out for the space it now has, rather than the same picture blown up and blurred.
+ *
+ * No compensating `calc(100% / zoom)` on the size: percentages inside a zoomed box already resolve
+ * against the parent measured in the zoomed coordinate space, so dividing again overshot by exactly
+ * the zoom factor and pushed the scene off the right-hand edge.
+ */
+.playground-stage > .scene {
+  zoom: var(--scene-zoom);
+  width: 100%;
 }
 
 .scene {
@@ -1297,109 +1385,53 @@ button.ui-cta {
 /* ------------------------------------------------------------ responsive --- */
 
 @container playground (max-width: 980px) {
-  /* The hint is the first thing to go: it is advice, and the tools are the bar's job. */
-  .playground-topbar-lead:has(.playground-hint:not(.is-hidden)) {
-    display: none;
-  }
-
-  .playground-tools {
-    flex: 1 1 auto;
-    justify-content: flex-end;
-  }
-}
-
-@container playground (max-width: 760px) {
-  /* Tools drop onto their own row rather than being squeezed. Still one strip, still one row of
-     evenly sized buttons — just under the lead instead of beside it. */
-  .playground-topbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    padding: 10px;
-  }
-
-  .playground-topbar-lead:has(.playground-hint:not(.is-hidden)) {
-    display: block;
-    padding-inline: 4px;
-  }
-
-  .playground-tools {
-    justify-content: space-between;
-  }
-}
-
-@container playground (max-width: 660px) {
   /*
-   * Captions and the dividers around them go. There is not enough width for a caption *and* a
-   * harmony name like "Complementary"; the select carries an `aria-label` and the stepper an
-   * `aria-label` on its group, so nothing is lost to assistive tech.
+   * The hint goes first — it is advice, and the clusters are the bar's job. The whole slot goes,
+   * not just the text inside it: hiding only the paragraph left an empty box holding a third of the
+   * bar open for nothing. The "Editing <palette>" note is not advice and stays a while longer.
    */
-  .playground-tool-caption,
-  .playground-hint {
+  .playground-topbar-lead[data-mode="hint"] {
     display: none;
   }
 
-  .playground-tool-divider {
-    margin-inline: 3px;
+  /* The note keeps its name and loses its link. `flex: none` on the link put a hard floor under
+     the whole slot, which is what pushed the clusters off the end of a linked bar. */
+  .playground-source-detach {
+    display: none;
   }
+}
 
-  .playground-select {
-    padding-inline: 8px;
+@container playground (max-width: 780px) {
+  /* Now the note goes too. The save chip already reads "Update palette", which says the same thing
+     in the space it was going to occupy anyway. */
+  .playground-topbar-lead {
+    display: none;
   }
+}
 
-  /* Labels off the two text buttons: the icons carry them, and their titles still spell them out. */
-  button.playground-tool span {
+@container playground (max-width: 700px) {
+  /* "Harmony" is the least load-bearing word on the bar — the value below it says what it is. */
+  .playground-cluster-label {
     display: none;
   }
 
-  button.playground-tool {
-    width: var(--tool-height);
+  .playground-cluster--harmony {
+    padding-left: 4px;
+  }
+}
+
+@container playground (max-width: 600px) {
+  /*
+   * Labels off the two text chips; the icons carry them and their titles still spell them out.
+   * The row stays one line throughout — this is what keeps it able to.
+   */
+  .playground-chip span:not(.playground-select-sizer) {
+    display: none;
+  }
+
+  .playground-chip:not(.playground-chip--select) {
+    width: var(--chip-height);
     padding-inline: 0;
-  }
-
-  /*
-   * Two rows rather than one that scrolls: the icon actions on top, the harmony picker underneath.
-   * Horizontal scrolling pushed "Save to library" off the end of the strip, where nothing said it
-   * was there.
-   */
-  .playground-tools {
-    flex-wrap: wrap;
-    row-gap: 6px;
-  }
-
-  .playground-tool-group--shuffle {
-    order: 1;
-  }
-
-  .playground-tool-group--history {
-    order: 3;
-  }
-
-  .playground-tool-group--save {
-    order: 5;
-    margin-left: auto;
-  }
-
-  .playground-tool-group--options {
-    order: 6;
-    flex: 1 1 100%;
-    gap: 6px;
-  }
-
-  .playground-tool-divider:nth-of-type(1) {
-    order: 2;
-  }
-
-  /* Only the first divider survives. Save is pushed to the far end by `margin-left: auto` and the
-     options moved to their own row, so the other two had nothing left to separate and hung in the
-     middle of the row pointing at nothing. */
-  .playground-tool-divider:nth-of-type(2),
-  .playground-tool-divider:nth-of-type(3) {
-    display: none;
-  }
-
-  .playground-select {
-    flex: 0 1 auto;
   }
 }
 
@@ -1451,7 +1483,7 @@ button.ui-cta {
     width: auto;
   }
 
-  .playground-preview-title {
+  .playground-preview .section-title {
     display: none;
   }
 
@@ -1461,5 +1493,33 @@ button.ui-cta {
 
   .scene-ui {
     grid-template-columns: 54px 1fr;
+  }
+}
+
+@container playground (max-width: 440px) {
+  /* Last resort: tighten the bar's own metrics so three clusters still fit a phone. */
+  .playground-topbar {
+    --chip-height: 30px;
+
+    gap: 6px;
+    padding-inline: 6px;
+  }
+
+  .playground-cluster {
+    height: 36px;
+    gap: 2px;
+    padding: 3px;
+  }
+
+  .playground-chip--select {
+    padding-inline: 10px 24px;
+  }
+
+  .playground-chip--select select {
+    padding: 0 24px 0 10px;
+  }
+
+  .playground-chip--select::after {
+    right: 10px;
   }
 }

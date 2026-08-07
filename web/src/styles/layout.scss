@@ -114,8 +114,12 @@
 
 .brand-text {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  flex-direction: column;
+  /* Stretch, so the subtitle's box is as wide as the title's and can justify across it. */
+  align-items: stretch;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
 }
 
 .brand-logo {
@@ -131,29 +135,38 @@
 
 .brand-title {
   font-size: clamp(2.2rem, 3vw, 3rem);
-  line-height: 1;
+  /* Just over 1: at exactly 1 the line box is the font size and descenders get clipped. */
+  line-height: 1.05;
 }
 
+/*
+ * "STUDIO" is tracked out to sit exactly under "Palette" rather than to a fixed letter-spacing
+ * that only happens to look right in English. The `letter-spacing` is the fallback for engines
+ * without inter-character justification; where it works, justification overrides it and the two
+ * words line up whatever the translation.
+ */
 .brand-subtitle {
-  font-size: 1rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.26em;
   color: var(--accent);
-  line-height: 1;
+  line-height: 1.2;
+  text-align: justify;
+  text-align-last: justify;
+  text-justify: inter-character;
 }
 
 .brand--sidebar .brand-logo {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
 }
 
 .brand--sidebar .brand-title {
-  font-size: 1.35rem;
+  font-size: 1.45rem;
 }
 
 .brand--sidebar .brand-subtitle {
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
+  font-size: 0.8rem;
 }
 
 .avatar-button.ghost {
@@ -388,7 +401,7 @@
 }
 
 .app-shell[data-sidebar="collapsed"] {
-  --sidebar-width: 86px;
+  --sidebar-width: 60px;
 }
 
 .app-shell[data-sidebar="collapsed"] .brand--sidebar .brand-text,
@@ -545,11 +558,18 @@
   padding: 22px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(12px);
-  animation: rise 0.6s ease forwards;
+  /* Short, and no stagger. `--delay` exists to cascade the panels on first paint, but a view
+     section replays the whole animation every time you switch tab, and 600ms plus a 200ms delay
+     made changing tab feel like waiting for something to load. */
+  animation: rise 0.28s ease forwards;
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(8px);
   animation-delay: var(--delay);
   align-content: start;
+}
+
+.view-section.panel {
+  animation-delay: 0s;
 }
 
 .panel-header {

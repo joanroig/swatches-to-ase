@@ -360,7 +360,7 @@ type LibraryGroup = {
 
 const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
   const header = document.createElement("div");
-  header.className = "library-group-header";
+  header.className = "section-head library-group-header";
 
   const toggle = document.createElement("button");
   toggle.type = "button";
@@ -391,7 +391,7 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
 
   const folder = group.folder;
   const actions = document.createElement("div");
-  actions.className = "library-group-actions";
+  actions.className = "section-actions library-group-actions";
 
   const grip = document.createElement("button");
   grip.type = "button";
@@ -435,7 +435,7 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
 
 const createLibraryGroup = (group: LibraryGroup, isSearching: boolean) => {
   const section = document.createElement("section");
-  section.className = "library-group";
+  section.className = "section-card library-group";
   section.dataset.folderId = group.id;
 
   const collapsed = !isSearching && isFolderCollapsed(group.id);

@@ -327,25 +327,40 @@
 }
 
 
-.color-card-text {
+/* One button holding both spans — the whole hex-and-name block is the single "change colour"
+   target, so hovering either half offers the same thing and there is one focus stop, not two. */
+button.color-card-text {
   display: flex;
   min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
   overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+
+  /* The hover plate is drawn with a spread shadow rather than padding. Padding changed the row's
+     height the moment the pointer arrived, and a control that moves as you reach for it is both
+     unpleasant and, for the test runner, never "stable" enough to click. */
+  &:hover {
+    box-shadow: 0 0 0 5px rgb(255 255 255 / 16%);
+    background: rgb(255 255 255 / 16%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+  }
 }
 
 .color-card-value,
 .color-card-name {
-  /* `display: block`, not the inherited `inline-flex` from the base button rule: `text-overflow`
-     has no effect on a flex container, so long names were being clipped mid-word instead of
-     ellipsised. The full name stays available via the row's tooltip. */
   display: block;
-  border: none;
-  background: transparent;
-  padding: 0;
-  color: inherit;
-  font: inherit;
-  text-align: inherit;
-  cursor: pointer;
   white-space: nowrap;
   min-width: 0;
   max-width: 100%;
@@ -367,11 +382,7 @@
   font-weight: 600;
 }
 
-.color-card-value:focus-visible,
-.color-card-name:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-}
+
 
 .color-actions {
   display: flex;

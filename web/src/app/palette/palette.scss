@@ -27,40 +27,15 @@
   gap: 18px;
 }
 
-/*
- * Each folder is drawn as its own panel. Previously a group was only a heading with cards flowing
- * underneath, and with more than one folder on screen there was nothing to say where one ended and
- * the next began — the boundary read as extra whitespace rather than as a container.
- */
+/* Chrome comes from `.section-card` / `.section-head`; only the folder-specific bits live here. */
 .library-group {
-  display: grid;
-  gap: 12px;
-  padding: 12px 14px 16px;
-  border-radius: 18px;
-  border: 1px solid var(--stroke);
-  background: color-mix(in srgb, var(--surface) 55%, transparent);
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.library-group:hover {
-  border-color: var(--stroke-strong);
-}
-
-.library-group-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--stroke);
+  align-content: start;
 }
 
 .library-group-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
   flex: 1 1 auto;
   padding: 6px 10px 6px 6px;
@@ -110,14 +85,15 @@
 /* Always visible. Hiding them until hover meant folders looked unmanageable at a glance, and on
    the way to the rename button the pointer crossed cards that reacted to it. */
 .library-group-actions {
-  display: flex;
-  align-items: center;
   gap: 4px;
-  flex: 0 0 auto;
 
   button {
     padding: 6px;
   }
+}
+
+.library-group .palette-grid {
+  padding: 14px;
 }
 
 .library-group.is-collapsed .palette-grid {

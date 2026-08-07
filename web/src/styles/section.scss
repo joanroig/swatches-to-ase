@@ -1,0 +1,60 @@
+/*
+ * The app's section container.
+ *
+ * One shape for every block that groups content under a heading — the playground preview, each
+ * library folder, the Discover feed. Before this each of them invented its own treatment, so a
+ * folder was a tinted box with an underlined title while the preview was a bordered card with a
+ * bar, and nothing said they were the same kind of thing.
+ *
+ * The recipe: a bordered card a shade off the panel, and a header bar a shade lighter again with a
+ * hairline under it. The header holds a small uppercase title on the left and its controls on the
+ * right.
+ */
+
+.section-card {
+  display: grid;
+  min-width: 0;
+  border-radius: 18px;
+  border: 1px solid var(--stroke-strong);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--stroke);
+  background: var(--surface);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Controls sit at the end of the bar and never shrink the title away entirely. */
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  min-width: 0;
+}
+
+.section-body {
+  min-width: 0;
+  padding: 14px;
+}

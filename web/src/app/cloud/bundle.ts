@@ -22,7 +22,6 @@ export {
   listenToDiscovery,
   renderDiscovery,
   savePublicPalette,
-  setDiscoveryFollowingOnly,
   setDiscoverySearch,
   setDiscoverySort,
   setupDiscoveryProfileControls,

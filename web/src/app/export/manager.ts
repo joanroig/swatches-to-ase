@@ -11,10 +11,9 @@ import {
   removeAllButton,
 } from "../dom";
 import { updateProcessingState } from "../processing";
-import { getPreferencesPayload } from "../preferences";
-import { buildCompleteShareUrl, buildSharedPaletteUrl } from "../share";
-import { cloudState, exportState, state } from "../state";
-import type { ExportMode, Palette, SharedWorkspacePayload } from "../types";
+import { buildSharedPaletteUrl } from "../share";
+import { exportState, state } from "../state";
+import type { ExportMode, Palette } from "../types";
 import { t } from "../i18n";
 import { trackEvent } from "../cloud/analytics";
 import { appendLog, showToast } from "../ui/notifications";
@@ -251,22 +250,6 @@ const getPrimaryExportPalette = () => {
   return selectPrimaryExportPalette(targets, state.palettes, state.activePaletteId);
 };
 
-const buildCompleteSharePayload = (): SharedWorkspacePayload => {
-  const activePaletteIndex = state.activePaletteId ? state.palettes.findIndex((palette) => palette.id === state.activePaletteId) : -1;
-  return {
-    version: 1,
-    user: cloudState.user?.name ? { name: cloudState.user.name } : undefined,
-    palettes: state.palettes.map((palette) => ({
-      name: palette.name,
-      colors: palette.colors.map((color) => ({
-        hex: rgbToHex(color.rgb).replace("#", "").toUpperCase(),
-      })),
-    })),
-    preferences: getPreferencesPayload(),
-    activePaletteIndex: activePaletteIndex >= 0 ? activePaletteIndex : null,
-  };
-};
-
 export const getSelectedExportFormat = () => exportFormatOptions.find((option) => option.checked)?.value ?? "all";
 
 export const setSelectedExportFormat = (format: string) => {
@@ -329,50 +312,11 @@ export const handleExportAction = async (action: string | undefined) => {
   const cleanName = sanitizeFileName(palette.name);
   const coolorsUrl = `https://coolors.co/${getPaletteHexes(palette).join("-")}`;
   const shareUrl = buildSharedPaletteUrl(palette);
-  const workspaceOwner = cloudState.user?.name?.trim();
 
   switch (action) {
     case "url":
       await copyToClipboard(shareUrl, t("toast.exportShareUrlCopied"));
       break;
-    case "share":
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: palette.name,
-            text: t("export.share.palette", { name: palette.name }),
-            url: shareUrl,
-          });
-          appendLog(t("log.shareOpened"), "success");
-        } catch (error) {
-          appendLog(t("log.shareCanceled", { message: (error as Error).message }), "info");
-        }
-      } else {
-        await copyToClipboard(shareUrl, t("toast.exportShareUrlCopied"));
-      }
-      break;
-    case "share-full": {
-      const completeShareUrl = buildCompleteShareUrl(buildCompleteSharePayload());
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: workspaceOwner
-              ? t("export.share.workspaceTitle", { owner: workspaceOwner })
-              : t("export.share.workspaceTitleGeneric"),
-            text: workspaceOwner
-              ? t("export.share.workspaceText", { owner: workspaceOwner })
-              : t("export.share.workspaceTitleGeneric"),
-            url: completeShareUrl,
-          });
-          appendLog(t("log.shareOpened"), "success");
-        } catch (error) {
-          appendLog(t("log.shareCanceled", { message: (error as Error).message }), "info");
-        }
-      } else {
-        await copyToClipboard(completeShareUrl, t("toast.exportCompleteShareCopied"));
-      }
-      break;
-    }
     case "pdf":
       openPrintExport(palette);
       break;

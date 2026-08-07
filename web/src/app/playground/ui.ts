@@ -2,7 +2,10 @@ import { trackEvent } from "../cloud/analytics";
 import { openColorTools } from "../color/tools";
 import {
   playgroundDetachButton,
+  playgroundFullscreenButton,
   playgroundHint,
+  playgroundLead,
+  playgroundPreview,
   playgroundRamp,
   playgroundRedoButton,
   playgroundSaveButton,
@@ -12,7 +15,9 @@ import {
   playgroundSourceText,
   playgroundStage,
   playgroundStyleSelect,
-  playgroundStyleText,
+  playgroundZoomInButton,
+  playgroundZoomOutButton,
+  playgroundZoomValue,
   playgroundUndoButton,
 } from "../dom";
 import { t } from "../i18n";
@@ -21,6 +26,7 @@ import { state } from "../state";
 import type { Palette } from "../types";
 import { createIcon, setButtonContent } from "../ui/icons";
 import { appendLog, showToast } from "../ui/notifications";
+import { createSelectChip } from "../ui/select-chip";
 import { createSortable, isSortableClickSuppressed } from "../ui/sortable";
 import { getContrastColor, rgbToHex } from "../utils/color";
 import { createId } from "../utils/id";
@@ -42,6 +48,8 @@ import {
   setPlaygroundScene,
   setPlaygroundStyle,
   shufflePlayground,
+  stepPlaygroundZoom,
+  canStepPlaygroundZoom,
   togglePlaygroundLock,
   undoPlayground,
 } from "./state";
@@ -54,6 +62,10 @@ let isActive = false;
  * than import it back and create a cycle, the shell hands the switcher over at setup.
  */
 let showPlaygroundView: (() => void) | null = null;
+
+let isFullscreen = false;
+/** Marks where the preview came from, so leaving full screen can put it back. */
+let previewAnchor: Comment | null = null;
 
 export const setPlaygroundViewSwitcher = (switcher: () => void) => {
   showPlaygroundView = switcher;
@@ -215,6 +227,82 @@ const renderSceneTabs = () => {
   });
 };
 
+/**
+ * Take the preview full screen.
+ *
+ * The Fullscreen API, so it fills the display rather than the app window. A fallback keeps the
+ * feature working where the request is refused — an iframe without `allow="fullscreen"`, an
+ * unsupported browser — by pinning the preview over the page instead.
+ *
+ * The fallback has to move the element to `<body>`: `.panel-playground` declares
+ * `container-type: inline-size`, which makes it a containing block for fixed-position descendants,
+ * so `inset: 0` would resolve against the panel and stop at the sidebar. The native path needs no
+ * such trick because a fullscreen element is promoted to the top layer.
+ */
+const syncFullscreenChrome = (next: boolean) => {
+  isFullscreen = next;
+  playgroundPreview?.classList.toggle("is-fullscreen", next);
+  setButtonContent(playgroundZoomInButton, "plus", t("playground.zoomIn"), true);
+  setButtonContent(playgroundZoomOutButton, "minus", t("playground.zoomOut"), true);
+  setButtonContent(
+    playgroundFullscreenButton,
+    next ? "collapse" : "expand",
+    t(next ? "playground.exitFullscreen" : "playground.fullscreen"),
+    true,
+  );
+  playgroundFullscreenButton?.setAttribute("aria-pressed", next ? "true" : "false");
+};
+
+const setFallbackFullscreen = (next: boolean) => {
+  if (!playgroundPreview) {
+    return;
+  }
+  if (next && !previewAnchor) {
+    previewAnchor = document.createComment("playground-preview");
+    playgroundPreview.replaceWith(previewAnchor);
+    document.body.appendChild(playgroundPreview);
+  } else if (!next && previewAnchor) {
+    previewAnchor.replaceWith(playgroundPreview);
+    previewAnchor = null;
+  }
+  playgroundPreview.classList.toggle("is-fullscreen-fallback", next);
+  document.body.classList.toggle("has-playground-fullscreen", next);
+  syncFullscreenChrome(next);
+};
+
+const setFullscreen = (next: boolean) => {
+  if (!playgroundPreview) {
+    return;
+  }
+  if (!next) {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => setFallbackFullscreen(false));
+      return;
+    }
+    setFallbackFullscreen(false);
+    return;
+  }
+  if (document.fullscreenEnabled && playgroundPreview.requestFullscreen) {
+    // Called straight from the click handler: the request needs the user gesture still on the stack.
+    playgroundPreview.requestFullscreen().catch(() => setFallbackFullscreen(true));
+    return;
+  }
+  setFallbackFullscreen(true);
+};
+
+const renderZoom = () => {
+  playgroundStage?.style.setProperty("--scene-zoom", String(playgroundState.zoom));
+  if (playgroundZoomValue) {
+    playgroundZoomValue.textContent = `${Math.round(playgroundState.zoom * 100)}%`;
+  }
+  if (playgroundZoomInButton) {
+    playgroundZoomInButton.disabled = !canStepPlaygroundZoom(1);
+  }
+  if (playgroundZoomOutButton) {
+    playgroundZoomOutButton.disabled = !canStepPlaygroundZoom(-1);
+  }
+};
+
 const renderStage = () => {
   if (!playgroundStage) {
     return;
@@ -222,19 +310,24 @@ const renderStage = () => {
   const scene: SceneId = isSceneId(playgroundState.scene) ? playgroundState.scene : "blend";
   playgroundStage.innerHTML = "";
   playgroundStage.appendChild(buildScene(scene, currentHexes()));
+  renderZoom();
 };
 
 const renderChrome = () => {
   const linked = Boolean(playgroundState.sourcePaletteId);
   playgroundSource?.classList.toggle("is-hidden", !linked);
-  // The lead slot holds one or the other, never both.
+  // The lead slot holds one or the other, never both. `data-mode` lets the stylesheet drop the
+  // hint on a narrow bar without also dropping the "Editing <palette>" note, which is not advice.
   playgroundHint?.classList.toggle("is-hidden", linked);
+  if (playgroundLead) {
+    playgroundLead.dataset.mode = linked ? "source" : "hint";
+  }
   if (playgroundSourceText && linked) {
     playgroundSourceText.textContent = t("playground.editing", { name: playgroundState.sourceName ?? "" });
   }
   if (playgroundSaveButton) {
     setButtonContent(playgroundSaveButton, "bookmark", t(linked ? "playground.update" : "playground.save"));
-    playgroundSaveButton.classList.add("playground-tool");
+    playgroundSaveButton.classList.add("playground-chip");
   }
   if (playgroundUndoButton) {
     playgroundUndoButton.disabled = !canUndoPlayground();
@@ -252,30 +345,34 @@ const render = () => {
 
 /** The three chrome buttons whose icon + label are rebuilt on every language change. */
 /**
- * The bar's buttons, rebuilt on every language change.
+ * The bar's chips, rebuilt on every language change.
  *
- * `setButtonContent` clears and re-fills the button, so it also wipes the `playground-tool` class
- * it must keep. Re-adding it here is cheaper than teaching the shared helper about callers that
- * style their own buttons.
+ * `setButtonContent` clears and re-fills the button, which also wipes the chip classes it must
+ * keep. Re-adding them here is cheaper than teaching the shared helper about callers that style
+ * their own buttons.
  */
-const TOOL_BUTTONS = [playgroundShuffleButton, playgroundUndoButton, playgroundRedoButton, playgroundSaveButton];
-
-/** Mirror the selected harmony into the span that gives the control its width. */
-const syncStyleText = () => {
-  if (playgroundStyleText) {
-    playgroundStyleText.textContent = playgroundStyleSelect?.selectedOptions[0]?.textContent?.trim() ?? "";
-  }
-};
+const CHIP_BUTTONS: Array<[HTMLButtonElement | null, string[]]> = [
+  [playgroundShuffleButton, ["playground-chip", "playground-chip--primary"]],
+  [playgroundUndoButton, ["playground-chip", "playground-chip--icon"]],
+  [playgroundRedoButton, ["playground-chip", "playground-chip--icon"]],
+  [playgroundSaveButton, ["playground-chip"]],
+];
 
 const syncPlaygroundLabels = () => {
-  syncStyleText();
   setButtonContent(playgroundShuffleButton, "refresh", t("playground.shuffle"));
   playgroundShuffleButton?.setAttribute("aria-keyshortcuts", "Space");
-  playgroundShuffleButton?.classList.add("playground-tool--accent");
   setButtonContent(playgroundSaveButton, "bookmark", t("playground.save"));
   setButtonContent(playgroundUndoButton, "undo", t("action.undo"), true);
   setButtonContent(playgroundRedoButton, "redo", t("action.redo"), true);
-  TOOL_BUTTONS.forEach((button) => button?.classList.add("playground-tool"));
+  setButtonContent(playgroundZoomInButton, "plus", t("playground.zoomIn"), true);
+  setButtonContent(playgroundZoomOutButton, "minus", t("playground.zoomOut"), true);
+  setButtonContent(
+    playgroundFullscreenButton,
+    isFullscreen ? "collapse" : "expand",
+    t(isFullscreen ? "playground.exitFullscreen" : "playground.fullscreen"),
+    true,
+  );
+  CHIP_BUTTONS.forEach(([button, classNames]) => button?.classList.add(...classNames));
 };
 
 const ensureSortable = () => {
@@ -361,6 +458,11 @@ export const setPlaygroundActive = (active: boolean) => {
   isActive = active;
   if (active) {
     render();
+    return;
+  }
+  // Leaving the tab must not leave a full-screen overlay covering the view you switched to.
+  if (isFullscreen) {
+    setFullscreen(false);
   }
 };
 
@@ -379,8 +481,7 @@ export const setupPlayground = () => {
     }
     playgroundStyleSelect.addEventListener("change", () => {
       setPlaygroundStyle(playgroundStyleSelect.value);
-      syncStyleText();
-      shuffle();
+          shuffle();
     });
   }
 
@@ -419,7 +520,33 @@ export const setupPlayground = () => {
     shuffle();
   });
 
+  document.addEventListener("keydown", (event) => {
+    // Only the fallback needs this; the native path gets Escape from the browser.
+    if (event.key === "Escape" && isFullscreen && !document.fullscreenElement) {
+      setFullscreen(false);
+    }
+  });
+
+  createSelectChip(playgroundStyleSelect);
+
+  playgroundZoomInButton?.addEventListener("click", () => {
+    if (stepPlaygroundZoom(1)) {
+      renderZoom();
+    }
+  });
+  playgroundZoomOutButton?.addEventListener("click", () => {
+    if (stepPlaygroundZoom(-1)) {
+      renderZoom();
+    }
+  });
+  playgroundFullscreenButton?.addEventListener("click", () => setFullscreen(!isFullscreen));
+  // The browser owns the native path — Escape, F11 and the exit chrome all land here.
+  document.addEventListener("fullscreenchange", () => {
+    syncFullscreenChrome(document.fullscreenElement === playgroundPreview);
+  });
+
   ensureSortable();
+  syncFullscreenChrome(false);
   renderSceneTabs();
   render();
   persistPlayground();

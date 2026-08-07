@@ -84,6 +84,24 @@ test.describe("playground", () => {
     await expect(swatch.locator(".playground-swatch-action:not(.is-on)")).toBeHidden();
   });
 
+  test("the preview goes to real full screen and comes back", async ({ page }) => {
+    await openPlayground(page);
+    await page.locator("#playground-fullscreen").click();
+
+    await expect(page.locator(".playground-preview")).toHaveClass(/is-fullscreen/);
+    // The Fullscreen API, not an in-page overlay.
+    expect(await page.evaluate(() => document.fullscreenElement?.classList.contains("playground-preview") ?? false)).toBe(
+      true,
+    );
+
+    // Not Escape: exiting full screen with it is browser chrome, which a page key event cannot drive.
+    await page.locator("#playground-fullscreen").click();
+    await expect(page.locator(".playground-preview")).not.toHaveClass(/is-fullscreen/);
+    expect(await page.evaluate(() => document.fullscreenElement === null)).toBe(true);
+    // And it is back inside the panel, not left parked on the body.
+    expect(await page.evaluate(() => Boolean(document.querySelector(".panel-playground .playground-preview")))).toBe(true);
+  });
+
   test("every scene renders from the working palette", async ({ page }) => {
     await openPlayground(page);
     for (const scene of ["blend", "ui", "poster", "chart"]) {
@@ -165,6 +183,8 @@ test.describe("playground", () => {
   });
 
   test("detaching makes the next save create a new palette", async ({ page }) => {
+    // Wide enough for the unlink link: it is dropped from a narrow bar to keep it on one line.
+    await page.setViewportSize({ width: 1600, height: 900 });
     await openPlayground(page);
     await page.locator("#playground-save").click();
     await expect(page.locator("#playground-source")).toBeVisible();
