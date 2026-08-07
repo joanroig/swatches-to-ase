@@ -29,6 +29,8 @@ export type SortableOptions = {
   thresholdPx?: number;
   /** FLIP duration for displaced siblings. Set to 0 to disable. */
   animationMs?: number;
+  /** Duration of the settle animation that eases the dropped item into its slot. */
+  dropAnimationMs?: number;
   /** Called once, on drop, and only when the index actually changed. */
   onDrop: (fromIndex: number, toIndex: number) => void;
 };
@@ -44,8 +46,9 @@ type Slot = {
 const DEFAULT_HOLD_DELAY_MS = 220;
 const DEFAULT_THRESHOLD_PX = 5;
 const DEFAULT_ANIMATION_MS = 170;
+const DEFAULT_DROP_ANIMATION_MS = 220;
+const DROP_EASING = "cubic-bezier(0.2, 0.9, 0.25, 1)";
 const CLICK_SUPPRESSION_MS = 300;
-const ROW_TOLERANCE_PX = 8;
 const AUTOSCROLL_EDGE_PX = 64;
 const AUTOSCROLL_MAX_SPEED_PX = 18;
 const INTERACTIVE_SELECTOR = "button, input, select, textarea, a, label, [contenteditable='true']";
@@ -57,6 +60,18 @@ let suppressClickUntil = 0;
 
 /** True while a click should be swallowed because it is the tail end of a drag. */
 export const isSortableClickSuppressed = () => Date.now() < suppressClickUntil;
+
+/** Mirrors the app's motion preference so drags stay still for users who asked for that. */
+const prefersReducedMotion = () => {
+  const motion = document.body.dataset.motion;
+  if (motion === "off") {
+    return true;
+  }
+  if (motion === "on") {
+    return false;
+  }
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+};
 
 const getScrollParent = (element: HTMLElement): HTMLElement | null => {
   let node = element.parentElement;
@@ -78,9 +93,13 @@ export const createSortable = (options: SortableOptions) => {
     cancelSelector,
     holdDelayMs = DEFAULT_HOLD_DELAY_MS,
     thresholdPx = DEFAULT_THRESHOLD_PX,
-    animationMs = DEFAULT_ANIMATION_MS,
+    animationMs: reorderAnimationMs = DEFAULT_ANIMATION_MS,
+    dropAnimationMs: settleAnimationMs = DEFAULT_DROP_ANIMATION_MS,
     onDrop,
   } = options;
+
+  const animationMs = () => (prefersReducedMotion() ? 0 : reorderAnimationMs);
+  const dropAnimationMs = () => (prefersReducedMotion() ? 0 : settleAnimationMs);
 
   let pointerId: number | null = null;
   let container: HTMLElement | null = null;
@@ -95,6 +114,8 @@ export const createSortable = (options: SortableOptions) => {
   let grabOffsetY = 0;
   let translateX = 0;
   let translateY = 0;
+  let originLeft = 0;
+  let originTop = 0;
   let isDragging = false;
   let holdElapsed = false;
   let holdTimerId: number | null = null;
@@ -132,20 +153,35 @@ export const createSortable = (options: SortableOptions) => {
     };
   };
 
+  /** The container-relative origin that `offsetLeft`/`offsetTop` on the items are measured from. */
+  const measureOrigin = () => {
+    if (!container) {
+      return;
+    }
+    // When the container is itself positioned it *is* the items' offsetParent, so their offsets
+    // are already container-relative.
+    const isOffsetParent = getComputedStyle(container).position !== "static";
+    originLeft = isOffsetParent ? 0 : container.offsetLeft;
+    originTop = isOffsetParent ? 0 : container.offsetTop;
+  };
+
   /**
-   * Re-measure every item's layout box relative to the container. Call after any DOM reorder.
+   * Capture the list's slot geometry once, at drag start.
    *
-   * This uses `offset*` rather than `getBoundingClientRect()` on purpose: displaced siblings are
-   * mid-FLIP, so their client rects carry an animation transform. Feeding those back into hit
-   * testing made the drop index drift, which is what made reordering feel chaotic.
+   * Two deliberate choices here, both of which were bugs before:
+   *
+   * 1. `offset*`, not `getBoundingClientRect()`. Displaced siblings are mid-FLIP, so their client
+   *    rects carry an animation transform.
+   * 2. Measured once and then frozen. The slot rectangles are a property of the list, not of which
+   *    item currently sits in each one, so freezing them keeps the hit test a pure function of the
+   *    pointer. Re-deriving them from the live DOM after every reorder is what let the index feed
+   *    back into itself.
    */
   const measureSlots = () => {
     if (!container) {
       return;
     }
-    const containerIsOffsetParent = getComputedStyle(container).position !== "static";
-    const originLeft = containerIsOffsetParent ? 0 : container.offsetLeft;
-    const originTop = containerIsOffsetParent ? 0 : container.offsetTop;
+    measureOrigin();
     slots = items.map((element) => ({
       left: element.offsetLeft - originLeft,
       top: element.offsetTop - originTop,
@@ -159,28 +195,29 @@ export const createSortable = (options: SortableOptions) => {
     if (!container || !item) {
       return;
     }
-    const slot = slots[currentIndex];
-    if (!slot) {
-      return;
-    }
     const { x: localX, y: localY, scaleX, scaleY } = toLocalPoint(pointerX, pointerY);
-    const grabLocalX = grabOffsetX / scaleX;
-    const grabLocalY = grabOffsetY / scaleY;
-    const maxLeft = container.offsetWidth - slot.width;
-    const maxTop = container.offsetHeight - slot.height;
-    const desiredLeft = localX - grabLocalX;
-    const desiredTop = localY - grabLocalY;
+    // Read the item's live layout box rather than the frozen slot: `offset*` ignores our own
+    // transform, so this stays correct however many times the item has been re-inserted.
+    const layoutLeft = item.offsetLeft - originLeft;
+    const layoutTop = item.offsetTop - originTop;
+    const maxLeft = container.offsetWidth - item.offsetWidth;
+    const maxTop = container.offsetHeight - item.offsetHeight;
+    const desiredLeft = localX - grabOffsetX / scaleX;
+    const desiredTop = localY - grabOffsetY / scaleY;
     const nextLeft = maxLeft >= 0 ? Math.min(Math.max(desiredLeft, 0), maxLeft) : 0;
     const nextTop = maxTop >= 0 ? Math.min(Math.max(desiredTop, 0), maxTop) : 0;
 
-    translateX = nextLeft - slot.left;
-    translateY = nextTop - slot.top;
+    translateX = nextLeft - layoutLeft;
+    translateY = nextTop - layoutTop;
     item.style.transform = `translate(${translateX}px, ${translateY}px)`;
   };
 
   /**
    * Resolve the index the dragged item should occupy for a pointer at (x, y).
-   * Pure: the same pointer position always yields the same index.
+   *
+   * Depends only on the pointer and the frozen slot table — never on where the item currently is.
+   * That is what makes it stable: a stationary pointer always resolves to the same index, so the
+   * list settles instead of ping-ponging between two orders.
    */
   const resolveTargetIndex = (pointerX: number, pointerY: number) => {
     if (!container || slots.length === 0) {
@@ -188,12 +225,23 @@ export const createSortable = (options: SortableOptions) => {
     }
     const { x: localX, y: localY } = toLocalPoint(pointerX, pointerY);
 
-    let nearest = -1;
+    // A slot the pointer is actually inside wins outright.
+    const contained = slots.findIndex(
+      (slot) =>
+        localX >= slot.left &&
+        localX <= slot.left + slot.width &&
+        localY >= slot.top &&
+        localY <= slot.top + slot.height,
+    );
+    if (contained >= 0) {
+      return contained;
+    }
+
+    // Otherwise fall back to the closest slot centre, which covers the gaps between slots and any
+    // pointer position outside the container.
+    let nearest = currentIndex;
     let nearestDistance = Number.POSITIVE_INFINITY;
     slots.forEach((slot, index) => {
-      if (index === currentIndex) {
-        return;
-      }
       const deltaX = localX - (slot.left + slot.width / 2);
       const deltaY = localY - (slot.top + slot.height / 2);
       const distance = deltaX * deltaX + deltaY * deltaY;
@@ -202,25 +250,7 @@ export const createSortable = (options: SortableOptions) => {
         nearest = index;
       }
     });
-
-    if (nearest < 0) {
-      return currentIndex;
-    }
-
-    const slot = slots[nearest];
-    const previous = slots[nearest - 1];
-    const next = slots[nearest + 1];
-    // A slot is laid out horizontally when one of its neighbours shares its row.
-    const isHorizontal =
-      (previous !== undefined && Math.abs(previous.top - slot.top) <= ROW_TOLERANCE_PX) ||
-      (next !== undefined && Math.abs(next.top - slot.top) <= ROW_TOLERANCE_PX);
-    const insertAfter = isHorizontal ? localX > slot.left + slot.width / 2 : localY > slot.top + slot.height / 2;
-
-    // `nearest` indexes the list *including* the dragged item, so shift when the dragged item
-    // currently sits before the anchor.
-    const anchor = nearest > currentIndex ? nearest - 1 : nearest;
-    const target = insertAfter ? anchor + 1 : anchor;
-    return Math.min(Math.max(target, 0), slots.length - 1);
+    return nearest;
   };
 
   const moveItemTo = (nextIndex: number) => {
@@ -245,9 +275,10 @@ export const createSortable = (options: SortableOptions) => {
 
     items = getItems(container);
     currentIndex = items.indexOf(item);
-    measureSlots();
+    // The slot table is deliberately *not* refreshed here — see `measureSlots`.
 
-    if (animationMs <= 0) {
+    const flipMs = animationMs();
+    if (flipMs <= 0) {
       return;
     }
     items.forEach((element) => {
@@ -266,7 +297,7 @@ export const createSortable = (options: SortableOptions) => {
       }
       element.getAnimations().forEach((animation) => animation.cancel());
       element.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "translate(0, 0)" }], {
-        duration: animationMs,
+        duration: flipMs,
         easing: "cubic-bezier(0.22, 1, 0.36, 1)",
       });
     });
@@ -327,18 +358,16 @@ export const createSortable = (options: SortableOptions) => {
     }
   }
 
-  const detach = () => {
+  const detachListeners = () => {
     clearHoldTimer();
     stopAutoscroll();
     window.removeEventListener("pointermove", handlePointerMove);
     window.removeEventListener("pointerup", handlePointerUp);
     window.removeEventListener("pointercancel", handlePointerUp);
     window.removeEventListener("touchmove", preventTouchScroll);
-    if (item) {
-      item.classList.remove(SORTABLE_ITEM_CLASS);
-      item.style.transform = "";
-    }
-    container?.classList.remove(SORTABLE_CONTAINER_CLASS);
+  };
+
+  const clearSession = () => {
     pointerId = null;
     container = null;
     item = null;
@@ -351,6 +380,16 @@ export const createSortable = (options: SortableOptions) => {
     scrollParent = null;
     translateX = 0;
     translateY = 0;
+  };
+
+  const detach = () => {
+    detachListeners();
+    if (item) {
+      item.classList.remove(SORTABLE_ITEM_CLASS);
+      item.style.transform = "";
+    }
+    container?.classList.remove(SORTABLE_CONTAINER_CLASS);
+    clearSession();
   };
 
   function handlePointerMove(event: PointerEvent) {
@@ -389,6 +428,9 @@ export const createSortable = (options: SortableOptions) => {
     const from = fromIndex;
     const to = currentIndex;
     const dragged = item;
+    const draggedContainer = container;
+    const settleX = translateX;
+    const settleY = translateY;
 
     if (dragged) {
       try {
@@ -398,15 +440,54 @@ export const createSortable = (options: SortableOptions) => {
       }
     }
 
-    detach();
-
     if (!didDrag) {
+      detach();
       return;
     }
+
+    detachListeners();
+    clearSession();
     suppressClickUntil = Date.now() + CLICK_SUPPRESSION_MS;
-    if (from >= 0 && to >= 0 && from !== to) {
-      onDrop(from, to);
+
+    const settle = () => {
+      dragged?.classList.remove(SORTABLE_ITEM_CLASS);
+      draggedContainer?.classList.remove(SORTABLE_CONTAINER_CLASS);
+      if (from >= 0 && to >= 0 && from !== to) {
+        onDrop(from, to);
+      }
+    };
+
+    const distance = Math.hypot(settleX, settleY);
+    const settleMs = dropAnimationMs();
+    if (!dragged || settleMs <= 0 || distance < 1) {
+      if (dragged) {
+        dragged.style.transform = "";
+      }
+      settle();
+      return;
     }
+
+    // Ease the dropped item from where the pointer left it into its slot. The inline transform is
+    // cleared first so that when the animation finishes the element simply keeps its resting
+    // position instead of snapping back to the drag offset for a frame.
+    dragged.style.transform = "";
+    dragged.getAnimations().forEach((animation) => animation.cancel());
+    const animation = dragged.animate(
+      [{ transform: `translate(${settleX}px, ${settleY}px)` }, { transform: "translate(0, 0)" }],
+      { duration: settleMs, easing: DROP_EASING },
+    );
+    let settled = false;
+    const finishOnce = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      settle();
+    };
+    animation.addEventListener("finish", finishOnce, { once: true });
+    animation.addEventListener("cancel", finishOnce, { once: true });
+    // Belt and braces: never leave the list in the dragging state if the animation is dropped.
+    window.setTimeout(finishOnce, settleMs + 120);
   }
 
   const handlePointerDown = (event: PointerEvent) => {

@@ -7,7 +7,7 @@ import { t } from "../i18n";
 import { persistPalettes } from "../persistence";
 import { cloudState, state } from "../state";
 import type { Palette } from "../types";
-import { setButtonContent } from "../ui/icons";
+import { createIcon, setButtonContent } from "../ui/icons";
 import { setModalOpen } from "../ui/modals";
 import { showToast } from "../ui/notifications";
 import { createSortable, isSortableClickSuppressed } from "../ui/sortable";
@@ -54,10 +54,18 @@ const createPaletteHeader = (palette: Palette) => {
   const metaRow = document.createElement("div");
   metaRow.className = "palette-meta-row";
 
+  // Affordance only: the whole card is draggable, but without a grip the card does not read as
+  // reorderable at all.
+  const grip = document.createElement("span");
+  grip.className = "palette-card-grip";
+  grip.setAttribute("aria-hidden", "true");
+  grip.title = t("action.dragToReorder");
+  grip.appendChild(createIcon("grip"));
+
   const title = document.createElement("div");
   title.className = "palette-title";
   title.textContent = palette.name;
-  metaRow.append(title);
+  metaRow.append(grip, title);
 
   const metaBadges = document.createElement("div");
   metaBadges.className = "palette-meta-badges";

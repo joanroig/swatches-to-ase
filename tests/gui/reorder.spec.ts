@@ -37,6 +37,8 @@ const seedPalettes = async (page, palettes: Array<{ name: string; colors?: SeedC
     })),
   })));
   await page.reload();
+  // `body:not(.is-ready) .page` is `visibility: hidden`, so cards can exist with no bounding box.
+  await expect(page.locator("body")).toHaveClass(/is-ready/);
   await expect(page.locator(".palette-card")).toHaveCount(palettes.length);
 };
 

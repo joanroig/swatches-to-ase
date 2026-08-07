@@ -169,7 +169,7 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
   dragHandle.type = "button";
   dragHandle.className = "ghost drag-handle";
   dragHandle.draggable = false;
-  setButtonContent(dragHandle, "grip", t("editor.drag"), true);
+  setButtonContent(dragHandle, "grip", t("action.dragToReorder"), true);
 
   const valueLabel = document.createElement("button");
   valueLabel.type = "button";

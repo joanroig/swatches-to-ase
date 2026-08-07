@@ -251,11 +251,39 @@
 
 .palette-meta-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   min-width: 0;
   width: 100%;
+}
+
+.palette-card-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: var(--muted);
+  opacity: 0.35;
+  cursor: grab;
+  transition: opacity 0.15s ease;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.palette-card:hover .palette-card-grip,
+.palette-card:focus-within .palette-card-grip {
+  opacity: 0.8;
+}
+
+.palette-card.is-sort-dragging .palette-card-grip {
+  opacity: 1;
+  cursor: grabbing;
 }
 
 .palette-meta-badges {
