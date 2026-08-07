@@ -10,6 +10,8 @@ const ICONS = {
   download: "/icons/download.svg#icon",
   files: "/icons/files.svg#icon",
   duplicate: "/icons/duplicate.svg#icon",
+  rows: "/icons/rows.svg#icon",
+  columns: "/icons/columns.svg#icon",
   chevronUp: "/icons/chevronUp.svg#icon",
   chevronDown: "/icons/chevronDown.svg#icon",
   grip: "/icons/grip.svg#icon",

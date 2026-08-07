@@ -146,7 +146,7 @@
 
 @media (min-width: 960px) {
   .palette-grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   }
 }
 
@@ -372,8 +372,9 @@
 }
 
 .chip {
+  /* `min-width: 0` so the swatches, not the "+N" counter, absorb a narrow card. */
   flex: 1 1 0;
-  min-width: 18px;
+  min-width: 0;
   border-radius: 0;
   border: none;
   min-height: 54px;
@@ -383,8 +384,9 @@
 .chip-more {
   display: grid;
   place-items: center;
-  flex: 0 0 54px;
-  min-width: 54px;
+  flex: 0 0 auto;
+  min-width: 42px;
+  padding: 0 8px;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;

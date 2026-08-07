@@ -251,6 +251,8 @@ const es: TranslationMap = {
   "editor.subtitle.empty": "Selecciona una paleta para comenzar.",
   "action.dragToReorder": "Arrastra para reordenar",
   "editor.layout.label": "Diseño",
+  "editor.layout.switchToVertical": "Cambiar a columnas",
+  "editor.layout.switchToHorizontal": "Cambiar a filas",
   "editor.layout.horizontal": "Horizontal",
   "editor.layout.vertical": "Vertical",
   "editor.colorPicker": "Selector de color",

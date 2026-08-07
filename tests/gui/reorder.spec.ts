@@ -76,6 +76,15 @@ const dragTo = async (page, from: { x: number; y: number }, to: { x: number; y: 
   return previewOrder;
 };
 
+/** Drive the single layout toggle, which flips between rows and columns. */
+const setEditorLayout = async (page, layout: "horizontal" | "vertical") => {
+  const editor = page.locator("#palette-editor");
+  if ((await editor.getAttribute("data-layout")) !== layout) {
+    await page.locator("#editor-layout-toggle").click();
+  }
+  await expect(editor).toHaveAttribute("data-layout", layout);
+};
+
 /** The modal opens with a scale transition; measuring before it settles yields 98%-sized boxes. */
 const waitForModalSettled = async (page, selector: string) => {
   await expect
@@ -340,8 +349,7 @@ test.describe("colour swatch reordering", () => {
     await seedPalettes(page, [{ name: "Palette", colors: COLORS }]);
     await openEditor(page);
 
-    await page.locator('input[name="editor-layout"][value="vertical"]').check({ force: true });
-    await expect(page.locator("#palette-editor")).toHaveAttribute("data-layout", "vertical");
+    await setEditorLayout(page, "vertical");
 
     const idsBefore = await getColorRowIds(page);
     const handle = await boxOf(page.locator(".color-row").nth(0).locator(".drag-handle"));

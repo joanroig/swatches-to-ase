@@ -2,7 +2,7 @@ import {
   addColorButton,
   editorExportButton,
   editorTools,
-  editorLayoutOptions,
+  editorLayoutToggle,
   editorModal,
   editorSubtitle,
   paletteEditor,
@@ -27,9 +27,33 @@ import { renderViewModal } from "./view";
 
 type EditorLayout = "horizontal" | "vertical";
 
+const LAYOUT_STORAGE_KEY = "palette-studio.editor-layout";
+
 const editorLayoutState = {
+  /**
+   * `auto` picks a layout from the window's aspect ratio, and keeps following it as the window is
+   * resized. As soon as the toggle is used the choice becomes sticky — and is remembered across
+   * sessions — so the editor never silently flips layout underneath you again.
+   */
   mode: "auto" as "auto" | "manual",
   value: "horizontal" as EditorLayout,
+};
+
+const readStoredLayout = (): EditorLayout | null => {
+  try {
+    const stored = localStorage.getItem(LAYOUT_STORAGE_KEY);
+    return stored === "horizontal" || stored === "vertical" ? stored : null;
+  } catch {
+    return null;
+  }
+};
+
+const persistLayout = (layout: EditorLayout) => {
+  try {
+    localStorage.setItem(LAYOUT_STORAGE_KEY, layout);
+  } catch {
+    // Ignore storage errors (private mode, storage disabled, etc.).
+  }
 };
 
 let colorListSortable: ReturnType<typeof createSortable> | null = null;
@@ -41,9 +65,17 @@ const applyEditorLayout = (layout: EditorLayout) => {
   if (paletteEditor) {
     paletteEditor.dataset.layout = layout;
   }
-  editorLayoutOptions.forEach((option) => {
-    option.checked = option.value === layout;
-  });
+  if (editorLayoutToggle) {
+    const isVertical = layout === "vertical";
+    // The icon shows the layout you are in; the label describes what pressing it does.
+    setButtonContent(
+      editorLayoutToggle,
+      isVertical ? "columns" : "rows",
+      t(isVertical ? "editor.layout.switchToHorizontal" : "editor.layout.switchToVertical"),
+      true,
+    );
+    editorLayoutToggle.setAttribute("aria-pressed", isVertical ? "true" : "false");
+  }
 };
 
 export const syncEditorLayout = () => {
@@ -51,14 +83,17 @@ export const syncEditorLayout = () => {
 };
 
 export const setupEditorLayout = () => {
-  editorLayoutOptions.forEach((option) => {
-    option.addEventListener("change", () => {
-      if (!option.checked) {
-        return;
-      }
-      editorLayoutState.mode = "manual";
-      applyEditorLayout(option.value as EditorLayout);
-    });
+  const stored = readStoredLayout();
+  if (stored) {
+    editorLayoutState.mode = "manual";
+    editorLayoutState.value = stored;
+  }
+
+  editorLayoutToggle?.addEventListener("click", () => {
+    const next: EditorLayout = editorLayoutState.value === "vertical" ? "horizontal" : "vertical";
+    editorLayoutState.mode = "manual";
+    persistLayout(next);
+    applyEditorLayout(next);
   });
 
   const handleResize = () => {

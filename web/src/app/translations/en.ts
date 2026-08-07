@@ -249,6 +249,8 @@ const en: TranslationMap = {
   "editor.subtitle.empty": "Select a palette to begin.",
   "action.dragToReorder": "Drag to reorder",
   "editor.layout.label": "Layout",
+  "editor.layout.switchToVertical": "Switch to column layout",
+  "editor.layout.switchToHorizontal": "Switch to row layout",
   "editor.layout.horizontal": "Horizontal",
   "editor.layout.vertical": "Vertical",
   "editor.colorPicker": "Color picker",

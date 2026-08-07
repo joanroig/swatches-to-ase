@@ -56,6 +56,7 @@ import {
   discoverSearchInput,
   discoverSortSelect,
   editorExportButton,
+  editorLayoutToggle,
   editorModal,
   editorRedoButton,
   editorSaveButton,
@@ -206,6 +207,7 @@ export const applyActionLabels = () => {
   setButtonContent(cloudSignOutButton, "logout", t("action.signOut"));
   setButtonContent(cloudSyncButton, "cloud", t("action.syncNow"));
   setButtonContent(editorToolsTrigger, "more", t("action.moreActions"), true);
+  setButtonContent(editorLayoutToggle, "rows", t("editor.layout.switchToVertical"), true);
 };
 
 export const setupActions = () => {

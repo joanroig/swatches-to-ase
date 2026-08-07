@@ -34,7 +34,9 @@
 }
 
 .export-grid--actions {
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
+  /* Equal-height rows regardless of which labels wrap. */
+  grid-auto-rows: 1fr;
 }
 
 .export-tile {
@@ -50,7 +52,10 @@
 }
 
 .tile-content {
+  /* `auto auto 1fr` pins the subtitle to the bottom, so tiles with a one-line and a two-line
+     description still line up with each other. */
   display: grid;
+  grid-template-rows: auto auto 1fr;
   gap: 10px;
   padding: 16px;
   border-radius: 18px;
@@ -69,11 +74,12 @@
   display: grid;
   place-items: center;
   border-radius: 14px;
-  background: linear-gradient(130deg, var(--accent), var(--accent-3));
+  background: var(--action-color, var(--accent));
   color: #fff;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--action-color, var(--accent)) 35%, transparent);
 }
 
 .tile-title {
@@ -84,30 +90,68 @@
 .tile-subtitle {
   font-size: 0.85rem;
   color: var(--muted);
+  align-self: start;
 }
 
 .export-tile input:checked + .tile-content {
-  border-color: rgba(79, 70, 229, 0.6);
-  box-shadow: 0 14px 28px rgba(79, 70, 229, 0.16);
+  border-color: color-mix(in srgb, var(--action-color, var(--accent)) 65%, transparent);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--action-color, var(--accent)) 22%, transparent);
   transform: translateY(-1px);
+}
+
+.export-tile input:focus-visible + .tile-content {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/*
+ * Each format and destination carries its own colour so the grid is scannable by shape and hue
+ * rather than being one wall of identical purple chips.
+ */
+.export-tile:has([value="ase"]) {
+  --action-color: #e0342c;
+}
+
+.export-tile:has([value="swatches"]) {
+  --action-color: #12a594;
+}
+
+.export-tile:has([value="gpl"]) {
+  --action-color: #8a6f3e;
+}
+
+.export-tile:has([value="all"]) {
+  --action-color: var(--accent);
 }
 
 .export-action {
   border: 1px solid var(--stroke);
   background: var(--surface);
   border-radius: 16px;
-  padding: 12px 10px;
+  padding: 14px 10px 12px;
+  /* Fixed icon row plus a two-line label box, so every tile is the same height whether its name
+     wraps or not. */
   display: grid;
-  gap: 8px;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
   justify-items: center;
+  align-content: start;
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
+  line-height: 1.25;
   color: inherit;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
     border-color 0.2s ease;
+}
+
+.export-action > span:not(.action-icon) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5em;
 }
 
 .export-action .action-icon {
@@ -116,8 +160,9 @@
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: linear-gradient(130deg, var(--accent), var(--accent-3));
+  background: var(--action-color, var(--accent));
   color: #fff;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--action-color, var(--accent)) 35%, transparent);
 }
 
 .export-action .action-icon svg {
@@ -128,8 +173,68 @@
 
 .export-action:not(:disabled):hover {
   transform: translateY(-1px);
-  border-color: rgba(79, 70, 229, 0.45);
-  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.12);
+  border-color: color-mix(in srgb, var(--action-color, var(--accent)) 55%, transparent);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--action-color, var(--accent)) 18%, transparent);
+}
+
+/* Brand-ish hues, so PDF reads as PDF and Tailwind reads as Tailwind at a glance. */
+.export-action[data-export-action="url"] {
+  --action-color: #6366f1;
+}
+
+.export-action[data-export-action="share"] {
+  --action-color: #8b5cf6;
+}
+
+.export-action[data-export-action="share-full"] {
+  --action-color: #0ea5e9;
+}
+
+.export-action[data-export-action="pdf"] {
+  --action-color: #e0342c;
+}
+
+.export-action[data-export-action="image"] {
+  --action-color: #16a34a;
+}
+
+.export-action[data-export-action="css"] {
+  --action-color: #2965f1;
+}
+
+.export-action[data-export-action="svg"] {
+  --action-color: #ffb13b;
+}
+
+.export-action[data-export-action="code"] {
+  --action-color: #64748b;
+}
+
+.export-action[data-export-action="tailwind"] {
+  --action-color: #38bdf8;
+}
+
+.export-action[data-export-action="embed"] {
+  --action-color: #a855f7;
+}
+
+.export-action[data-export-action="coolors"] {
+  --action-color: #4d61fc;
+}
+
+.export-action[data-export-action="x"] {
+  --action-color: #1f2937;
+}
+
+.export-action[data-export-action="pinterest"] {
+  --action-color: #e60023;
+}
+
+/* The X mark is near-black, which disappears on a dark surface. */
+:root[data-theme="noir"] .export-action[data-export-action="x"],
+:root[data-theme="graphite"] .export-action[data-export-action="x"],
+:root[data-theme="aurora"] .export-action[data-export-action="x"] {
+  --action-color: #4b5563;
 }
 
 .export-action:disabled {

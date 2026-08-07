@@ -32,11 +32,21 @@
 
 /* ------------------------------------------------------- header (top row) --- */
 
+/*
+ * The close button joins the flow here instead of being absolutely pinned to the top-right, so it
+ * lines up with the colour-count badge beside it.
+ */
 .modal-header.editor-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  padding-right: 0;
+
+  > .close-button {
+    position: static;
+    flex: 0 0 auto;
+  }
 }
 
 .editor-title {
@@ -104,17 +114,6 @@
 .editor-toolbar-spacer {
   flex: 1 1 auto;
   min-width: 0;
-}
-
-.editor-layout-toggle {
-  padding: 4px;
-  width: fit-content;
-  flex: 0 0 auto;
-
-  .segmented-option span {
-    padding: 5px 12px;
-    font-size: 0.85rem;
-  }
 }
 
 .editor-toolbar button {
@@ -679,20 +678,6 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
     gap: 12px;
   }
 
-  .editor-layout-toggle {
-    flex: 1 1 100%;
-    width: 100%;
-    justify-content: space-between;
-
-    .segmented-option {
-      flex: 1 1 0;
-    }
-
-    .segmented-option span {
-      width: 100%;
-      justify-content: center;
-    }
-  }
 }
 
 @media (max-width: 480px) {

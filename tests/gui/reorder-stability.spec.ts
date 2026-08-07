@@ -76,8 +76,8 @@ const boxOf = async (locator) => {
  * including slot boundaries and gutters, and require the order to settle.
  */
 test("holding the pointer still never keeps reshuffling the grid", async ({ page }) => {
-  // A short, narrow window: a two-column grid, which is where the cycle showed up.
-  await page.setViewportSize({ width: 1000, height: 660 });
+  // A short window wide enough for two columns, which is where the cycle showed up.
+  await page.setViewportSize({ width: 1320, height: 660 });
   await seed(page, 6);
 
   const layout = await page.locator(".palette-card").evaluateAll((cards: Element[]) =>

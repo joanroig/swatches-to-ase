@@ -27,7 +27,7 @@ export const editorOverflow = document.querySelector<HTMLDivElement>("#editor-ov
 export const editorToolsTrigger = document.querySelector<HTMLButtonElement>("#editor-tools-trigger");
 export const editorToolsPanel = document.querySelector<HTMLDivElement>("#editor-tools-panel");
 export const editorSubtitle = document.querySelector<HTMLElement>("#editor-subtitle");
-export const editorLayoutOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="editor-layout"]'));
+export const editorLayoutToggle = document.querySelector<HTMLButtonElement>("#editor-layout-toggle");
 export const editorUndoButton = document.querySelector<HTMLButtonElement>("#editor-undo");
 export const editorRedoButton = document.querySelector<HTMLButtonElement>("#editor-redo");
 export const editorSaveButton = document.querySelector<HTMLButtonElement>("#editor-save");

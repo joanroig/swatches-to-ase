@@ -671,19 +671,10 @@
       </div>
     </div>
     <div class="editor-toolbar">
-      <div class="segmented editor-layout-toggle" role="radiogroup" aria-label="Layout" data-i18n-aria-label="editor.layout.label">
-        <label class="segmented-option">
-          <input type="radio" name="editor-layout" value="horizontal" checked />
-          <span data-i18n="editor.layout.horizontal">Horizontal</span>
-        </label>
-        <label class="segmented-option">
-          <input type="radio" name="editor-layout" value="vertical" />
-          <span data-i18n="editor.layout.vertical">Vertical</span>
-        </label>
-      </div>
       <div class="editor-toolbar-group">
         <button class="ghost" id="editor-undo" type="button" data-i18n="action.undo">Undo</button>
         <button class="ghost" id="editor-redo" type="button" data-i18n="action.redo">Redo</button>
+        <button class="ghost" id="editor-layout-toggle" type="button" aria-pressed="false"></button>
       </div>
       <span class="editor-toolbar-spacer" aria-hidden="true"></span>
       <div class="editor-toolbar-group editor-tools" id="editor-tools">
