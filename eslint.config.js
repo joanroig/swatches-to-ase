@@ -27,4 +27,20 @@ export default [
     files: tsFiles,
     rules: tsRecommended?.rules ?? {},
   },
+  {
+    // Build scripts run under Node, where `process`, `console` and the WHATWG globals exist.
+    // Without this every one of them was a `no-undef` error and lint output was pure noise.
+    files: ["scripts/**/*.mjs", "*.config.js", "*.config.mjs"],
+    languageOptions: {
+      globals: {
+        Buffer: "readonly",
+        URL: "readonly",
+        URLSearchParams: "readonly",
+        __dirname: "readonly",
+        console: "readonly",
+        fetch: "readonly",
+        process: "readonly",
+      },
+    },
+  },
 ];

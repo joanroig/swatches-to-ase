@@ -54,6 +54,7 @@
     "@capacitor/android": "^8.1.0",
     "@capacitor/cli": "^8.1.0",
     "@capacitor/ios": "^8.1.0",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.58.2",
     "@types/color-convert": "^2.0.4",
     "@types/node": "^25.3.0",

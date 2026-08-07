@@ -38,7 +38,7 @@ export const sortDiscoveryPalettes = (palettes: PublicPalette[], sort: Discovery
     const likesB = b.palette.likesCount ?? 0;
     const savesA = a.palette.savesCount ?? 0;
     const savesB = b.palette.savesCount ?? 0;
-    let diff = 0;
+    let diff: number;
     switch (sort) {
       case "likes-desc":
         diff = likesB - likesA;

@@ -11,18 +11,9 @@ import {
 } from "firebase/auth";
 
 import {
-  cloudChangeEmailButton,
-  cloudDeleteAccountButton,
   cloudEmailInput,
-  cloudEmailSignInButton,
-  cloudEmailSignUpButton,
   cloudPasswordInput,
-  cloudPasswordResetButton,
   cloudRecaptcha,
-  cloudSignInButton,
-  cloudSignOutButton,
-  cloudSyncButton,
-  cloudVerifyEmailButton,
 } from "../dom";
 import { t } from "../i18n";
 import { syncActivePalette } from "../palette/mutations";

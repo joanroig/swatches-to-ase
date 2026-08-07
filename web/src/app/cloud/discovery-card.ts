@@ -1,5 +1,4 @@
 import { t } from "../i18n";
-import { discoveryState } from "../state";
 import type { PublicPalette } from "../types";
 import { setButtonContent } from "../ui/icons";
 import { rgbToHex } from "../utils/color";

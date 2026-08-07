@@ -30,7 +30,6 @@ import { openViewForPalette, renderViewModal } from "./view";
 const PREVIEW_CHIP_LIMIT = 10;
 
 let paletteSortable: ReturnType<typeof createSortable> | null = null;
-let folderSortable: ReturnType<typeof createSortable> | null = null;
 
 /**
  * Bind the sortables once. Both survive every re-render through event delegation on the stable
@@ -61,7 +60,9 @@ const ensureSortables = () => {
       renderViewModal();
     },
   });
-  folderSortable = createSortable({
+  // Not stored: `paletteSortable` alone is the "already bound" flag, and nothing ever needs a
+  // handle back to the folder sortable.
+  createSortable({
     root: paletteList,
     itemSelector: ".library-group[data-folder-id]:not([data-folder-id='__unfiled__'])",
     handleSelector: ".library-group-grip",

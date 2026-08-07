@@ -156,7 +156,8 @@ test.describe("palette card reordering", () => {
     await expect(page.locator(".palette-card")).toHaveCount(4);
     expect(await getPaletteTitles(page)).toEqual(["One", "Two", "Three", "Four"]);
 
-    const first = await boxOf(page.locator(".palette-card").nth(0));
+    // Measuring the first card is how this waits for the grid to finish laying out.
+    await boxOf(page.locator(".palette-card").nth(0));
     const third = await boxOf(page.locator(".palette-card").nth(2));
 
     // Release just below the third card's centre: "One" must land at index 2, not overshoot.
@@ -173,7 +174,7 @@ test.describe("palette card reordering", () => {
     await page.setViewportSize({ width: 760, height: 1000 });
     await seedPalettes(page, [{ name: "One" }, { name: "Two" }, { name: "Three" }]);
 
-    const first = await boxOf(page.locator(".palette-card").nth(0));
+    await boxOf(page.locator(".palette-card").nth(0));
     const last = await boxOf(page.locator(".palette-card").nth(2));
 
     await dragTo(
@@ -204,7 +205,6 @@ test.describe("palette card reordering", () => {
     expect(rows.size).toBeGreaterThan(1);
 
     // Row 0, column 0 → down into the second row.
-    const source = layout[0];
     const target = layout[5];
     const preview = await dragTo(
       page,
@@ -236,7 +236,6 @@ test.describe("palette card reordering", () => {
     expect(new Set(layout.map((box) => Math.round(box.y))).size).toBeGreaterThan(1);
 
     // Last card → the left half of the very first slot, which must put it at the front.
-    const source = layout[8];
     const target = layout[0];
     const preview = await dragTo(
       page,

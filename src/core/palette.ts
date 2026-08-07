@@ -97,7 +97,7 @@ const parseAse = (data: ArrayBuffer | Uint8Array): Palette => {
   for (const entry of decoded.colors ?? []) {
     const model = (entry.model ?? "RGB").toUpperCase();
     const values = Array.isArray(entry.color) ? entry.color : [];
-    let rgb: [number, number, number] = [0, 0, 0];
+    let rgb: [number, number, number];
 
     if (model === "RGB") {
       rgb = normalizeRgb(values);

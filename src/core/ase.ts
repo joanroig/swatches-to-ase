@@ -183,9 +183,8 @@ export const decodeAse = (data: ArrayBuffer | Uint8Array) => {
       offset = blockEnd;
       continue;
     }
-    readUint16BE(view, cursor);
-    cursor += 2;
-
+    // The block ends with a two-byte colour type; nothing after this reads the cursor, and the
+    // bounds check above is the reason those two bytes still have to be there.
     colors.push({ name, model, color });
     offset = blockEnd;
   }

@@ -58,6 +58,6 @@ test("shades stay on the source hue", () => {
   });
   // The mid shade should be recognisably the same family, not a grey.
   const mid = buildShades(source, 7)[3];
-  const [r, g, b] = mid.rgb;
+  const [r, , b] = mid.rgb;
   assert.ok(b > r, "expected the blue-leaning source hue to be preserved");
 });
