@@ -5,6 +5,7 @@ import { cloudState } from "../state";
 import type { Palette } from "../types";
 import { createId } from "../utils/id";
 import { firebaseClient } from "./context";
+import { upsertPublicProfile } from "./follow";
 import { isCloudUserVerified } from "./verification";
 
 const PUBLIC_SYNC_COOLDOWN_MS = 2500;
@@ -45,6 +46,8 @@ export const upsertPublicPalette = async (palette: Palette) => {
   await setDoc(docRef, payload, {
     merge: true,
   });
+  // Keep the public profile in step so the author shown beside a palette is followable.
+  await upsertPublicProfile(cloudState.user.name, cloudState.user.avatar ?? null);
 };
 
 export const removePublicPalette = async (palette: Palette) => {

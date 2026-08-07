@@ -11,7 +11,13 @@ import {
 } from "firebase/auth";
 import { firebaseClient } from "./cloud/context";
 import { deleteCloudAccount } from "./cloud/delete";
-import { renderDiscovery, setDiscoverySearch, setDiscoverySort } from "./cloud/discovery";
+import {
+  renderDiscovery,
+  setDiscoveryFollowingOnly,
+  setDiscoverySearch,
+  setDiscoverySort,
+  setupDiscoveryProfileControls,
+} from "./cloud/discovery";
 import { trackEvent } from "./cloud/analytics";
 import { reportAuthError } from "./cloud/errors";
 import { savePublicPalette, toggleLikePublicPalette } from "./cloud/interactions";
@@ -52,6 +58,7 @@ import {
   generateBaseColorInput,
   generateHistoryBackButton,
   generateHistoryForwardButton,
+  discoverFollowingOnlyToggle,
   discoverProfileModal,
   discoverSearchInput,
   discoverSortSelect,
@@ -865,6 +872,13 @@ export const setupActions = () => {
     renderPaletteList();
   });
 
+  if (discoverFollowingOnlyToggle) {
+    discoverFollowingOnlyToggle.checked = discoveryState.followingOnly;
+    discoverFollowingOnlyToggle.addEventListener("change", () => {
+      setDiscoveryFollowingOnly(discoverFollowingOnlyToggle.checked);
+    });
+  }
+
   if (discoverSearchInput) {
     discoverSearchInput.value = discoveryState.search;
     discoverSearchInput.addEventListener("input", () => {
@@ -893,6 +907,7 @@ export const setupActions = () => {
     setupPopover({ root: editorOverflow, trigger: editorToolsTrigger, panel: editorToolsPanel });
   }
   setupCloudProfileControls();
+  setupDiscoveryProfileControls();
 
   window.desktopApi?.onOpenLegal?.(() => {
     setModalOpen(legalModal, true);
@@ -928,7 +943,8 @@ export const setupActions = () => {
         editorModal,
         exportModal,
         viewModal,
-        discoverProfileModal,
+        discoverFollowingOnlyToggle,
+  discoverProfileModal,
       ]);
     }
 

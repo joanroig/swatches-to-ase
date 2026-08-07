@@ -13,6 +13,7 @@ import { t } from "../i18n";
 import { showToast } from "../ui/notifications";
 import { areAvatarColorsEqual, DEFAULT_AVATAR_COLORS, getCloudAvatarSrc, normalizeAvatarColors } from "./avatars";
 import { firebaseClient } from "./context";
+import { upsertPublicProfile } from "./follow";
 import { saveUserAvatar } from "./profile-store";
 import { renderCloudUserCard } from "./user-card";
 import { isCloudUserVerified, requireVerifiedCloudUser } from "./verification";
@@ -144,6 +145,7 @@ export const setupCloudProfileControls = () => {
         tasks.push(saveUserAvatar(currentUser.uid, nextAvatar));
       }
       await Promise.all(tasks);
+      void upsertPublicProfile(name, avatarChanged ? nextAvatar : (cloudState.user.avatar ?? nextAvatar));
       cloudState.user = {
         ...cloudState.user,
         name,

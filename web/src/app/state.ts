@@ -43,4 +43,10 @@ export const discoveryState = {
   loading: false,
   sort: "recent" as DiscoverySort,
   search: "",
+  /** Creators the signed-in user follows. */
+  followingIds: new Set<string>(),
+  /** Follower counts by owner id, filled in lazily for creators shown in Discover. */
+  followerCounts: new Map<string, number>(),
+  /** Restrict the feed to creators the user follows. */
+  followingOnly: false,
 };

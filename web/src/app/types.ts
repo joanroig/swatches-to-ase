@@ -63,6 +63,14 @@ export type CloudUser = {
   avatar?: AvatarColors | null;
 };
 
+/** The public face of an account: what other people can see and follow. */
+export type PublicProfile = {
+  uid: string;
+  name: string | null;
+  avatar: AvatarColors | null;
+  followersCount: number;
+};
+
 export type PublicPalette = {
   id: string;
   name: string;

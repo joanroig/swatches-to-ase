@@ -108,6 +108,23 @@ service cloud.firestore {
       return (next == current + 1 || next == current - 1) && next >= 0;
     }
 
+    function isValidPublicProfile(data) {
+      return data.keys().hasOnly(['name', 'avatar', 'followersCount', 'updatedAt'])
+        && (data.name == null || (data.name is string && data.name.size() <= 60))
+        && (data.avatar == null || isValidAvatar(data.avatar))
+        && data.followersCount is int
+        && data.followersCount >= 0
+        && data.updatedAt is timestamp;
+    }
+
+    // Anyone signed in may move a follower count by one, the same trade-off as likes and saves:
+    // client-side counters, with the shape and delta constrained here.
+    function isFollowerCountUpdate() {
+      let changed = request.resource.data.diff(resource.data).changedKeys();
+      return changed.hasOnly(['followersCount'])
+        && isCountDelta(resource.data.followersCount, request.resource.data.followersCount);
+    }
+
     function isCountUpdate() {
       let changed = request.resource.data.diff(resource.data).changedKeys();
       return (changed.hasOnly(['likesCount'])
@@ -155,6 +172,39 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['savedAt'])
         && request.resource.data.savedAt is timestamp
         && request.resource.data.savedAt == request.time;
+      allow delete: if isOwner(userId);
+    }
+
+    // Who a user follows is their own business, so the edge lives under their document.
+    match /users/{userId}/following/{targetId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && verified()
+        && targetId != userId
+        && request.resource.data.keys().hasOnly(['followedAt'])
+        && request.resource.data.followedAt is timestamp
+        && request.resource.data.followedAt == request.time;
+      allow delete: if isOwner(userId);
+    }
+
+    // The public face of an account: name, avatar and follower count.
+    match /publicProfiles/{userId} {
+      allow read: if true;
+      allow create: if verified()
+        && request.auth.uid == userId
+        && isValidPublicProfile(request.resource.data)
+        && request.resource.data.followersCount == 0
+        && request.resource.data.updatedAt == request.time;
+      allow update: if verified()
+        && (
+          (
+            request.auth.uid == userId
+            && isValidPublicProfile(request.resource.data)
+            && request.resource.data.followersCount == resource.data.followersCount
+            && request.resource.data.updatedAt == request.time
+          )
+          || isFollowerCountUpdate()
+        );
       allow delete: if isOwner(userId);
     }
 

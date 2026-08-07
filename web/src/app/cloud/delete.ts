@@ -5,6 +5,7 @@ import { syncActivePalette } from "../palette/ui";
 import { persistPalettes } from "../persistence";
 import { cloudState, discoveryState, state } from "../state";
 import { ensureAppCheckToken, firebaseClient } from "./context";
+import { deleteFollowData } from "./follow";
 import { unlinkPublicPalette } from "./public";
 
 export type DeleteAccountResult = "success" | "reauth" | "failed";
@@ -101,6 +102,8 @@ export const deleteCloudAccount = async (): Promise<DeleteAccountResult> => {
     discoveryState.likedIds.clear();
     discoveryState.savedIds.clear();
     await deletePublicPalettes(uid);
+    await deleteFollowData(uid);
+    discoveryState.followingIds.clear();
     await deleteUserStateDocs(uid);
   } catch (error) {
     console.warn("[cloud] Failed to delete some cloud data.", error);

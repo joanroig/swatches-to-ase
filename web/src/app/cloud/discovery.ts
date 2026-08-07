@@ -92,13 +92,18 @@ export const renderDiscovery = () => {
 
   const searchQuery = discoveryState.search.trim().toLowerCase();
   const palettes = sortDiscoveryPalettes(discoveryState.palettes);
-  const filtered = searchQuery ? palettes.filter((palette) => matchesDiscoverySearch(palette, searchQuery)) : palettes;
+  const bySearch = searchQuery ? palettes.filter((palette) => matchesDiscoverySearch(palette, searchQuery)) : palettes;
+  const filtered = discoveryState.followingOnly
+    ? bySearch.filter((palette) => discoveryState.followingIds.has(palette.ownerId))
+    : bySearch;
 
   discoverEmpty.textContent = hasLoadError
     ? t("toast.discoveryLoadFailed")
-    : searchQuery
-      ? t("discover.emptySearch")
-      : t("discover.empty");
+    : discoveryState.followingOnly
+      ? t("discover.emptyFollowing")
+      : searchQuery
+        ? t("discover.emptySearch")
+        : t("discover.empty");
   discoverEmpty.classList.toggle("is-hidden", filtered.length > 0);
 
   filtered.forEach((palette) => {
@@ -126,6 +131,11 @@ export const setDiscoverySort = (value: string) => {
 
 export const setDiscoverySearch = (value: string) => {
   discoveryState.search = value;
+  renderDiscovery();
+};
+
+export const setDiscoveryFollowingOnly = (value: boolean) => {
+  discoveryState.followingOnly = value;
   renderDiscovery();
 };
 
@@ -180,3 +190,4 @@ export const stopListeningToDiscovery = () => {
 };
 
 export { fetchUserInteractions, savePublicPalette, toggleLikePublicPalette } from "./interactions";
+export { setupDiscoveryProfileControls } from "./discovery-profile";

@@ -35,6 +35,7 @@ import { createId } from "../utils/id";
 import { ensureAppCheckToken, firebaseClient, firebaseConfigStatus } from "./context";
 import { fetchUserInteractions, renderDiscovery } from "./discovery";
 import { getFirebaseErrorCode, logCloudError } from "./errors";
+import { fetchFollowing } from "./follow";
 import { syncCloudProfileForm } from "./profile";
 import { ensureUserAvatar } from "./profile-store";
 import { unpublishPalette, upsertPublicPalette } from "./public";
@@ -635,14 +636,11 @@ export const setupCloudAuth = () => {
     if (!cloudState.user) {
       discoveryState.likedIds.clear();
       discoveryState.savedIds.clear();
+      discoveryState.followingIds.clear();
       renderDiscovery();
       return;
     }
-    try {
-      await fetchUserInteractions();
-    } catch (error) {
-      console.warn("[cloud] Failed to load user interactions.", error);
-    }
+    await Promise.allSettled([fetchUserInteractions(), fetchFollowing()]);
     listenToCloudState();
   });
 };
