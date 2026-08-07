@@ -290,34 +290,40 @@
   }
 }
 
-/* Rows: a wide, shallow zone centred on the horizontal midpoint, clear of the grip and actions. */
+/*
+ * Rows: a shallow band spanning the full width of the gap, so hovering anywhere along the seam
+ * between two swatches reveals the button. Shallow enough that it never covers the grip, the
+ * label or the actions, which all sit on the swatch's vertical centre line.
+ */
 #palette-editor[data-layout="horizontal"] .color-insert-zone {
-  left: 50%;
+  left: 0;
+  right: 0;
+  width: auto;
   top: calc(var(--color-gap, 8px) / -2);
-  width: min(40%, 240px);
-  height: 30px;
-  transform: translate(-50%, -50%);
+  height: 24px;
+  transform: translateY(-50%);
 }
 
 #palette-editor[data-layout="horizontal"] .color-insert-zone--end {
   top: auto;
   bottom: calc(var(--color-gap, 8px) / -2);
-  transform: translate(-50%, 50%);
+  transform: translateY(50%);
 }
 
-/* Columns: a tall, narrow zone centred on the vertical midpoint, clear of the grip and the label. */
+/* Columns: the same band, rotated — full height of the gap between two columns. */
 #palette-editor[data-layout="vertical"] .color-insert-zone {
-  top: 50%;
+  top: 0;
+  bottom: 0;
+  height: auto;
   left: calc(var(--color-gap, 8px) / -2);
-  width: 30px;
-  height: min(40%, 200px);
-  transform: translate(-50%, -50%);
+  width: 24px;
+  transform: translateX(-50%);
 }
 
 #palette-editor[data-layout="vertical"] .color-insert-zone--end {
   left: auto;
   right: calc(var(--color-gap, 8px) / -2);
-  transform: translate(50%, -50%);
+  transform: translateX(50%);
 }
 
 
