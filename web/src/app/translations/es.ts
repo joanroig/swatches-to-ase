@@ -296,7 +296,6 @@ const es: TranslationMap = {
   "folder.deleteConfirm": "¿Eliminar la carpeta {name}? Sus {count} paletas vuelven a Sin carpeta y no se borran.",
   "palette.empty": "Aún no se han cargado paletas.",
   "palette.colors": { one: "{count} color", other: "{count} colores" },
-  "palette.public": "Pública",
   "palette.noColors": "Aún no hay colores.",
   "palette.moreColors": { one: "{count} color más", other: "{count} colores más" },
   "palette.signInToPublish": "Inicia sesión para publicar",

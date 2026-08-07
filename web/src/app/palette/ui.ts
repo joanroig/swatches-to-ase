@@ -11,7 +11,6 @@
 
 export { openEditorForPalette, renderEditor, setupEditorLayout, syncEditorLayout } from "./editor";
 export {
-  cancelEditorChanges,
   confirmEditorClose,
   redoEditorChange,
   saveEditorChanges,

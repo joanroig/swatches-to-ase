@@ -55,7 +55,6 @@ import {
   discoverProfileModal,
   discoverSearchInput,
   discoverSortSelect,
-  editorCancelButton,
   editorExportButton,
   editorModal,
   editorRedoButton,
@@ -136,7 +135,6 @@ import { ensureLicenseLoaded, ensureLicensesLoaded } from "./licenses";
 import { createFolder } from "./palette/folders";
 import { nameColor, resolveNameFormat } from "./palette/naming";
 import {
-  cancelEditorChanges,
   confirmEditorClose,
   getPaletteById,
   openEditorForPalette,
@@ -197,7 +195,6 @@ export const applyActionLabels = () => {
   setButtonContent(editorUndoButton, "undo", t("action.undo"), true);
   setButtonContent(editorRedoButton, "redo", t("action.redo"), true);
   setButtonContent(addColorButton, "plus", t("action.addColor"));
-  setButtonContent(editorCancelButton, "x", t("common.cancel"));
   setButtonContent(exportAllButton, "download", t("action.download"));
   setButtonContent(generateHistoryBackButton, "undo", t("action.back"), true);
   setButtonContent(generateHistoryForwardButton, "redo", t("action.forward"), true);
@@ -402,10 +399,6 @@ export const setupActions = () => {
 
   editorSaveButton?.addEventListener("click", () => {
     void saveEditorChanges();
-  });
-
-  editorCancelButton?.addEventListener("click", () => {
-    cancelEditorChanges();
   });
 
   openViewButton?.addEventListener("click", () => {

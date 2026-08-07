@@ -1,5 +1,5 @@
 import { unpublishPalette } from "../cloud/public";
-import { editorCancelButton, editorRedoButton, editorSaveButton, editorUndoButton } from "../dom";
+import { editorRedoButton, editorSaveButton, editorUndoButton } from "../dom";
 import { updateExportAvailability } from "../export/manager";
 import { t } from "../i18n";
 import { persistPalettes } from "../persistence";
@@ -88,9 +88,6 @@ const updateEditorActions = () => {
   }
   if (editorSaveButton) {
     editorSaveButton.disabled = !canSave;
-  }
-  if (editorCancelButton) {
-    editorCancelButton.disabled = !canSave;
   }
 };
 
@@ -200,19 +197,6 @@ export const saveEditorChanges = async () => {
   editorSession.isDirty = false;
   updateEditorActions();
   persistPalettes();
-};
-
-export const cancelEditorChanges = () => {
-  const palette = getEditorPalette();
-  if (!palette || !editorSession.original) {
-    return;
-  }
-  applySnapshotToPalette(palette, editorSession.original);
-  refreshEditorViews();
-  editorSession.history = [createSnapshot(palette)];
-  editorSession.future = [];
-  editorSession.isDirty = false;
-  updateEditorActions();
 };
 
 export const confirmEditorClose = () => {

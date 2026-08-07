@@ -306,19 +306,16 @@
   padding-top: 10px;
 }
 
-.palette-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(14, 165, 233, 0.12);
-  color: var(--accent-3);
-  white-space: nowrap;
+/* Published state lives on the globe action rather than a separate badge, which keeps the title
+   row short enough for the palette name. */
+.palette-actions button.is-published {
+  color: var(--published);
+  background: color-mix(in srgb, var(--published) 16%, transparent);
+  border-color: color-mix(in srgb, var(--published) 40%, transparent);
+}
+
+.palette-actions button.is-published:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--published) 26%, transparent);
 }
 
 .palette-meta {

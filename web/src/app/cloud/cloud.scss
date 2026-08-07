@@ -231,16 +231,19 @@
  * Compact swatch pills instead of full form fields: the avatar preview beside them already shows
  * the result, so the colour inputs only need to be tappable, not large.
  */
+/* Two equal columns rather than content-width pills, so the row lines up with the name field
+   above it instead of trailing off into empty space. */
 .cloud-profile-swatches {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
 .cloud-profile-swatch {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 9px;
+  min-width: 0;
   padding: 5px 14px 5px 5px;
   border-radius: 999px;
   border: 1px solid var(--stroke);
@@ -268,6 +271,13 @@
     height: 28px;
     border-radius: 999px;
     flex: 0 0 auto;
+  }
+
+  span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &:has(input:disabled) {

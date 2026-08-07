@@ -294,7 +294,6 @@ const en: TranslationMap = {
   "folder.deleteConfirm": "Delete the folder {name}? Its {count} palettes move back to Unfiled and are not deleted.",
   "palette.empty": "No palettes loaded yet.",
   "palette.colors": { one: "{count} color", other: "{count} colors" },
-  "palette.public": "Public",
   "palette.noColors": "No colors yet.",
   "palette.moreColors": { one: "{count} more color", other: "{count} more colors" },
   "palette.signInToPublish": "Sign in to publish",

@@ -30,7 +30,6 @@ export const editorSubtitle = document.querySelector<HTMLElement>("#editor-subti
 export const editorLayoutOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="editor-layout"]'));
 export const editorUndoButton = document.querySelector<HTMLButtonElement>("#editor-undo");
 export const editorRedoButton = document.querySelector<HTMLButtonElement>("#editor-redo");
-export const editorCancelButton = document.querySelector<HTMLButtonElement>("#editor-cancel");
 export const editorSaveButton = document.querySelector<HTMLButtonElement>("#editor-save");
 export const themeSelect = document.querySelector<HTMLSelectElement>("#theme-select");
 export const motionSelect = document.querySelector<HTMLSelectElement>("#motion-select");

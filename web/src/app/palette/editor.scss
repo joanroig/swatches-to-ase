@@ -39,14 +39,16 @@
   flex-wrap: wrap;
 }
 
-/* Name and colour count share a line; the count is the same badge used on the library cards. */
 .editor-title {
   display: flex;
   align-items: center;
-  gap: 10px;
   min-width: 0;
-  /* Small basis so the commit buttons stay on the title row rather than wrapping below it. */
-  flex: 1 1 140px;
+  flex: 1 1 auto;
+}
+
+/* The count sits at the end of the title row, just inside the space reserved for the close button. */
+.editor-count {
+  flex: 0 0 auto;
 }
 
 .editor-count:empty {
@@ -79,19 +81,6 @@
 #editor-subtitle {
   margin: 0;
   flex: 0 0 auto;
-}
-
-.editor-commit {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
-  margin-left: auto;
-
-  button {
-    padding: 8px 16px;
-    font-size: 0.88rem;
-  }
 }
 
 /* ---------------------------------------------------- toolbar (bottom row) --- */
@@ -135,6 +124,10 @@
 
 .editor-toolbar button.icon-only {
   padding: 8px;
+}
+
+#editor-save {
+  padding: 8px 18px;
 }
 
 .editor-notation {
@@ -670,7 +663,11 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
     width: 100%;
   }
 
-  .overflow-panel .editor-notation {
+  .overflow-panel #editor-save {
+  padding: 8px 18px;
+}
+
+.editor-notation {
     max-width: none;
     width: 100%;
   }
@@ -699,12 +696,12 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
 }
 
 @media (max-width: 480px) {
-  .editor-commit button {
-    padding: 8px 12px;
-  }
-
   .editor-toolbar button {
     padding: 8px 10px;
+  }
+
+  #editor-save {
+    padding: 8px 14px;
   }
 }
 

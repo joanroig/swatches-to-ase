@@ -115,12 +115,6 @@ const createPaletteHeader = (palette: Palette) => {
   count.className = "palette-count";
   count.textContent = t("palette.colors", { count: palette.colors.length });
   metaBadges.appendChild(count);
-  if (palette.isPublic) {
-    const badge = document.createElement("span");
-    badge.className = "palette-badge";
-    badge.textContent = t("palette.public");
-    metaBadges.appendChild(badge);
-  }
   metaRow.appendChild(metaBadges);
 
   meta.append(metaRow);
@@ -167,7 +161,7 @@ const createPaletteActions = (palette: Palette) => {
     openEditorForPalette(palette.id);
   });
 
-  const duplicateButton = createIconButton("files", t("action.duplicate"), (event) => {
+  const duplicateButton = createIconButton("duplicate", t("action.duplicate"), (event) => {
     event.stopPropagation();
     const copy = duplicatePalette(
       palette,
@@ -193,6 +187,9 @@ const createPaletteActions = (palette: Palette) => {
     event.stopPropagation();
     void togglePaletteVisibility(palette.id);
   });
+  // The globe itself carries the published state, so there is no separate "PUBLIC" badge.
+  publishButton.classList.toggle("is-published", Boolean(palette.isPublic));
+  publishButton.setAttribute("aria-pressed", palette.isPublic ? "true" : "false");
   publishButton.title = cloudState.user
     ? isCloudUserVerified()
       ? publishLabel

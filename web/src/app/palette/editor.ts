@@ -208,7 +208,7 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
   const duplicateButton = document.createElement("button");
   duplicateButton.type = "button";
   duplicateButton.className = "ghost";
-  setButtonContent(duplicateButton, "files", t("action.duplicate"), true);
+  setButtonContent(duplicateButton, "duplicate", t("action.duplicate"), true);
   duplicateButton.addEventListener("click", () => {
     updatePalette(palette.id, (item) => {
       const targetIndex = item.colors.findIndex((entry) => entry.id === color.id);
