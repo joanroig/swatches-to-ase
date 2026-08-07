@@ -1,7 +1,12 @@
 import { applyActionLabels, setupActions } from "./app/actions";
-import { renderDiscovery } from "./app/cloud/discovery";
-import { syncCloudProfileForm } from "./app/cloud/profile";
-import { refreshCloudControls, scheduleCloudSync, setupCloudAuth } from "./app/cloud/sync";
+import {
+  prefetchCloud,
+  refreshCloudControls,
+  renderDiscovery,
+  scheduleCloudSync,
+  setupCloudAuth,
+  syncCloudProfileForm,
+} from "./app/cloud/lazy";
 import { updateExportAvailability } from "./app/export/manager";
 import { onLanguageChange } from "./app/i18n";
 import { setupImageImport } from "./app/image/importer";
@@ -56,4 +61,8 @@ importSharedPaletteFromUrl();
 renderPaletteList();
 renderEditor();
 updateExportAvailability();
-void waitForAppReady();
+void waitForAppReady().then(() => {
+  // Warm the Firebase chunk once the app has painted, so the first cloud action is not also a
+  // 370 kB download. Deliberately after `waitForAppReady`, never before it.
+  prefetchCloud();
+});

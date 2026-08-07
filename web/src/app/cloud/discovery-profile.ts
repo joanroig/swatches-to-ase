@@ -57,9 +57,7 @@ const getProfilePalettes = () => {
   if (!activeProfile.ownerId || !handlers) {
     return [] as PublicPalette[];
   }
-  return handlers
-    .sortPalettes(discoveryState.palettes)
-    .filter((palette) => palette.ownerId === activeProfile.ownerId);
+  return handlers.sortPalettes(discoveryState.palettes).filter((palette) => palette.ownerId === activeProfile.ownerId);
 };
 
 export const renderDiscoveryProfile = () => {

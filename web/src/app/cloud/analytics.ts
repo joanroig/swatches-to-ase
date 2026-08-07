@@ -9,8 +9,7 @@ import type { Analytics } from "firebase/analytics";
  */
 
 const measurementId = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ?? "";
-const analyticsDisabled =
-  import.meta.env.VITE_DISABLE_ANALYTICS === "true" || import.meta.env.VITE_DISABLE_ANALYTICS === "1";
+const analyticsDisabled = import.meta.env.VITE_DISABLE_ANALYTICS === "true" || import.meta.env.VITE_DISABLE_ANALYTICS === "1";
 
 export type AnalyticsEvent =
   | "palette_created"
@@ -55,10 +54,7 @@ const loadAnalytics = async (): Promise<Analytics | null> => {
     return null;
   }
   try {
-    const [{ getAnalytics, isSupported }, { getFirebaseApp }] = await Promise.all([
-      import("firebase/analytics"),
-      import("./client"),
-    ]);
+    const [{ getAnalytics, isSupported }, { getFirebaseApp }] = await Promise.all([import("firebase/analytics"), import("./client")]);
     const app = getFirebaseApp();
     if (!app || !(await isSupported())) {
       return null;

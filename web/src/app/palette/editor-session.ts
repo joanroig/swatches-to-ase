@@ -1,4 +1,4 @@
-import { unpublishPalette } from "../cloud/public";
+import { unpublishPalette } from "../cloud/lazy";
 import { editorRedoButton, editorSaveButton, editorUndoButton } from "../dom";
 import { updateExportAvailability } from "../export/manager";
 import { t } from "../i18n";

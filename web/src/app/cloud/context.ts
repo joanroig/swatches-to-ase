@@ -1,8 +1,5 @@
-import { cloudState } from "../state";
-import { ensureAppCheckToken, getFirebaseClient, getFirebaseConfigStatus } from "./client";
+import { firebaseConfigStatus } from "./config";
+import { ensureAppCheckToken, getFirebaseClient } from "./client";
 
 export const firebaseClient = getFirebaseClient();
-export const firebaseConfigStatus = getFirebaseConfigStatus();
-export { ensureAppCheckToken };
-
-cloudState.isConfigured = firebaseConfigStatus.isConfigured;
+export { ensureAppCheckToken, firebaseConfigStatus };

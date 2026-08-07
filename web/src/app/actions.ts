@@ -1,36 +1,22 @@
+import { trackEvent } from "./cloud/analytics";
+import { getCloudAuthMode, setCloudAuthMode, type CloudAuthMode } from "./cloud/auth-mode";
 import {
-  createUserWithEmailAndPassword,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  reauthenticateWithPopup,
-  sendEmailVerification,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
-} from "firebase/auth";
-import { firebaseClient } from "./cloud/context";
-import { deleteCloudAccount } from "./cloud/delete";
-import {
+  prefetchCloud,
+  refreshCloudControls,
+  refreshCloudUser,
   renderDiscovery,
+  resetCloudProfileDraft,
+  savePublicPalette,
   setDiscoveryFollowingOnly,
   setDiscoverySearch,
   setDiscoverySort,
+  setupCloudProfileControls,
   setupDiscoveryProfileControls,
-} from "./cloud/discovery";
-import { trackEvent } from "./cloud/analytics";
-import { reportAuthError } from "./cloud/errors";
-import { savePublicPalette, toggleLikePublicPalette } from "./cloud/interactions";
-import { resetCloudProfileDraft, setupCloudProfileControls } from "./cloud/profile";
-import {
-  getRecaptchaToken,
-  hasRecaptchaLoadFailed,
-  isRecaptchaEnabled,
-  resetRecaptcha,
-  setupRecaptcha,
-} from "./cloud/recaptcha";
-import { unpublishPalette } from "./cloud/public";
-import { refreshCloudControls, refreshCloudUser, syncToCloud } from "./cloud/sync";
+  toggleLikePublicPalette,
+  unpublishPalette,
+} from "./cloud/lazy";
+import { setupCloudAuthBindings } from "./cloud/auth-bindings";
+import { resetRecaptcha, setupRecaptcha } from "./cloud/recaptcha";
 import {
   addBwToggle,
   addColorButton,
@@ -223,38 +209,6 @@ export const setupActions = () => {
   applyActionLabels();
   hydrateExportActionIcons(exportActionIcons);
 
-  const requireRecaptchaToken = () => {
-    if (!isRecaptchaEnabled()) {
-      return true;
-    }
-    if (hasRecaptchaLoadFailed()) {
-      showToast(t("toast.recaptchaLoadFailed"), "error");
-      return false;
-    }
-    const recaptchaToken = getRecaptchaToken();
-    if (recaptchaToken) {
-      return true;
-    }
-    showToast(t("toast.recaptchaRequired"), "info");
-    return false;
-  };
-
-  type CloudAuthMode = "signin" | "signup";
-  let currentCloudAuthMode: CloudAuthMode = "signin";
-
-  const setCloudAuthMode = (mode: CloudAuthMode) => {
-    currentCloudAuthMode = mode;
-    if (cloudAuthSection) {
-      cloudAuthSection.dataset.mode = mode;
-    }
-    if (cloudAuthSwitchButton) {
-      cloudAuthSwitchButton.textContent = t(mode === "signin" ? "cloud.auth.switch.signup" : "cloud.auth.switch.signin");
-    }
-    if (cloudPasswordInput) {
-      cloudPasswordInput.autocomplete = mode === "signup" ? "new-password" : "current-password";
-    }
-  };
-
   const activateRecaptchaOnInput = () => {
     const hasValue = Boolean(cloudEmailInput?.value.trim() || cloudPasswordInput?.value.trim());
     if (!hasValue) {
@@ -265,6 +219,7 @@ export const setupActions = () => {
 
   openCloudButtons.forEach((button) => {
     button.addEventListener("click", () => {
+      prefetchCloud();
       resetCloudProfileDraft();
       refreshCloudControls();
       void refreshCloudUser();
@@ -280,7 +235,7 @@ export const setupActions = () => {
   });
 
   cloudAuthSwitchButton?.addEventListener("click", () => {
-    const nextMode: CloudAuthMode = currentCloudAuthMode === "signin" ? "signup" : "signin";
+    const nextMode: CloudAuthMode = getCloudAuthMode() === "signin" ? "signup" : "signin";
     setCloudAuthMode(nextMode);
     cloudEmailInput?.focus();
   });
@@ -290,7 +245,7 @@ export const setupActions = () => {
   setCloudAuthMode("signin");
 
   onLanguageChange(() => {
-    setCloudAuthMode(currentCloudAuthMode);
+    setCloudAuthMode(getCloudAuthMode());
     syncGeneratedPalettePreviewName();
   });
 
@@ -498,9 +453,7 @@ export const setupActions = () => {
 
   /** The public palette currently shown in the view modal, if it is a Discover one. */
   const getViewedPublicPalette = () =>
-    viewState.mode === "discover"
-      ? (discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId) ?? null)
-      : null;
+    viewState.mode === "discover" ? (discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId) ?? null) : null;
 
   viewSaveEditButton?.addEventListener("click", () => {
     const publicPalette = getViewedPublicPalette();
@@ -544,267 +497,6 @@ export const setupActions = () => {
       renderViewModal();
       renderDiscovery();
     });
-  });
-
-  cloudSignInButton?.addEventListener("click", async () => {
-    if (!firebaseClient) {
-      showToast(t("toast.firebaseMissing"), "error");
-      return;
-    }
-    try {
-      await signInWithPopup(firebaseClient.auth, firebaseClient.provider);
-      trackEvent("sign_in", { method: "google" });
-    } catch (error) {
-      reportAuthError("Google sign-in", error, "toast.signInFailed");
-    }
-  });
-
-  const resolveEmailAuthPayload = () => {
-    const email = cloudEmailInput?.value.trim() ?? "";
-    const password = cloudPasswordInput?.value ?? "";
-    if (!email || !password) {
-      showToast(t("toast.emailAuthMissing"), "info");
-      return null;
-    }
-    return { email, password };
-  };
-
-  const resolveEmailOnly = () => {
-    const email = cloudEmailInput?.value.trim() ?? "";
-    if (!email) {
-      showToast(t("toast.emailMissing"), "info");
-      return null;
-    }
-    return email;
-  };
-
-  cloudEmailSignInButton?.addEventListener("click", async () => {
-    if (!firebaseClient) {
-      showToast(t("toast.firebaseMissing"), "error");
-      return;
-    }
-    const payload = resolveEmailAuthPayload();
-    if (!payload) {
-      return;
-    }
-    if (!requireRecaptchaToken()) {
-      return;
-    }
-    try {
-      await signInWithEmailAndPassword(firebaseClient.auth, payload.email, payload.password);
-      trackEvent("sign_in", { method: "password" });
-      if (cloudPasswordInput) {
-        cloudPasswordInput.value = "";
-      }
-    } catch (error) {
-      reportAuthError("Email sign-in", error, "toast.signInFailed");
-    } finally {
-      resetRecaptcha();
-    }
-  });
-
-  cloudEmailSignUpButton?.addEventListener("click", async () => {
-    if (!firebaseClient) {
-      showToast(t("toast.firebaseMissing"), "error");
-      return;
-    }
-    const payload = resolveEmailAuthPayload();
-    if (!payload) {
-      return;
-    }
-    if (!requireRecaptchaToken()) {
-      return;
-    }
-    try {
-      const credential = await createUserWithEmailAndPassword(firebaseClient.auth, payload.email, payload.password);
-      trackEvent("sign_up", { method: "password" });
-      if (cloudPasswordInput) {
-        cloudPasswordInput.value = "";
-      }
-      try {
-        await sendEmailVerification(credential.user);
-        showToast(t("toast.verifyEmailSent"), "success");
-      } catch (error) {
-        reportAuthError("Send verification email", error, "toast.verifyEmailFailed");
-      }
-    } catch (error) {
-      reportAuthError("Email sign-up", error, "toast.signUpFailed");
-    } finally {
-      resetRecaptcha();
-    }
-  });
-
-  cloudPasswordResetButton?.addEventListener("click", async () => {
-    if (!firebaseClient) {
-      showToast(t("toast.firebaseMissing"), "error");
-      return;
-    }
-    const email = resolveEmailOnly();
-    if (!email) {
-      return;
-    }
-    try {
-      await sendPasswordResetEmail(firebaseClient.auth, email);
-      showToast(t("toast.passwordResetSent"), "success");
-    } catch (error) {
-      reportAuthError("Password reset", error, "toast.passwordResetFailed");
-    }
-  });
-
-  cloudVerifyEmailButton?.addEventListener("click", async () => {
-    if (!firebaseClient) {
-      showToast(t("toast.firebaseMissing"), "error");
-      return;
-    }
-    const currentUser = firebaseClient.auth.currentUser;
-    if (!currentUser) {
-      showToast(t("toast.verifyEmailSignIn"), "info");
-      return;
-    }
-    if (currentUser.emailVerified) {
-      showToast(t("toast.verifyEmailAlready"), "info");
-      return;
-    }
-    try {
-      await sendEmailVerification(currentUser);
-      showToast(t("toast.verifyEmailSent"), "success");
-    } catch (error) {
-      reportAuthError("Resend verification email", error, "toast.verifyEmailFailed");
-    }
-  });
-
-  const handleCloudSignOut = async (options: { prefillEmail?: string; nextAuthMode?: CloudAuthMode } = {}) => {
-    if (!firebaseClient) {
-      return;
-    }
-    try {
-      if (state.palettes.length > 0) {
-        // Phrased so that dismissing the dialog keeps the palettes. It used to be the other way
-        // round: cancelling the "keep them?" prompt silently wiped the whole local library.
-        const clearLocal = window.confirm(t("cloud.signOutClearLocalConfirm", { count: state.palettes.length }));
-        cloudState.applyingRemote = true;
-        if (clearLocal) {
-          state.palettes = [];
-          syncActivePalette(null);
-        } else {
-          state.palettes.forEach((palette) => {
-            palette.isPublic = false;
-            palette.publicId = null;
-          });
-          syncActivePalette(state.activePaletteId);
-        }
-        cloudState.applyingRemote = false;
-      }
-      await signOut(firebaseClient.auth);
-      if (cloudEmailInput && options.prefillEmail) {
-        cloudEmailInput.value = options.prefillEmail;
-      }
-      if (cloudPasswordInput) {
-        cloudPasswordInput.value = "";
-      }
-      if (options.nextAuthMode) {
-        setCloudAuthMode(options.nextAuthMode);
-      }
-      if (cloudRecaptcha) {
-        cloudRecaptcha.classList.add("is-hidden");
-      }
-      resetRecaptcha();
-    } catch (error) {
-      reportAuthError("Sign out", error, "toast.signOutFailed");
-    }
-  };
-
-  cloudSignOutButton?.addEventListener("click", async () => {
-    await handleCloudSignOut();
-  });
-
-  cloudDeleteAccountButton?.addEventListener("click", async () => {
-    if (!firebaseClient) {
-      showToast(t("toast.firebaseMissing"), "error");
-      return;
-    }
-    if (!firebaseClient.auth.currentUser) {
-      showToast(t("toast.deleteAccountFailed"), "error");
-      return;
-    }
-    const confirmed = window.confirm(t("cloud.deleteAccountConfirm"));
-    if (!confirmed) {
-      return;
-    }
-    const runDelete = async () => {
-      const result = await deleteCloudAccount();
-      if (result === "success") {
-        showToast(t("toast.deleteAccountSuccess"), "success");
-        return true;
-      }
-      if (result === "reauth") {
-        return false;
-      }
-      showToast(t("toast.deleteAccountFailed"), "error");
-      return null;
-    };
-
-    const initial = await runDelete();
-    if (initial !== false) {
-      return;
-    }
-
-    const user = firebaseClient.auth.currentUser;
-    if (!user) {
-      showToast(t("toast.deleteAccountFailed"), "error");
-      return;
-    }
-
-    const providers = new Set(user.providerData.map((provider) => provider.providerId));
-    const tryReauth = async () => {
-      if (providers.has("google.com")) {
-        try {
-          await reauthenticateWithPopup(user, firebaseClient.provider);
-          return true;
-        } catch (error) {
-          console.warn("[cloud] Re-auth with Google failed.", error);
-          return false;
-        }
-      }
-      if (providers.has("password")) {
-        const email = user.email ?? cloudEmailInput?.value.trim() ?? "";
-        if (!email) {
-          return false;
-        }
-        const password = window.prompt(t("cloud.deleteAccountPasswordPrompt"));
-        if (!password) {
-          return false;
-        }
-        try {
-          await reauthenticateWithCredential(user, EmailAuthProvider.credential(email, password));
-          return true;
-        } catch (error) {
-          console.warn("[cloud] Re-auth with password failed.", error);
-          return false;
-        }
-      }
-      return false;
-    };
-
-    const reauthed = await tryReauth();
-    if (!reauthed) {
-      showToast(t("toast.deleteAccountReauth"), "info");
-      return;
-    }
-
-    const retry = await runDelete();
-    if (retry === false) {
-      showToast(t("toast.deleteAccountFailed"), "error");
-    }
-  });
-
-  cloudChangeEmailButton?.addEventListener("click", async () => {
-    const email = cloudState.user?.email ?? cloudEmailInput?.value.trim() ?? "";
-    await handleCloudSignOut({ prefillEmail: email, nextAuthMode: "signup" });
-  });
-
-  cloudSyncButton?.addEventListener("click", () => {
-    void syncToCloud("manual");
   });
 
   formatSelect?.addEventListener("change", () => {
@@ -908,6 +600,7 @@ export const setupActions = () => {
   if (editorOverflow) {
     setupPopover({ root: editorOverflow, trigger: editorToolsTrigger, panel: editorToolsPanel });
   }
+  setupCloudAuthBindings();
   setupCloudProfileControls();
   setupDiscoveryProfileControls();
 
@@ -946,7 +639,7 @@ export const setupActions = () => {
         exportModal,
         viewModal,
         discoverFollowingOnlyToggle,
-  discoverProfileModal,
+        discoverProfileModal,
       ]);
     }
 

@@ -8,11 +8,7 @@ import type { DiscoverySort, PublicPalette, PublicPaletteColor } from "../types"
 import { isAvatarColors, normalizeAvatarColors } from "./avatars";
 import { firebaseClient } from "./context";
 import { createDiscoveryCard, createDiscoverySkeleton } from "./discovery-card";
-import {
-  openDiscoveryProfile,
-  refreshDiscoveryProfileIfOpen,
-  setDiscoveryProfileHandlers,
-} from "./discovery-profile";
+import { openDiscoveryProfile, refreshDiscoveryProfileIfOpen, setDiscoveryProfileHandlers } from "./discovery-profile";
 import { logCloudError } from "./errors";
 
 /** Bounded so a large public collection cannot turn into an unbounded live query. */
@@ -69,10 +65,7 @@ const matchesDiscoverySearch = (palette: PublicPalette, searchQuery: string) => 
   if (!searchQuery) {
     return true;
   }
-  return (
-    palette.name.toLowerCase().includes(searchQuery) ||
-    (palette.ownerName?.toLowerCase() ?? "").includes(searchQuery)
-  );
+  return palette.name.toLowerCase().includes(searchQuery) || (palette.ownerName?.toLowerCase() ?? "").includes(searchQuery);
 };
 
 export const renderDiscovery = () => {
@@ -93,9 +86,7 @@ export const renderDiscovery = () => {
   const searchQuery = discoveryState.search.trim().toLowerCase();
   const palettes = sortDiscoveryPalettes(discoveryState.palettes);
   const bySearch = searchQuery ? palettes.filter((palette) => matchesDiscoverySearch(palette, searchQuery)) : palettes;
-  const filtered = discoveryState.followingOnly
-    ? bySearch.filter((palette) => discoveryState.followingIds.has(palette.ownerId))
-    : bySearch;
+  const filtered = discoveryState.followingOnly ? bySearch.filter((palette) => discoveryState.followingIds.has(palette.ownerId)) : bySearch;
 
   discoverEmpty.textContent = hasLoadError
     ? t("toast.discoveryLoadFailed")
@@ -148,11 +139,7 @@ export const listenToDiscovery = () => {
   }
   hasLoadError = false;
   discoveryState.loading = discoveryState.palettes.length === 0;
-  const discoverQuery = query(
-    collection(firebaseClient.db, "publicPalettes"),
-    orderBy("updatedAt", "desc"),
-    limit(DISCOVERY_PAGE_SIZE),
-  );
+  const discoverQuery = query(collection(firebaseClient.db, "publicPalettes"), orderBy("updatedAt", "desc"), limit(DISCOVERY_PAGE_SIZE));
   discoveryUnsubscribe = onSnapshot(
     discoverQuery,
     (snapshot) => {

@@ -22,8 +22,7 @@ const inFlight = new Set<string>();
 
 export const isPaletteSaved = (paletteId: string) => discoveryState.savedIds.has(paletteId);
 export const isPaletteLiked = (paletteId: string) => discoveryState.likedIds.has(paletteId);
-export const isOwnPalette = (palette: PublicPalette) =>
-  Boolean(cloudState.user && palette.ownerId === cloudState.user.uid);
+export const isOwnPalette = (palette: PublicPalette) => Boolean(cloudState.user && palette.ownerId === cloudState.user.uid);
 
 /**
  * Saving takes a full, independent copy rather than a reference. That is what lets a saver keep
@@ -74,15 +73,7 @@ export const decideSaveAction = ({ isOwner, isSaved, isBusy }: SaveContext): Sav
 export type LikeAction = "like" | "unlike" | "blocked";
 
 /** Liking is a toggle, but never for your own palette and never while a write is in flight. */
-export const decideLikeAction = ({
-  isOwner,
-  isLiked,
-  isBusy,
-}: {
-  isOwner: boolean;
-  isLiked: boolean;
-  isBusy: boolean;
-}): LikeAction => {
+export const decideLikeAction = ({ isOwner, isLiked, isBusy }: { isOwner: boolean; isLiked: boolean; isBusy: boolean }): LikeAction => {
   if (isOwner || isBusy) {
     return "blocked";
   }

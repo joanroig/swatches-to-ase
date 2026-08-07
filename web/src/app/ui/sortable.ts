@@ -70,9 +70,40 @@ export const SORTABLE_ITEM_CLASS = "is-sort-dragging";
 export const SORTABLE_CONTAINER_CLASS = "is-sorting";
 
 let suppressClickUntil = 0;
+let activeDragCount = 0;
+const dragEndListeners = new Set<() => void>();
 
 /** True while a click should be swallowed because it is the tail end of a drag. */
 export const isSortableClickSuppressed = () => Date.now() < suppressClickUntil;
+
+/**
+ * Whether any sortable anywhere is mid-drag.
+ *
+ * A full re-render replaces the very node the pointer is holding, which silently aborts the drag.
+ * Anything that can re-render a sortable list on a timer or a network callback — the cloud layer
+ * settling, a sync landing — has to check this first. See `runAfterSortableDrag`.
+ */
+export const isSortableDragActive = () => activeDragCount > 0;
+
+/** Run `task` now, or once the in-flight drag has finished if there is one. */
+export const runAfterSortableDrag = (task: () => void) => {
+  if (activeDragCount === 0) {
+    task();
+    return;
+  }
+  dragEndListeners.add(task);
+};
+
+const notifyDragEnd = () => {
+  if (activeDragCount > 0 || dragEndListeners.size === 0) {
+    return;
+  }
+  const pending = [...dragEndListeners];
+  dragEndListeners.clear();
+  pending.forEach((task) => {
+    task();
+  });
+};
 
 /** Mirrors the app's motion preference so drags stay still for users who asked for that. */
 const prefersReducedMotion = () => {
@@ -140,9 +171,7 @@ export const createSortable = (options: SortableOptions) => {
   let lastPointerY = 0;
 
   const getItems = (parent: HTMLElement) =>
-    Array.from(parent.children).filter(
-      (child): child is HTMLElement => child instanceof HTMLElement && child.matches(itemSelector),
-    );
+    Array.from(parent.children).filter((child): child is HTMLElement => child instanceof HTMLElement && child.matches(itemSelector));
 
   const clearHoldTimer = () => {
     if (holdTimerId !== null) {
@@ -262,11 +291,7 @@ export const createSortable = (options: SortableOptions) => {
 
     // A slot the pointer is actually inside wins outright.
     const contained = slots.findIndex(
-      (slot) =>
-        localX >= slot.left &&
-        localX <= slot.left + slot.width &&
-        localY >= slot.top &&
-        localY <= slot.top + slot.height,
+      (slot) => localX >= slot.left && localX <= slot.left + slot.width && localY >= slot.top && localY <= slot.top + slot.height,
     );
     if (contained >= 0) {
       return contained;
@@ -409,6 +434,7 @@ export const createSortable = (options: SortableOptions) => {
       return;
     }
     isDragging = true;
+    activeDragCount += 1;
     clearHoldTimer();
     translateX = 0;
     translateY = 0;
@@ -436,6 +462,9 @@ export const createSortable = (options: SortableOptions) => {
   };
 
   const clearSession = () => {
+    if (isDragging) {
+      activeDragCount = Math.max(0, activeDragCount - 1);
+    }
     pointerId = null;
     container = null;
     item = null;
@@ -449,6 +478,9 @@ export const createSortable = (options: SortableOptions) => {
     scrollParent = null;
     translateX = 0;
     translateY = 0;
+    // A microtask, not a direct call: the drop path clears the session *before* it invokes
+    // `onDrop`, and a deferred render must not replace the dropped node out from under it.
+    queueMicrotask(notifyDragEnd);
   };
 
   const detach = () => {

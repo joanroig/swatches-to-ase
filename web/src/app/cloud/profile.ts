@@ -70,9 +70,7 @@ export const syncCloudProfileForm = () => {
   }
 
   cloudProfileNameInput.value = user.name ?? "";
-  cloudProfileNameInput.placeholder = isCloudUserVerified()
-    ? t("cloud.profile.name.placeholder")
-    : t("cloud.profile.verifyPlaceholder");
+  cloudProfileNameInput.placeholder = isCloudUserVerified() ? t("cloud.profile.name.placeholder") : t("cloud.profile.verifyPlaceholder");
   const currentAvatar = normalizeAvatarColors(pendingAvatar ?? user.avatar ?? DEFAULT_AVATAR_COLORS);
   cloudProfileAvatar.src = getCloudAvatarSrc(currentAvatar);
   cloudProfileAvatar.alt = user.name ?? t("cloud.profile.cloudAlt");
@@ -149,7 +147,7 @@ export const setupCloudProfileControls = () => {
       cloudState.user = {
         ...cloudState.user,
         name,
-        avatar: avatarChanged ? nextAvatar : cloudState.user.avatar ?? nextAvatar,
+        avatar: avatarChanged ? nextAvatar : (cloudState.user.avatar ?? nextAvatar),
       };
       pendingAvatar = null;
       renderCloudUserCard();

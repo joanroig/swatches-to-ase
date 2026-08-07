@@ -85,11 +85,11 @@ const scheduleSyncCooldownRefresh = () => {
     return;
   }
   const delay = Math.max(0, nextCooldown - Date.now());
-    syncCooldownTimer = setTimeout(() => {
-      syncCooldownTimer = null;
-      updateCloudControls();
-    }, delay);
-  };
+  syncCooldownTimer = setTimeout(() => {
+    syncCooldownTimer = null;
+    updateCloudControls();
+  }, delay);
+};
 
 const isCloudModalOpen = () => cloudModal?.getAttribute("aria-hidden") !== "true";
 
@@ -261,8 +261,7 @@ const updateCloudControls = () => {
     cloudDeleteAccountButton.disabled = !cloudState.user;
   }
   if (cloudSyncButton) {
-    cloudSyncButton.disabled =
-      !cloudState.user || !isCloudUserVerified() || cloudState.isSyncing || isSyncCoolingDown();
+    cloudSyncButton.disabled = !cloudState.user || !isCloudUserVerified() || cloudState.isSyncing || isSyncCoolingDown();
   }
   if (cloudVerifyEmailButton) {
     cloudVerifyEmailButton.disabled = !shouldShowVerification;
@@ -397,11 +396,7 @@ const mergePalettes = (localPalettes: Palette[], remotePalettes: Palette[]) => {
   return merged;
 };
 
-const resolveMergedActivePaletteId = (
-  remoteActiveId: string | null,
-  localActiveId: string | null,
-  palettes: Palette[],
-) => {
+const resolveMergedActivePaletteId = (remoteActiveId: string | null, localActiveId: string | null, palettes: Palette[]) => {
   if (remoteActiveId && palettes.some((palette) => palette.id === remoteActiveId)) {
     return remoteActiveId;
   }
@@ -479,9 +474,7 @@ const listenToCloudState = () => {
       const remoteIds = new Set(payload.palettes.map((palette) => palette.id));
       const removedPublic = state.palettes.filter((palette) => palette.isPublic && !remoteIds.has(palette.id));
       if (removedPublic.length > 0) {
-        const results = await Promise.allSettled(
-          removedPublic.map((palette) => unpublishPalette(palette, { persist: false })),
-        );
+        const results = await Promise.allSettled(removedPublic.map((palette) => unpublishPalette(palette, { persist: false })));
         if (results.some((result) => result.status === "rejected")) {
           showToast(t("toast.paletteUnpublishFailed"), "error");
         }
@@ -621,13 +614,19 @@ export const setupCloudAuth = () => {
     if (authUid && firebaseClient.auth.currentUser?.uid !== authUid) {
       return;
     }
+    const previousUid = cloudState.user?.uid ?? null;
     cloudState.user = resolvedUser;
     cloudState.hasResolvedInitialSync = false;
     cloudState.lastRevision = null;
     cloudState.lastSyncedAt = null;
     updateCloudControls();
     syncCloudProfileForm();
-    renderPaletteList();
+    // Only when the signed-in identity actually changed. This callback also fires once on start-up
+    // with the user it already had (usually none), and rebuilding the whole library for a no-op
+    // change threw away scroll position and any interaction in progress.
+    if (previousUid !== authUid) {
+      renderPaletteList();
+    }
     clearInitialSyncRetry();
     if (cloudUnsubscribe) {
       cloudUnsubscribe();

@@ -7,8 +7,7 @@ import { firebaseClient } from "./context";
 const PROFILE_COLLECTION = "profile";
 const PROFILE_DOC_ID = "avatar";
 
-const getProfileRef = (uid: string) =>
-  firebaseClient ? doc(firebaseClient.db, "users", uid, PROFILE_COLLECTION, PROFILE_DOC_ID) : null;
+const getProfileRef = (uid: string) => (firebaseClient ? doc(firebaseClient.db, "users", uid, PROFILE_COLLECTION, PROFILE_DOC_ID) : null);
 
 export const fetchUserAvatar = async (uid: string): Promise<AvatarColors | null> => {
   const ref = getProfileRef(uid);

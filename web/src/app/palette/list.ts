@@ -1,6 +1,5 @@
 import { trackEvent } from "../cloud/analytics";
-import { firebaseClient } from "../cloud/context";
-import { unpublishPalette, upsertPublicPalette } from "../cloud/public";
+import { unpublishPalette, upsertPublicPalette } from "../cloud/lazy";
 import { isCloudUserVerified, requireVerifiedCloudUser } from "../cloud/verification";
 import { exportModal, libraryEmptySearch, paletteList } from "../dom";
 import { setExportMode, updateExportAvailability } from "../export/manager";
@@ -11,7 +10,7 @@ import type { Folder, Palette } from "../types";
 import { createIcon, setButtonContent, type IconName } from "../ui/icons";
 import { setModalOpen } from "../ui/modals";
 import { showToast } from "../ui/notifications";
-import { createSortable, isSortableClickSuppressed } from "../ui/sortable";
+import { createSortable, isSortableClickSuppressed, isSortableDragActive, runAfterSortableDrag } from "../ui/sortable";
 import { rgbToHex } from "../utils/color";
 import { duplicatePalette } from "./duplicate";
 import { openEditorForPalette } from "./editor";
@@ -73,12 +72,7 @@ const ensureSortables = () => {
   });
 };
 
-const createIconButton = (
-  icon: IconName,
-  label: string,
-  onClick: (event: MouseEvent) => void,
-  iconOnly = false,
-) => {
+const createIconButton = (icon: IconName, label: string, onClick: (event: MouseEvent) => void, iconOnly = false) => {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "ghost";
@@ -241,7 +235,7 @@ export const togglePaletteVisibility = async (paletteId: string) => {
   if (!palette) {
     return;
   }
-  if (!firebaseClient || !cloudState.user) {
+  if (!cloudState.isConfigured || !cloudState.user) {
     showToast(t("palette.signInToPublishToast"), "info");
     return;
   }
@@ -460,6 +454,13 @@ export const renderPaletteList = () => {
   if (!paletteList) {
     return;
   }
+  // Rebuilding the list replaces the card the pointer is holding, which aborts the drag. Callers
+  // are no longer all user-initiated — a cloud sync or the lazily loaded auth state can land at any
+  // moment — so the render waits for the drop instead of cancelling it.
+  if (isSortableDragActive()) {
+    runAfterSortableDrag(renderPaletteList);
+    return;
+  }
   ensureSortables();
   paletteList.innerHTML = "";
 
@@ -486,9 +487,7 @@ export const renderPaletteList = () => {
   }
 
   // While searching, folders with no match are hidden rather than shown empty.
-  const groups = buildGroups(visible).filter(
-    (group) => !query || group.palettes.length > 0 || (!group.folder && !hasMatches),
-  );
+  const groups = buildGroups(visible).filter((group) => !query || group.palettes.length > 0 || (!group.folder && !hasMatches));
   groups.forEach((group) => paletteList.appendChild(createLibraryGroup(group, Boolean(query))));
 
   updateExportAvailability();

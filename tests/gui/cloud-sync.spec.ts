@@ -94,7 +94,9 @@ test("test account can sync to firestore", async ({ page }) => {
   );
 
   const syncButton = page.locator("#cloud-sync");
-  await expect(syncButton).toBeEnabled();
+  // Signing in kicks off an initial sync, and the button stays disabled while that runs and for the
+  // cooldown after it. Waiting past both is the point — the default 5s expect timeout raced them.
+  await expect(syncButton).toBeEnabled({ timeout: 30_000 });
   await syncButton.click();
 
   // The timestamp lives in #cloud-sync-status; #cloud-status only carries sign-in/verification

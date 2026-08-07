@@ -18,7 +18,13 @@ const normalizeAvatarColor = (value: string | null | undefined, fallback: string
   if (!/^[0-9a-f]{3}$/.test(hex) && !/^[0-9a-f]{6}$/.test(hex)) {
     return fallback;
   }
-  const expanded = hex.length === 3 ? hex.split("").map((channel) => `${channel}${channel}`).join("") : hex;
+  const expanded =
+    hex.length === 3
+      ? hex
+          .split("")
+          .map((channel) => `${channel}${channel}`)
+          .join("")
+      : hex;
   return `#${expanded}`;
 };
 
@@ -41,12 +47,11 @@ export const areAvatarColorsEqual = (first?: AvatarColors | null, second?: Avata
   }
   const normalizedFirst = normalizeAvatarColors(first);
   const normalizedSecond = normalizeAvatarColors(second);
-  return (
-    normalizedFirst.background === normalizedSecond.background && normalizedFirst.foreground === normalizedSecond.foreground
-  );
+  return normalizedFirst.background === normalizedSecond.background && normalizedFirst.foreground === normalizedSecond.foreground;
 };
 
-const buildAvatarSvg = (colors: AvatarColors) => `
+const buildAvatarSvg = (colors: AvatarColors) =>
+  `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-hidden="true">
   <rect width="96" height="96" rx="22" fill="${colors.background}" />
   <circle cx="48" cy="38" r="16" fill="${colors.foreground}" />
@@ -54,8 +59,7 @@ const buildAvatarSvg = (colors: AvatarColors) => `
 </svg>
 `.trim();
 
-const buildAvatarDataUrl = (colors: AvatarColors) =>
-  `data:image/svg+xml;utf8,${encodeURIComponent(buildAvatarSvg(colors))}`;
+const buildAvatarDataUrl = (colors: AvatarColors) => `data:image/svg+xml;utf8,${encodeURIComponent(buildAvatarSvg(colors))}`;
 
 export const getCloudAvatarSrc = (value?: AvatarColors | null) => {
   if (!value) {

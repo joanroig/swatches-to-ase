@@ -29,10 +29,7 @@ export const upsertPublicPalette = async (palette: Palette) => {
     palette.publicId = publicId;
     persistPalettes();
   }
-  cloudState.publicSyncCooldownUntil = Math.max(
-    cloudState.publicSyncCooldownUntil,
-    Date.now() + PUBLIC_SYNC_COOLDOWN_MS,
-  );
+  cloudState.publicSyncCooldownUntil = Math.max(cloudState.publicSyncCooldownUntil, Date.now() + PUBLIC_SYNC_COOLDOWN_MS);
   cloudState.recentPublicUpserts.set(palette.id, Date.now());
   const payload = {
     name: palette.name,

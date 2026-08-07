@@ -1,5 +1,5 @@
 import { trackEvent } from "../cloud/analytics";
-import { fetchUserInteractions, listenToDiscovery, renderDiscovery } from "../cloud/discovery";
+import { fetchUserInteractions, listenToDiscovery, renderDiscovery } from "../cloud/lazy";
 import {
   appShell,
   actionDock,
