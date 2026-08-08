@@ -8,6 +8,9 @@
   --bottom-nav-height: 0px;
   --frame-padding-top: 32px;
   --frame-padding-bottom: 32px;
+  /* The channel between the rail and the content. One variable because the footer has to line up
+     with the panel, and a gap declared twice drifts. */
+  --rail-gap: 14px;
 }
 
 /*
@@ -73,7 +76,7 @@
  * bottom controls into. */
 .shell {
   display: grid;
-  gap: 24px;
+  gap: var(--rail-gap);
   grid-template-columns: 1fr;
   grid-template-areas:
     "main"
@@ -139,6 +142,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  transition: gap 0.25s ease;
   font-family: "Fraunces", serif;
   letter-spacing: -0.02em;
 }
@@ -156,6 +160,10 @@
 .brand-logo {
   width: var(--brand-size);
   height: var(--brand-size);
+  /* Resizes with the rail rather than popping to its smaller size at the end of the collapse. */
+  transition:
+    width 0.25s ease,
+    height 0.25s ease;
   border-radius: 12px;
   border: 1px solid var(--stroke);
   background: var(--bg-elevated);
@@ -246,10 +254,14 @@
      themes left the whole rail looking disabled. `--muted` is for the icon only. */
   color: var(--ink);
   font-weight: 600;
+  /* `gap` and `padding` are here so the rail closes as one movement rather than as a width
+     animation with the contents jumping into place at the end. */
   transition:
     color 0.2s ease,
     border-color 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    gap 0.25s ease,
+    padding 0.25s ease;
 
   &:hover {
     background: var(--surface-2);
@@ -457,24 +469,68 @@
   --sidebar-width: 60px;
 }
 
+/*
+ * Collapsing the rail, without the snap.
+ *
+ * The labels were `display: none`, which takes effect on the first frame: the text vanished
+ * instantly while the column spent a quarter second sliding shut, so the whole thing read as a jump
+ * followed by an animation. They collapse along with it now — `max-width` to nothing, opacity
+ * fading a little faster so the text is gone before its box is — and the row's `gap` closes with
+ * them, which is why the icon does not step sideways at the end.
+ *
+ * The clipping was the same cause seen from the other side: a nowrap label in a rail narrower than
+ * the text has to go somewhere, and with nothing clipping it, it went over the panel. Each item
+ * clips its own overflow, and the brand row clips the wordmark, so nothing escapes the rail
+ * mid-transition. The clip sits on the row rather than on `.brand-text`, whose subtitle overhangs
+ * its box by design to line "STUDIO" up with "Palette".
+ */
+.sidebar .nav-item span,
+.sidebar-actions .nav-item span,
+.brand--sidebar .brand-text {
+  max-width: 160px;
+  opacity: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width 0.25s ease,
+    opacity 0.16s ease;
+}
+
+.sidebar .nav-item,
+.sidebar-actions .nav-item,
+.brand--sidebar {
+  overflow: hidden;
+}
+
 .app-shell[data-sidebar="collapsed"] .brand--sidebar .brand-text,
 .app-shell[data-sidebar="collapsed"] .sidebar .nav-item span,
 .app-shell[data-sidebar="collapsed"] .sidebar-actions .nav-item span {
-  display: none;
+  max-width: 0;
+  opacity: 0;
 }
 
+/*
+ * No `justify-content: center` — that is not animatable, so it landed the icon in its final spot a
+ * frame before the column finished closing. An inline padding that centres the icon in the narrow
+ * rail does the same job and can be transitioned: 11px each side of an 18px icon fills the 40px the
+ * collapsed rail leaves exactly.
+ */
 .app-shell[data-sidebar="collapsed"] .sidebar .nav-item,
 .app-shell[data-sidebar="collapsed"] .sidebar-actions .nav-item {
-  justify-content: center;
   gap: 0;
+  padding-inline: 11px;
 }
 
 .app-shell[data-sidebar="collapsed"] .sidebar {
   padding: 12px 10px;
 }
 
+/* Small enough to sit inside the collapsed rail. At 44px the mark was wider than the column and
+   spilled over both edges of it. */
 .app-shell[data-sidebar="collapsed"] .brand--sidebar {
-  justify-content: center;
+  --brand-size: 34px;
+
+  gap: 0;
 }
 
 .app-shell[data-sidebar="collapsed"] .sidebar-actions {
@@ -602,8 +658,66 @@
   align-content: start;
 }
 
+/*
+ * A tab change slides in from the side you came from, which turns three unrelated fades into one
+ * strip you are moving along. The axis follows the tab bar: the rail stacks its destinations, so
+ * the panel travels vertically beside it; the phone's nav lays them out in a row, so it travels
+ * horizontally. `--view-from` is the offset the panel starts at, and only its sign changes with
+ * direction.
+ */
 .view-section.panel {
+  --view-from: 10px;
+
+  animation: view-enter 0.28s ease both;
   animation-delay: 0s;
+}
+
+.app-shell[data-view-direction="back"] .view-section.panel {
+  --view-from: -10px;
+}
+
+@keyframes view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--view-from));
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The phone's nav is a row, so the panels are a row too — and it travels further, because a
+   horizontal step across a narrow screen needs the distance to register. */
+@media (max-width: 960px) {
+  .view-section.panel {
+    --view-from: 22px;
+
+    animation-name: view-enter-x;
+  }
+
+  .app-shell[data-view-direction="back"] .view-section.panel {
+    --view-from: -22px;
+  }
+
+  @keyframes view-enter-x {
+    from {
+      opacity: 0;
+      transform: translateX(var(--view-from));
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-section.panel {
+    --view-from: 0px;
+  }
 }
 
 .panel-header {

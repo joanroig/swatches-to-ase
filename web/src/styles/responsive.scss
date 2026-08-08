@@ -3,11 +3,11 @@
      the footer noticeably left of the panel it belongs to. Tracks the rail's collapsed width too,
      because `--sidebar-width` is set on the shell and inherited here. */
   .footer {
-    margin-left: calc(var(--sidebar-width, 178px) + 24px);
+    margin-left: calc(var(--sidebar-width, 164px) + var(--rail-gap));
   }
 
   .shell {
-    grid-template-columns: var(--sidebar-width, 178px) minmax(0, 1fr);
+    grid-template-columns: var(--sidebar-width, 164px) minmax(0, 1fr);
     grid-template-areas: "sidebar main";
     transition: grid-template-columns 0.25s ease;
   }
@@ -27,7 +27,7 @@
     align-self: start;
     min-height: calc(100dvh - var(--frame-padding-top) - var(--frame-padding-bottom));
     justify-content: flex-start;
-    width: var(--sidebar-width, 178px);
+    width: var(--sidebar-width, 164px);
     transition: width 0.25s ease;
   }
 

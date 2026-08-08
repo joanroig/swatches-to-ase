@@ -111,6 +111,18 @@ const toggleFab = () => {
 };
 
 const syncViewState = (view: AppView) => {
+  /*
+   * Which way the tabs moved, so the incoming panel can come from the side you left.
+   *
+   * The rail stacks its destinations vertically and the phone's nav lays them out horizontally, so
+   * the same "forward" reads as downward on one and rightward on the other — the CSS picks the axis
+   * per breakpoint, this only says the sign.
+   */
+  if (appShell) {
+    const from = APP_VIEWS.indexOf(currentView);
+    const to = APP_VIEWS.indexOf(view);
+    appShell.dataset.viewDirection = to < from ? "back" : "forward";
+  }
   currentView = view;
   if (appShell) {
     appShell.dataset.view = view;

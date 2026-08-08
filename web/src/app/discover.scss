@@ -11,8 +11,18 @@
  * These selectors used to target a `.discover-controls` wrapper that no longer exists, so nothing
  * constrained the sort chip and it stretched the full width of the header.
  */
+/*
+ * A query container, so the head below can respond to the width it actually has.
+ *
+ * The narrow-width rule underneath was written as a `@container` query but nothing in Discover ever
+ * declared itself one, so it had never matched: on a phone the sort chip — which cannot shrink —
+ * took the row and squeezed the search field down to a few pixels of rounded sliver. The panel is
+ * also narrower than the viewport by whatever the rail is taking, and the rail collapses, so its
+ * own width is the honest thing to ask about.
+ */
 .discover-shell {
   align-content: start;
+  container-type: inline-size;
 }
 
 .discover-head {
@@ -20,8 +30,10 @@
 }
 
 .discover-search {
-  flex: 1 1 auto;
-  min-width: 0;
+  /* A floor, not zero: the field is the head's flexible item and would otherwise shrink away
+     entirely rather than push the head into wrapping. */
+  flex: 1 1 220px;
+  min-width: 160px;
   max-width: 420px;
 }
 
@@ -35,9 +47,21 @@
 }
 
 @container (max-width: 560px) {
-  /* The sort chip keeps its label; the search box gives up its width first. */
+  /* Two rows instead of one cramped one: the field takes the first and the sort chip sits under it,
+     still at the end of the row so it stays where it is at every other width. */
+  .discover-head {
+    flex-wrap: wrap;
+    padding-block: 10px;
+  }
+
   .discover-search {
+    flex: 1 1 100%;
+    min-width: 0;
     max-width: none;
+  }
+
+  .discover-sort {
+    margin-left: auto;
   }
 }
 
@@ -240,19 +264,14 @@
   }
 }
 
+/*
+ * `.discover-controls` used to wrap the head's two controls and is long gone, so its rule here was
+ * dead — and the two that stretched the search and the sort to the full width outlived the layout
+ * they belonged to. The full-width sort chip was the worse of the pair: at 720px it took a 650px
+ * row and pushed itself past the head's right edge. The head's own container query handles the
+ * narrow case now, at the width the panel actually has rather than the width of the window.
+ */
 @media (max-width: 720px) {
-  .discover-controls {
-    width: 100%;
-  }
-
-  .discover-sort {
-    width: 100%;
-  }
-
-  .discover-search {
-    width: 100%;
-  }
-
   .discover-profile-card {
     grid-template-columns: minmax(0, 1fr);
     justify-items: center;
