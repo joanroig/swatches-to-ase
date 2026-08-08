@@ -3,7 +3,7 @@
   max-width: 1800px;
   margin: 0 auto;
   /* The top padding belongs to the frame, which has to measure exactly one viewport. */
-  padding: 0 24px 72px;
+  padding: 0 24px 44px;
   --topbar-offset: 0px;
   --bottom-nav-height: 0px;
   --frame-padding-top: 32px;
@@ -497,8 +497,10 @@
 }
 
 /* Below the whole app — both columns — rather than inside the library's own column. */
+/* The frame above already ends short of the fold, so the footer only needs enough of its own gap to
+   read as a separate band rather than as more page padding. */
 .footer {
-  margin-top: 40px;
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -513,19 +515,6 @@
   justify-content: center;
   gap: 18px;
 }
-
-.footer-links {
-  justify-content: center;
-}
-
-.footer-links--meta {
-  align-items: center;
-}
-
-.footer-meta-row {
-  justify-content: center;
-}
-
 
 .footer-links {
   display: flex;

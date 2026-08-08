@@ -61,7 +61,7 @@
 @media (max-width: 960px) {
   .page {
     --bottom-nav-height: 44px;
-    --page-bottom-padding: calc(var(--bottom-nav-height) + 32px + env(safe-area-inset-bottom));
+    --page-bottom-padding: calc(var(--bottom-nav-height) + 20px + env(safe-area-inset-bottom));
     --topbar-offset: 64px;
     padding-bottom: var(--page-bottom-padding);
   }
