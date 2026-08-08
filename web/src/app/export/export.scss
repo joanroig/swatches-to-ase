@@ -172,7 +172,6 @@
 }
 
 .export-action:not(:disabled):hover {
-  transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--action-color, var(--accent)) 55%, transparent);
   box-shadow: 0 12px 24px color-mix(in srgb, var(--action-color, var(--accent)) 18%, transparent);
 }

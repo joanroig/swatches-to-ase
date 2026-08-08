@@ -17,13 +17,11 @@
   background: var(--bg-elevated);
   min-height: var(--control-md);
   transition:
-    transform 0.2s ease,
     box-shadow 0.2s ease,
     border-color 0.2s ease;
   box-shadow: 0 12px 24px rgba(28, 26, 22, 0.08);
 
   &:hover {
-    transform: translateY(-1px);
     border-color: rgba(28, 26, 22, 0.3);
     box-shadow: 0 16px 28px rgba(28, 26, 22, 0.14);
   }
@@ -43,7 +41,6 @@ button.footer-link {
 
   &:hover {
     color: var(--ink);
-    transform: none;
   }
 
   &:focus-visible {
@@ -94,7 +91,7 @@ button {
   cursor: pointer;
   font-weight: 600;
   transition:
-    transform 0.2s ease,
+    filter 0.2s ease,
     box-shadow 0.2s ease,
     background 0.2s ease;
   display: inline-flex;
@@ -120,14 +117,30 @@ button {
     box-shadow: var(--shadow-soft);
   }
 
-  &:hover {
-    transform: translateY(-1px);
+  /*
+   * Lit, not lifted.
+   *
+   * Hover used to raise every button a pixel, which moves the control out from under the pointer
+   * that is reaching for it — a small target can slide out of its own hitbox mid-click, and a row
+   * of them ripples as the pointer crosses it. The tone changes instead, and nothing moves.
+   *
+   * Two treatments because there are two kinds of button: a flat one takes a tint, and a gradient
+   * one has no flat colour to tint, so it brightens. `.primary` and `.danger` are excluded from
+   * the tint by name rather than by specificity, since `button:hover` (0,1,1) would otherwise beat
+   * their (0,1,0) backgrounds and paint over the gradient.
+   */
+  &:hover:not(:disabled):not(.primary):not(.danger) {
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+
+  &.primary:hover:not(:disabled),
+  &.danger:hover:not(:disabled) {
+    filter: brightness(1.06);
   }
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.55;
-    transform: none;
     box-shadow: none;
   }
 
@@ -173,7 +186,6 @@ button {
 
     &:hover {
       background: rgba(148, 163, 184, 0.15);
-      transform: none;
     }
   }
 }

@@ -257,6 +257,8 @@
 }
 
 .nav-item .icon {
+  width: 18px;
+  height: 18px;
   color: var(--muted);
 }
 
@@ -264,15 +266,22 @@
   color: var(--accent);
 }
 
-.nav-item .icon {
-  width: 18px;
-  height: 18px;
-}
-
-.nav-item.is-active {
-  color: var(--ink);
-  background: var(--surface-2);
-  border-color: var(--stroke);
+/*
+ * The current destination, in the accent.
+ *
+ * It used to be `--surface-2` with a hairline — the same fill as `:hover`, so the page you were on
+ * looked exactly like the one the pointer happened to be over, and on the dark themes `--surface-2`
+ * against the rail is a couple of percent of difference. Mixed against `--accent` rather than a
+ * fixed rgba so every theme's own accent comes through.
+ *
+ * `:hover` is repeated because it matches at the same specificity (0,2,0) and would otherwise win
+ * on source order alone, dropping the active item back to the hover fill under the pointer.
+ */
+.nav-item.is-active,
+.nav-item.is-active:hover {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .sidebar-actions {

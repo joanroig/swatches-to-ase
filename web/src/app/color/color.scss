@@ -56,7 +56,6 @@ body[data-motion="off"] .color-tools {
   font-weight: 600;
 
   &:hover {
-    transform: none;
     color: var(--ink);
   }
 
@@ -194,7 +193,6 @@ body[data-motion="off"] .color-tools {
   letter-spacing: 0.06em;
 
   &:hover {
-    transform: none;
   }
 
   /* Only the hex label fades — the swatch itself is always visible. */
@@ -278,7 +276,6 @@ body[data-motion="off"] .color-tools {
   text-align: left;
 
   &:hover {
-    transform: none;
     background: var(--surface-2);
   }
 }
