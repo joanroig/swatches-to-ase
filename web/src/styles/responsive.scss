@@ -64,16 +64,11 @@
     --page-bottom-padding: calc(var(--bottom-nav-height) + 32px + env(safe-area-inset-bottom));
     --topbar-offset: 64px;
     padding-bottom: var(--page-bottom-padding);
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
   }
 
   .shell {
     grid-template-areas: "main";
     gap: 0;
-    flex: 1 1 auto;
-    min-height: 0;
   }
 
   .sidebar-stack {
@@ -164,7 +159,8 @@
    * borders, so it reads as a sheet rather than a card floating in a gutter.
    */
   .page {
-    padding: 16px 0 var(--page-bottom-padding);
+    --frame-padding-top: 16px;
+    padding: 0 0 var(--page-bottom-padding);
   }
 
   .topbar,

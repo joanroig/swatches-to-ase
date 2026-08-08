@@ -2,9 +2,28 @@
   /* Room for four generous palette columns on a large display. */
   max-width: 1800px;
   margin: 0 auto;
-  padding: 32px 24px 72px;
+  /* The top padding belongs to the frame, which has to measure exactly one viewport. */
+  padding: 0 24px 72px;
   --topbar-offset: 0px;
   --bottom-nav-height: 0px;
+  --frame-padding-top: 32px;
+  --frame-padding-bottom: 32px;
+}
+
+/*
+ * The topbar and the app itself, sized to exactly one viewport so that the footer following it
+ * starts at the fold: the legal links are there for anyone who scrolls, and cost nothing on the
+ * first screen. This used to be a `100vh - 160px` guess on `.shell`, and 160px was never the real
+ * height of what sits above it, so the footer crept into view.
+ */
+.app-frame {
+  display: flex;
+  flex-direction: column;
+  /* Inside the viewport the frame measures, so the app ends a little short of the fold rather than
+   * running off the bottom edge. */
+  padding-block: var(--frame-padding-top) var(--frame-padding-bottom);
+  /* The phone's bottom nav floats over the page, so the frame has to stop above it. */
+  min-height: calc(100dvh - var(--bottom-nav-height));
 }
 
 .topbar {
@@ -50,10 +69,8 @@
   gap: 12px;
 }
 
-/*
- * The app frame fills the viewport, so the footer below it starts off screen and is revealed by
- * scrolling. That also gives the sidebar a full-height column to push its bottom controls into.
- */
+/* Takes whatever height the frame has left, which gives the sidebar a full column to push its
+ * bottom controls into. */
 .shell {
   display: grid;
   gap: 24px;
@@ -61,7 +78,8 @@
   grid-template-areas:
     "main"
     "sidebar";
-  min-height: calc(100vh - var(--frame-offset, 160px));
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .main-content {
