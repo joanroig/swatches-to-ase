@@ -316,6 +316,17 @@ button.playground-insert.icon-only {
   min-width: 0;
 }
 
+/*
+ * The bar's spring lives here rather than on the lead slot. The lead is hidden at the narrow
+ * breakpoints, and it was the only thing holding the harmony and save chips against the right edge:
+ * without it the whole row packed left and left a third of the bar empty. An auto margin takes the
+ * free space whenever there is any and collapses to nothing when there is not, so the wide bar is
+ * unchanged and the narrow one keeps its shape.
+ */
+.playground-cluster--harmony {
+  margin-left: auto;
+}
+
 /* `p.`, not `.`: `.panel p` in the shared layout is (0,1,1) and was winning, adding a 12px top
    margin that pushed the text 6px below the bar's centre line. */
 p.playground-hint {
