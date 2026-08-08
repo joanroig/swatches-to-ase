@@ -46,22 +46,52 @@
   flex: none;
 }
 
-@container (max-width: 560px) {
-  /* Two rows instead of one cramped one: the field takes the first and the sort chip sits under it,
-     still at the end of the row so it stays where it is at every other width. */
-  .discover-head {
-    flex-wrap: wrap;
-    padding-block: 10px;
-  }
+/* Only ever visible in the collapsed form below. Declared before that block, not after: both
+   selectors are (0,2,0), so the later one wins and a rule placed afterwards would keep it hidden. */
+.discover-sort .chip-icon {
+  display: none;
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
 
+/*
+ * Still one line, with the sort collapsed into a round button.
+ *
+ * The sort chip cannot shrink, so on a phone it took the row and squeezed the field down to a few
+ * pixels of rounded sliver. Wrapping onto two rows fixed that and cost a row of height; giving up
+ * the words instead keeps both controls on the line they belong on. The icon and the button's
+ * title carry what "Sort by / Most recent" was saying.
+ */
+@container (max-width: 560px) {
   .discover-search {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
     min-width: 0;
     max-width: none;
   }
 
   .discover-sort {
-    margin-left: auto;
+    padding-left: 4px;
+  }
+
+  .discover-sort .chip-label,
+  .discover-sort .chip-select-label {
+    display: none;
+  }
+
+  /* A circle: no text inside, so the chip's text padding and its chevron's reserved column both go,
+     and the icon sits in the middle of what is left. */
+  .discover-sort .chip--select {
+    width: var(--chip-height);
+    padding-inline: 0;
+  }
+
+  .discover-sort .chip--select::after {
+    display: none;
+  }
+
+  .discover-sort .chip-icon {
+    display: block;
   }
 }
 

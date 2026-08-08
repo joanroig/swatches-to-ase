@@ -1,11 +1,32 @@
 /* Library: search toolbar, folder groups and the palette cards themselves. */
 
+/* One line at every width. It used to wrap, which on a phone put "New folder" on a row of its own
+   and cost the list a whole button's height of chrome before the first folder. */
 .library-toolbar {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin-bottom: 16px;
+}
+
+/*
+ * Below this the label goes and the button is a circle. The folder-and-plus icon carries the
+ * meaning on its own, which a bare "+" would not have.
+ */
+@media (max-width: 560px) {
+  #create-folder {
+    width: var(--control-md);
+    min-width: var(--control-md);
+    height: var(--control-md);
+    padding: 0;
+    border-radius: var(--radius-pill);
+    flex: 0 0 auto;
+  }
+
+  #create-folder span {
+    display: none;
+  }
 }
 
 .library-search {
@@ -73,6 +94,44 @@
   height: 16px;
   flex: 0 0 auto;
   opacity: 0.7;
+}
+
+/* The palette card's grip, on the folder header: a bare glyph at the start of the row rather than
+   a circular icon button among the actions, which read as a third thing to press. */
+.library-group-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 7px;
+  color: var(--muted);
+  opacity: 0.55;
+  cursor: grab;
+  touch-action: none;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    opacity: 1;
+    background: var(--surface-2);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.library-group:hover .library-group-grip,
+.library-group:focus-within .library-group-grip {
+  opacity: 0.9;
 }
 
 .library-group-icon {
@@ -275,23 +334,31 @@ body[data-motion="off"] .library-group-body {
   transition: none;
 }
 
+/*
+ * One row, by dropping the count rather than by wrapping.
+ *
+ * This used to wrap the header and give the toggle the full width, which cost a folder three rows
+ * of chrome on a phone — and once the toggle became the chevron alone, the full-width rule put the
+ * chevron on a row of its own and pushed the name and the actions onto two more. The badge is the
+ * thing worth losing: the number of palettes is visible in the folder itself, and dropping it buys
+ * the name enough width to share a row with the actions.
+ */
 @media (max-width: 640px) {
-  /* Name on its own row. With the actions permanently visible there is not enough width for both,
-     and the folder name was the thing that lost — truncated to two characters. */
   .library-group-header {
-    flex-wrap: wrap;
+    gap: 4px;
+    padding-inline: 8px;
   }
 
-  .library-group-toggle {
-    flex: 1 1 100%;
+  .library-group-open .palette-count {
+    display: none;
   }
 
-  .library-group-actions {
-    margin-left: auto;
+  .library-group-open {
+    padding-inline: 6px;
+  }
 
-    button {
-      padding: 5px;
-    }
+  .library-group-actions button {
+    padding: 5px;
   }
 }
 
@@ -367,6 +434,9 @@ body[data-motion="off"] .palette-grid::before {
 
 .palette-card {
   position: relative;
+  /* A grid item's automatic minimum is its min-content, so without this the card grew to whatever
+     its widest row wanted and overflowed its own column. */
+  min-width: 0;
   border-radius: 16px;
   border: 1px solid var(--stroke);
   padding: 18px;
@@ -480,7 +550,12 @@ body[data-motion="off"] .palette-grid::before {
   gap: 10px;
   flex-wrap: nowrap;
   width: 100%;
+  /* `min-width: 0` so the row never sets the card's min-content width. It used to: six unwrappable
+     buttons are wider than a phone-sized card, so the card outgrew its grid column and its contents
+     spilled past the folder's edge. */
   min-width: 0;
+  /* The overflow menu hangs off this box. */
+  position: relative;
 
   button:not(.icon-only) {
     flex: 0 0 auto;
@@ -489,9 +564,41 @@ body[data-motion="off"] .palette-grid::before {
   }
 }
 
-.palette-actions-spacer {
-  flex: 1 1 auto;
-  min-width: 0;
+/*
+ * Two groups and a trigger. `ui/overflow-row.ts` moves buttons between them as the card resizes;
+ * everything here just has to lay them out and get out of the way.
+ *
+ * `display: contents` on the group that fits, so its buttons are laid out by `.palette-actions`
+ * itself and the wrapper adds no box to measure around.
+ */
+.palette-actions-primary {
+  display: contents;
+}
+
+.palette-actions-more {
+  margin-left: auto;
+
+  &.is-hidden {
+    display: none;
+  }
+}
+
+.palette-actions-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 8;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+}
+
+.palette-actions.is-open .palette-actions-menu {
+  display: flex;
 }
 
 @container palette-card (max-width: 640px) {
@@ -509,9 +616,55 @@ body[data-motion="off"] .palette-grid::before {
   }
 }
 
-@container palette-card (max-width: 520px) {
-  .palette-actions button:not(.icon-only) {
-    padding: 6px 8px;
+/*
+ * Behind one button.
+ *
+ * Seven controls that will not wrap are wider than a phone-sized card, and because the row refuses
+ * to wrap it set the card's min-content width — the card outgrew its grid column and its contents
+ * spilled past the folder's edge. Collapsing them fixes the overflow at its source rather than
+ * clipping the symptom.
+ */
+@container palette-card (max-width: 420px) {
+  .palette-actions {
+    position: relative;
+    justify-content: flex-end;
+  }
+
+  .palette-actions-more {
+    display: inline-flex;
+  }
+
+  .palette-actions-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    z-index: 8;
+    gap: 6px;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--stroke-strong);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow);
+  }
+
+  .palette-actions.is-open .palette-actions-menu {
+    display: flex;
+  }
+
+  /* The spacer separates publish and delete from the rest along a row; inside the panel it would
+     only stretch it. */
+  .palette-actions-spacer {
+    display: none;
+  }
+
+  /* The colour count goes with them. The swatches below it are the count, drawn — and on a card this
+     narrow the badge was taking width from the name beside it.
+
+     `.palette-card` qualifies the selector only to outrank the (0,1,0) `.palette-meta-badges` rule
+     further down the file, which a media or container query does nothing to change. */
+  .palette-card .palette-meta-badges {
+    display: none;
   }
 }
 
@@ -521,6 +674,10 @@ body[data-motion="off"] .palette-grid::before {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  /* Lets the actions row report the width it has rather than the width its buttons want. Without
+     it the row's min-content travelled up through the footer and the card, so the card ignored its
+     grid column, the row never measured as short, and the overflow menu never engaged. */
+  min-width: 0;
   /* No rule above the actions: the card already reads as a unit, and the line only cut it in two. */
   padding-top: 10px;
 }

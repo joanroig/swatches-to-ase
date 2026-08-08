@@ -74,6 +74,20 @@
               <div class="chip-group chip-group--labelled discover-sort">
                 <span class="chip-label" data-i18n="discover.sort.label">Sort by</span>
                 <span class="chip chip--primary chip--select">
+                  <!-- Shown only when the chip collapses to a circle; see `.discover-sort .chip-icon`. -->
+                  <svg
+                    class="icon chip-icon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <use href="/icons/sort.svg#icon" xlink:href="/icons/sort.svg#icon" />
+                  </svg>
                   <select id="discover-sort" aria-label="Sort by" data-i18n-aria-label="discover.sort.label">
                     <option value="recent" data-i18n="discover.sort.recent">Most recent</option>
                     <option value="likes-desc" data-i18n="discover.sort.likesDesc">Popularity (high to low)</option>

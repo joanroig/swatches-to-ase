@@ -394,6 +394,7 @@ const en: TranslationMap = {
   "palette.colors": { one: "{count} color", other: "{count} colors" },
   "palette.noColors": "No colors yet.",
   "palette.moreColors": { one: "{count} more color", other: "{count} more colors" },
+  "palette.actions": "Palette actions",
   "palette.signInToPublish": "Sign in to publish",
   "palette.verifyToPublish": "Verify your email to publish",
   "palette.signInToPublishToast": "Sign in to publish palettes.",

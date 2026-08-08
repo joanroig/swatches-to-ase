@@ -9,9 +9,11 @@ import { openPaletteInPlayground } from "../playground/ui";
 import { cloudState, libraryState, state } from "../state";
 import type { Folder, Palette } from "../types";
 import { createIconButton } from "../ui/buttons";
-import { createIcon, setButtonContent } from "../ui/icons";
+import { createIcon } from "../ui/icons";
 import { setModalOpen } from "../ui/modals";
 import { showToast } from "../ui/notifications";
+import { createOverflowRow } from "../ui/overflow-row";
+import { setupPopover } from "../ui/popover";
 import { createSortable, isSortableClickSuppressed, isSortableDragActive, runAfterSortableDrag } from "../ui/sortable";
 import { rgbToHex } from "../utils/color";
 import { duplicatePalette } from "./duplicate";
@@ -197,9 +199,6 @@ const createPaletteActions = (palette: Palette) => {
     },
   });
 
-  const spacer = document.createElement("span");
-  spacer.className = "palette-actions-spacer";
-
   const publishLabel = palette.isPublic ? t("action.unpublish") : t("action.publish");
   const publishButton = createIconButton({
     icon: "globe",
@@ -230,7 +229,35 @@ const createPaletteActions = (palette: Palette) => {
     },
   });
 
-  actions.append(editButton, duplicateButton, playgroundButton, exportButton, spacer, publishButton, removeButton);
+  /*
+   * Six controls in a row that will not wrap, which on a phone is wider than the card holding them
+   * — the row set the card's min-content width, so the card outgrew its grid column and its
+   * contents spilled past the folder's edge.
+   *
+   * They spill into a "more" menu as the card narrows, keeping whatever fits: a card wide enough
+   * for four buttons shows four. The order below is the order they are given up in, most useful
+   * first, so editing survives longest and deleting — which nobody needs in a hurry — goes first.
+   */
+  const primary = document.createElement("div");
+  primary.className = "palette-actions-primary";
+  primary.append(editButton, playgroundButton, publishButton, duplicateButton, exportButton, removeButton);
+
+  const menu = document.createElement("div");
+  menu.className = "palette-actions-menu";
+
+  const moreButton = createIconButton({
+    icon: "more",
+    label: t("palette.actions"),
+    iconOnly: true,
+    className: "ghost palette-actions-more",
+    actionKey: "palette-actions",
+  });
+  moreButton.setAttribute("aria-expanded", "false");
+  moreButton.setAttribute("aria-haspopup", "true");
+
+  actions.append(primary, moreButton, menu);
+  const popover = setupPopover({ root: actions, trigger: moreButton, panel: menu });
+  createOverflowRow({ row: actions, primary, menu, trigger: moreButton, onCollapse: popover.close });
   return actions;
 };
 
@@ -429,10 +456,17 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
   const actions = document.createElement("div");
   actions.className = "section-actions library-group-actions";
 
-  const grip = document.createElement("button");
-  grip.type = "button";
-  grip.className = "ghost library-group-grip";
-  setButtonContent(grip, "grip", t("action.dragToReorder"), true);
+  /*
+   * The same grip the palette cards use, in the same place: a bare glyph at the start of the row
+   * rather than a circular icon button sitting among the actions. It was reading as a third action
+   * — something to press — and it is not one; it is where you take hold of the folder.
+   */
+  const grip = document.createElement("span");
+  grip.className = "library-group-grip";
+  grip.setAttribute("role", "button");
+  grip.setAttribute("aria-label", t("action.dragToReorder"));
+  grip.title = t("action.dragToReorder");
+  grip.appendChild(createIcon("grip"));
 
   /*
    * Rename in place rather than through `window.prompt`.
@@ -539,7 +573,9 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
     iconOnly: true,
   });
 
-  actions.append(grip, renameButton, removeButton);
+  actions.append(renameButton, removeButton);
+  // The grip leads the row, before the chevron, like the one on a palette card.
+  header.prepend(grip);
   header.appendChild(actions);
   return header;
 };

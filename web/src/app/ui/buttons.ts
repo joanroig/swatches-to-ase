@@ -13,7 +13,8 @@ export type IconButtonOptions = {
   icon: IconName;
   /** Used as the visible label when not icon-only, and always as the tooltip and accessible name. */
   label: string;
-  onClick: (event: MouseEvent) => void;
+  /** Optional: a disclosure trigger gets its behaviour from the popover that owns it. */
+  onClick?: (event: MouseEvent) => void;
   /** Show the icon alone. The label still reaches assistive tech through `aria-label`. */
   iconOnly?: boolean;
   className?: string;
@@ -33,7 +34,9 @@ export const createIconButton = ({ icon, label, onClick, iconOnly = false, class
   // labelled button reachable by its name when the visible text is truncated.
   button.setAttribute("aria-label", label);
   button.title = label;
-  button.addEventListener("click", onClick);
+  if (onClick) {
+    button.addEventListener("click", onClick);
+  }
   return button;
 };
 

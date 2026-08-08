@@ -157,7 +157,9 @@ export const applyActionLabels = () => {
   viewToggleButtons.forEach((button) => {
     const target = button.dataset.viewTarget;
     if (target === "library") {
-      setButtonContent(button, "files", t("nav.library"));
+      // A grid of swatches, not a sheet of paper: the library holds palettes, and the page icon it
+      // used to carry read as a document view.
+      setButtonContent(button, "library", t("nav.library"));
     } else if (target === "playground") {
       setButtonContent(button, "playground", t("nav.playground"));
     } else if (target === "discover") {
@@ -179,7 +181,9 @@ export const applyActionLabels = () => {
   setButtonContent(openImportButton, "import", t("action.import"));
   setButtonContent(openGenerateButton, "generate", t("action.generate"));
   setButtonContent(removeAllButton, "trash", t("action.removeAll"));
-  setButtonContent(createFolderButton, "plus", t("folder.create"));
+  // A folder with a plus, not a bare plus: on a narrow toolbar the label goes and the icon is all
+  // that is left to say what the button makes.
+  setButtonContent(createFolderButton, "folderPlus", t("folder.create"));
   setButtonContent(openExportButton, "export", t("action.exportAll"));
   setButtonContent(openViewButton, "view", t("action.view"));
   setButtonContent(editorExportButton, "export", t("action.export"));

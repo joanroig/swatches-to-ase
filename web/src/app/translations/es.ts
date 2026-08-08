@@ -396,6 +396,7 @@ const es: TranslationMap = {
   "palette.colors": { one: "{count} color", other: "{count} colores" },
   "palette.noColors": "Aún no hay colores.",
   "palette.moreColors": { one: "{count} color más", other: "{count} colores más" },
+  "palette.actions": "Acciones de la paleta",
   "palette.signInToPublish": "Inicia sesión para publicar",
   "palette.verifyToPublish": "Verifica tu correo para publicar",
   "palette.signInToPublishToast": "Inicia sesión para publicar paletas.",
