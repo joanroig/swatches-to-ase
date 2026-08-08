@@ -37,6 +37,7 @@ import {
   confirmGenerateButton,
   createFolderButton,
   generateBaseColorInput,
+  generateDestination,
   generateHistoryBackButton,
   generateHistoryForwardButton,
   discoverProfileModal,
@@ -120,7 +121,7 @@ import {
 } from "./generation";
 import { onLanguageChange, t } from "./i18n";
 import { ensureLicenseLoaded, ensureLicensesLoaded } from "./licenses";
-import { createFolder } from "./palette/folders";
+import { createFolder, getOpenFolderName, getTargetFolderId } from "./palette/folders";
 import { nameColor, resolveNameFormat } from "./palette/naming";
 import {
   confirmEditorClose,
@@ -298,6 +299,11 @@ export const setupActions = () => {
   openGenerateButton?.addEventListener("click", () => {
     syncBaseColorState();
     startGeneratedPalettePreviewSession();
+    // Where it lands depends on which folder is open, so the dialog says so rather than leaving it
+    // to be discovered after saving.
+    if (generateDestination) {
+      generateDestination.textContent = t("folder.savesTo", { name: getOpenFolderName() });
+    }
     setModalOpen(generateModal, true);
   });
 
@@ -424,6 +430,10 @@ export const setupActions = () => {
   saveGeneratedPaletteButton?.addEventListener("click", () => {
     const palette = saveGeneratedPaletteFromPreview();
     trackEvent("palette_created", { colors: palette.colors.length, style: generateStyleSelect?.value ?? "unknown" });
+    // Into whichever folder the library is showing, which is Drafts at the top level. A new palette
+    // used to arrive unfiled wherever you were, so making one from inside a folder put it somewhere
+    // other than the folder you were looking at.
+    palette.folderId = getTargetFolderId();
     state.palettes.unshift(palette);
     syncActivePalette(palette.id);
     appendLog(t(palette.colors.length === 0 ? "log.generatedEmpty" : "log.generated"), "success");

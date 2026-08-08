@@ -27,18 +27,22 @@
   gap: 18px;
 }
 
+
 /* Chrome comes from `.section-card` / `.section-head`; only the folder-specific bits live here. */
 .library-group {
   align-content: start;
 }
 
-.library-group-toggle {
+/*
+ * The header carries two targets. The chevron alone furls the folder; the name beside it opens the
+ * folder on its own. One button over the whole row could only ever mean one of the two.
+ */
+.library-group-toggle,
+.library-group-open {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
-  flex: 1 1 auto;
-  padding: 6px 10px 6px 6px;
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -53,6 +57,16 @@
     background: var(--surface-2);
     transform: none;
   }
+}
+
+.library-group-toggle {
+  flex: 0 0 auto;
+  padding: 6px;
+}
+
+.library-group-open {
+  flex: 1 1 auto;
+  padding: 6px 10px;
 }
 
 .library-group-chevron {
@@ -116,7 +130,8 @@ input.library-group-rename {
 /* Held at the end of the row by its own margin rather than by the name growing into the space
    beside it: the rename field takes only the width of its text, so with nothing to push the badge
    it jumped from the end of the header to right beside the name the moment an edit started. */
-.library-group-toggle .palette-count {
+.library-group-open .palette-count,
+.library-crumb-title .palette-count {
   flex: 0 0 auto;
   margin-left: auto;
 }
@@ -175,6 +190,61 @@ input.library-group-rename {
 
 .library-group .palette-grid {
   padding: 14px;
+}
+
+/* ------------------------------------------------------ folder navigation --- */
+
+.library-crumb-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Its own size, not the section title's micro-caps: this is the name of the place you are in. */
+.library-crumb-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/*
+ * The step between the two levels. `#palette-list` gets the class for one run, and the direction
+ * says which way you went: into a folder from the right, back out from the left.
+ */
+@keyframes library-level-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}
+
+@keyframes library-level-out {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+}
+
+.library-groups.is-entering-in {
+  animation: library-level-in 0.22s ease both;
+}
+
+.library-groups.is-entering-out {
+  animation: library-level-out 0.22s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-groups.is-entering-in,
+  .library-groups.is-entering-out {
+    animation: none;
+  }
 }
 
 /*

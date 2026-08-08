@@ -19,10 +19,12 @@ import { openEditorForPalette } from "./editor";
 import {
   UNFILED_FOLDER_ID,
   deleteFolder,
+  getOpenFolderId,
   isFolderCollapsed,
   matchesLibrarySearch,
   moveFolderToIndex,
   movePaletteToFolderIndex,
+  openFolder,
   renameFolder,
   toggleFolderCollapsed,
 } from "./folders";
@@ -370,13 +372,34 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
   const header = document.createElement("div");
   header.className = "section-head library-group-header";
 
+  /*
+   * Two targets, not one.
+   *
+   * The whole header used to collapse the folder, which left no way to say "show me this folder and
+   * nothing else". The chevron keeps the collapse; the name opens the folder on its own.
+   */
   const toggle = document.createElement("button");
   toggle.type = "button";
   toggle.className = "library-group-toggle";
   toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  toggle.setAttribute("aria-label", t(collapsed ? "folder.expand" : "folder.collapse"));
+  toggle.title = t(collapsed ? "folder.expand" : "folder.collapse");
   const chevron = createIcon(collapsed ? "chevronDown" : "chevronUp");
   chevron.classList.add("library-group-chevron");
-  // A folder icon on real folders, a tray on Unfiled: the two are different kinds of thing, and the
+  toggle.appendChild(chevron);
+  toggle.addEventListener("click", () => {
+    if (header.querySelector(".library-group-rename")) {
+      return;
+    }
+    toggleFolderCollapsed(group.id);
+    renderPaletteList();
+  });
+
+  const open = document.createElement("button");
+  open.type = "button";
+  open.className = "library-group-open";
+  open.title = t("folder.open");
+  // A folder icon on real folders, a tray on Drafts: the two are different kinds of thing, and the
   // name alone did not say so.
   const kind = createIcon(group.folder ? "folder" : "inbox");
   kind.classList.add("library-group-icon");
@@ -386,15 +409,17 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
   const count = document.createElement("span");
   count.className = "palette-count";
   count.textContent = t("folder.count", { count: group.palettes.length });
-  toggle.append(chevron, kind, label, count);
-  toggle.addEventListener("click", () => {
+  open.append(kind, label, count);
+  open.addEventListener("click", () => {
+    // Mid-rename the name is a text field, and clicking inside it must not navigate away.
     if (header.querySelector(".library-group-rename")) {
       return;
     }
-    toggleFolderCollapsed(group.id);
+    openFolder(group.id);
     renderPaletteList();
   });
-  header.appendChild(toggle);
+
+  header.append(toggle, open);
 
   if (!group.folder) {
     return header;
@@ -551,6 +576,93 @@ const createLibraryGroup = (group: LibraryGroup, isSearching: boolean) => {
   return section;
 };
 
+let lastLevelKey = "";
+
+/*
+ * The step between the list of folders and one folder on its own.
+ *
+ * Only when the level actually changes. The list re-renders on every rename, every drop and every
+ * cloud update, and animating all of those would leave the panel twitching. Direction follows the
+ * move: opening a folder comes in from the right, going back from the left.
+ */
+const playLevelTransition = (root: HTMLElement) => {
+  const key = `${root.dataset.level ?? ""}:${getOpenFolderId() ?? ""}`;
+  const previous = lastLevelKey;
+  lastLevelKey = key;
+  if (!previous || previous === key) {
+    return;
+  }
+  root.classList.remove("is-entering-in", "is-entering-out");
+  // Forces the removal to take effect, so stepping between two folders replays the animation
+  // instead of being treated as no change at all.
+  void root.offsetWidth;
+  root.classList.add(root.dataset.level === "folder" ? "is-entering-in" : "is-entering-out");
+};
+
+/*
+ * The bar above an opened folder: a way back, the folder's name, and how much is in it.
+ *
+ * It is the app's section header again, so the folder you are inside reads as the same kind of
+ * thing as the folder you clicked to get here.
+ */
+const createFolderCrumb = (group: LibraryGroup) => {
+  const head = document.createElement("div");
+  head.className = "section-head library-crumb";
+
+  const back = createIconButton({
+    icon: "chevronLeft",
+    label: t("folder.backToLibrary"),
+    onClick: () => {
+      openFolder(null);
+      renderPaletteList();
+    },
+    iconOnly: true,
+    actionKey: "close-folder",
+  });
+
+  const title = document.createElement("h2");
+  title.className = "section-title library-crumb-title";
+  const kind = createIcon(group.folder ? "folder" : "inbox");
+  kind.classList.add("library-group-icon");
+  const name = document.createElement("span");
+  name.className = "library-crumb-name";
+  name.textContent = group.folder ? group.folder.name : t("folder.unfiled");
+  const count = document.createElement("span");
+  count.className = "palette-count";
+  count.textContent = t("folder.count", { count: group.palettes.length });
+  title.append(kind, name, count);
+
+  head.append(back, title);
+  return head;
+};
+
+/** One folder, filling the panel on its own. */
+const createFolderView = (group: LibraryGroup, isSearching: boolean) => {
+  const section = document.createElement("section");
+  section.className = "section-card section-card--open library-group library-group--open";
+  section.dataset.folderId = group.id;
+  section.appendChild(createFolderCrumb(group));
+
+  const body = document.createElement("div");
+  body.className = "library-group-body";
+
+  const grid = document.createElement("div");
+  grid.className = "palette-grid";
+  grid.dataset.folderId = group.folder ? group.folder.id : UNFILED_FOLDER_ID;
+  group.palettes.forEach((palette) => grid.appendChild(createPaletteCard(palette)));
+
+  if (group.palettes.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "empty library-group-empty";
+    empty.textContent = isSearching ? t("library.search.emptyFolder") : t("folder.empty");
+    grid.appendChild(empty);
+  }
+
+  body.appendChild(grid);
+  section.appendChild(body);
+  return section;
+};
+
 /** Folders first in their own order, then the unfiled section. */
 const buildGroups = (palettes: Palette[]): LibraryGroup[] => {
   const groups: LibraryGroup[] = state.folders.map((folder) => ({
@@ -591,20 +703,28 @@ export const renderPaletteList = () => {
       )
     : state.palettes;
 
-  const hasAnyPalette = state.palettes.length > 0;
   const hasMatches = visible.length > 0;
   libraryEmptySearch?.classList.toggle("is-hidden", !query || hasMatches);
 
-  if (!hasAnyPalette && state.folders.length === 0) {
-    paletteList.innerHTML = `<p class="empty">${t("palette.empty")}</p>`;
-    updateExportAvailability();
-    window.dispatchEvent(new Event("actiondock:sync"));
-    return;
-  }
+  /*
+   * A fresh install used to get a bare "no palettes yet" line, which left the panel with nothing in
+   * it and nothing to drop onto. Drafts is always there instead, empty and ready — the library is
+   * never a blank box.
+   */
+  const allGroups = buildGroups(visible);
+  const openId = getOpenFolderId();
+  const openGroup = openId ? allGroups.find((group) => group.id === openId) : undefined;
 
-  // While searching, folders with no match are hidden rather than shown empty.
-  const groups = buildGroups(visible).filter((group) => !query || group.palettes.length > 0 || (!group.folder && !hasMatches));
-  groups.forEach((group) => paletteList.appendChild(createLibraryGroup(group, Boolean(query))));
+  paletteList.dataset.level = openGroup ? "folder" : "library";
+  if (openGroup) {
+    paletteList.appendChild(createFolderView(openGroup, Boolean(query)));
+  } else {
+    // While searching, folders with no match are hidden rather than shown empty.
+    allGroups
+      .filter((group) => !query || group.palettes.length > 0 || (!group.folder && !hasMatches))
+      .forEach((group) => paletteList.appendChild(createLibraryGroup(group, Boolean(query))));
+  }
+  playLevelTransition(paletteList);
 
   updateExportAvailability();
   renderViewModal();

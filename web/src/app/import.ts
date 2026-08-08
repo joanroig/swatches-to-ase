@@ -3,6 +3,7 @@ import { readPaletteFile } from "@core/palette";
 import { trackEvent } from "./cloud/analytics";
 import { dropzone, fileInput, formatSelect } from "./dom";
 import { updateExportAvailability } from "./export/manager";
+import { getTargetFolderId } from "./palette/folders";
 import { nameColor, resolveNameFormat } from "./palette/naming";
 import { renderEditor, renderPaletteList, syncActivePalette } from "./palette/ui";
 import { persistPalettes, persistPreferences } from "./persistence";
@@ -44,6 +45,8 @@ export const handleFiles = async (fileList: FileList | null) => {
             rgb: color.rgb,
           })),
           lastModified: Date.now(),
+          // Into the folder being browsed, like everything else the dock creates.
+          folderId: getTargetFolderId(),
         };
         state.palettes.push(palette);
         trackEvent("palette_imported", { format: file.name.split(".").pop() ?? "unknown", colors: palette.colors.length });

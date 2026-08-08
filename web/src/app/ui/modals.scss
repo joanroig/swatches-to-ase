@@ -395,6 +395,17 @@
   min-width: 156px;
 }
 
+/* Where the palette will end up, stated before you commit to it rather than discovered afterwards.
+   It takes the free space so the two buttons stay together at the end of the row. */
+.generate-destination {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 720px) {
   #generate-modal .modal-card {
     width: min(96vw, 560px);

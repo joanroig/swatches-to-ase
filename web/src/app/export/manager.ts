@@ -10,6 +10,7 @@ import {
   openExportButton,
   removeAllButton,
 } from "../dom";
+import { getOpenFolderId, resolveFolderId } from "../palette/folders";
 import { updateProcessingState } from "../processing";
 import { buildSharedPaletteUrl } from "../share";
 import { exportState, state } from "../state";
@@ -268,8 +269,24 @@ export const setExportMode = (mode: ExportMode) => {
   updateExportAvailability();
 };
 
+/*
+ * What "everything" means right now.
+ *
+ * Inside a folder it means that folder: the panel is showing one folder's palettes, and an "Export
+ * all" that quietly reached past it into the rest of the library would be exporting things the
+ * screen is not even displaying.
+ */
+const getExportScope = () => {
+  const open = getOpenFolderId();
+  if (!open) {
+    return state.palettes;
+  }
+  const folderId = resolveFolderId(open);
+  return state.palettes.filter((palette) => (palette.folderId ?? null) === folderId);
+};
+
 export const updateExportAvailability = () => {
-  const hasPalettes = state.palettes.length > 0;
+  const hasPalettes = getExportScope().length > 0;
   if (openExportButton) {
     openExportButton.disabled = !hasPalettes;
   }
@@ -287,7 +304,7 @@ export const updateExportAvailability = () => {
   });
 };
 
-export const getExportTargets = () => selectExportTargets(exportState.mode, state.palettes, state.activePaletteId);
+export const getExportTargets = () => selectExportTargets(exportState.mode, getExportScope(), state.activePaletteId);
 
 export const exportPalettesSmart = async (palettes: Palette[]) => {
   if (palettes.length === 0) {

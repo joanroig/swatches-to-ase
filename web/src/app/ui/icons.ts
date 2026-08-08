@@ -15,6 +15,7 @@ const ICONS = {
   eyedropper: "/icons/eyedropper.svg#icon",
   chevronUp: "/icons/chevronUp.svg#icon",
   chevronDown: "/icons/chevronDown.svg#icon",
+  chevronLeft: "/icons/chevronLeft.svg#icon",
   grip: "/icons/grip.svg#icon",
   link: "/icons/link.svg#icon",
   share: "/icons/share.svg#icon",

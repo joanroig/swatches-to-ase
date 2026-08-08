@@ -11,6 +11,11 @@ export const state = {
 export const libraryState = {
   search: "",
   collapsedFolderIds: new Set<string>(),
+  /**
+   * The folder being browsed on its own, or `null` for the list of every folder. Deliberately not
+   * persisted: which folder you had open is about the last minute, not the last session.
+   */
+  openFolderId: null as string | null,
 };
 
 export const exportState = {

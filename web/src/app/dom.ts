@@ -109,6 +109,7 @@ export const saveGeneratedPaletteButton = document.querySelector<HTMLButtonEleme
 export const generatePreviewName = document.querySelector<HTMLParagraphElement>("#generate-preview-name");
 export const generatePreviewSubtitle = document.querySelector<HTMLParagraphElement>("#generate-preview-subtitle");
 export const generatePreviewStrip = document.querySelector<HTMLDivElement>("#generate-preview-strip");
+export const generateDestination = document.querySelector<HTMLParagraphElement>("#generate-destination");
 export const exportAllButton = document.querySelector<HTMLButtonElement>("#export-all");
 export const exportFormatOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="export-format"]'));
 export const exportActionButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-export-action]"));

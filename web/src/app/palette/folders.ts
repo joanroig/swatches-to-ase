@@ -113,6 +113,40 @@ export const toggleFolderCollapsed = (folderId: string) => {
   persistCollapsedFolders();
 };
 
+/* ------------------------------------------------------- folder navigation --- */
+
+/*
+ * Browsing one folder on its own.
+ *
+ * The id is stored rather than the folder itself, so a folder deleted from under the view — by a
+ * cloud merge, say — resolves to nothing and the library falls back to the list of folders. Drafts
+ * opens under its sentinel, since it has no folder record to point at.
+ */
+
+/** The open group's id, or `null` at the top level. Drafts reports the sentinel, not `null`. */
+export const getOpenFolderId = () => {
+  const open = libraryState.openFolderId;
+  if (!open) {
+    return null;
+  }
+  return open === UNFILED_FOLDER_ID || getFolderById(open) ? open : null;
+};
+
+/** Where a palette created right now belongs: the open folder, or Drafts at the top level. */
+export const getTargetFolderId = () => resolveFolderId(getOpenFolderId());
+
+export const getOpenFolderName = () => {
+  const open = getOpenFolderId();
+  if (!open || open === UNFILED_FOLDER_ID) {
+    return t("folder.unfiled");
+  }
+  return getFolderById(open)?.name ?? t("folder.unfiled");
+};
+
+export const openFolder = (folderId: string | null) => {
+  libraryState.openFolderId = folderId;
+};
+
 /**
  * Reposition a palette, optionally into a different folder.
  *

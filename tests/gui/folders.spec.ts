@@ -45,6 +45,73 @@ const boxOf = async (locator) => {
   return box;
 };
 
+test("a brand new library still shows Drafts", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await expect(page.locator("body")).toHaveClass(/is-ready/);
+
+  await expect(page.locator('.library-group[data-folder-id="__unfiled__"]')).toHaveCount(1);
+  await expect(page.locator('.palette-grid[data-folder-id="__unfiled__"]')).toBeVisible();
+});
+
+/* The chevron and the name are two different intentions, and one button over the row could only
+   ever serve one of them. */
+test("the chevron collapses and the name opens the folder", async ({ page }) => {
+  await seed(page, ["Alpha", "Beta"]);
+  const group = page.locator('.library-group[data-folder-id="__unfiled__"]');
+  const list = page.locator("#palette-list");
+
+  await group.locator(".library-group-toggle").click();
+  await expect(group).toHaveClass(/is-collapsed/);
+  await expect(list).toHaveAttribute("data-level", "library");
+
+  await group.locator(".library-group-toggle").click();
+  await group.locator(".library-group-open").click();
+  await expect(list).toHaveAttribute("data-level", "folder");
+  await expect(page.locator(".library-group")).toHaveCount(1);
+  await expect(page.locator(".palette-card")).toHaveCount(2);
+
+  await page.locator('[data-action-key="close-folder"]').click();
+  await expect(list).toHaveAttribute("data-level", "library");
+});
+
+/* Inside a folder the dock works on that folder: a palette made there lands there, and the dialog
+   says so before you commit to it. */
+test("a palette created inside a folder is filed there", async ({ page }) => {
+  await seed(page, ["Alpha"]);
+  await page.locator("#create-folder").click();
+  const folder = page.locator(".library-group[data-folder-id]:not([data-folder-id='__unfiled__'])").first();
+  const folderId = await folder.getAttribute("data-folder-id");
+
+  await page.locator("#open-generate").click();
+  await expect(page.locator("#generate-destination")).toHaveText("Saved to Drafts");
+  await page.keyboard.press("Escape");
+
+  await folder.locator(".library-group-open").click();
+  await page.locator("#open-generate").click();
+  await expect(page.locator("#generate-destination")).toHaveText("Saved to New folder");
+  await page.locator("#save-generated-palette").click();
+
+  await expect(page.locator(".palette-card")).toHaveCount(1);
+  await page.locator('[data-action-key="close-folder"]').click();
+  expect(await titlesInFolder(page, "__unfiled__")).toEqual(["Alpha"]);
+  expect((await titlesInFolder(page, folderId as string)).length).toBe(1);
+});
+
+/* "Export all" means the folder you are in, not the whole library behind it. */
+test("export is disabled inside an empty folder", async ({ page }) => {
+  await seed(page, ["Alpha"]);
+  await expect(page.locator("#open-export")).toBeEnabled();
+
+  await page.locator("#create-folder").click();
+  await page.locator(".library-group[data-folder-id]:not([data-folder-id='__unfiled__'])").first().locator(".library-group-open").click();
+  await expect(page.locator("#open-export")).toBeDisabled();
+
+  await page.locator('[data-action-key="close-folder"]').click();
+  await expect(page.locator("#open-export")).toBeEnabled();
+});
+
 test("palettes start unfiled and a new folder can be created", async ({ page }) => {
   await seed(page, ["Alpha", "Beta"]);
 
