@@ -1413,3 +1413,28 @@ button.ui-cta {
 .playground-preview > .playground-stage {
   margin-inline: calc(var(--panel-pad) * -1);
 }
+
+/*
+ * The preview head has to be able to shrink.
+ *
+ * `.section-actions` is `flex: none` and a `.chip-group` is too, so on a narrow panel the tab strip,
+ * the zoom and the full-screen button kept their full 500px and simply hung off the side — 161px
+ * past the panel edge at 360px wide. The tab strip is the one that gives: it already scrolls rather
+ * than wraps, so it absorbs the shrink and the two fixed controls beside it stay whole.
+ */
+.playground-preview-controls {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.playground-preview-controls .playground-scene-tabs {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* The title yields before the controls do — the tabs are the thing being used. */
+.playground-preview > .section-head > .section-title {
+  flex: 0 1 auto;
+  overflow: hidden;
+}

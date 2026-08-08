@@ -2,8 +2,10 @@
   /* Room for four generous palette columns on a large display. */
   max-width: 1800px;
   margin: 0 auto;
+  --page-pad: 16px;
+
   /* The top padding belongs to the frame, which has to measure exactly one viewport. */
-  padding: 0 16px 36px;
+  padding: 0 var(--page-pad) 36px;
   --topbar-offset: 0px;
   --bottom-nav-height: 0px;
   --frame-padding-top: 22px;
@@ -44,15 +46,20 @@
   isolation: isolate;
 }
 
+/*
+ * The sticky bar's backdrop, bled out to the window edges.
+ *
+ * `width: 100vw` did it before, and `100vw` counts the scrollbar: on every phone width the backdrop
+ * was ~17px wider than the page could hold and the whole document scrolled sideways. The page's own
+ * gutter is the exact amount to give back, and it is a variable so the two cannot drift.
+ */
 .topbar::before {
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 50%;
-  width: 100vw;
-  width: 100dvw;
-  transform: translateX(-50%);
+  left: calc(var(--page-pad) * -1);
+  right: calc(var(--page-pad) * -1);
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -385,12 +392,18 @@
   align-items: center;
   justify-items: end;
   isolation: isolate;
+  /* The menu hangs off this box, so it needs to be the thing that box is measured against. */
+  position: fixed;
 }
 
+/* The glow behind the open menu. It used to reach 50px past the hub, and the hub is 12px from the
+   panel's edge, so those last 38px hung off the window and the whole page scrolled sideways — on
+   every library width, for a decoration nobody can point at. It stops at the edge now and spreads
+   inwards, which is where the menu is. */
 .fab-hub::before {
   content: "";
   position: absolute;
-  right: -50px;
+  right: -12px;
   bottom: -12px;
   width: 240px;
   height: 280px;
@@ -402,7 +415,16 @@
   pointer-events: none;
 }
 
+/*
+ * Closed, it is faded out but still laid out — which is what lets it animate — and its buttons are
+ * wider than the toggle they sit above. As a grid item that made the hub's overflow, and the hub is
+ * pinned to the right edge, so the page scrolled sideways by the difference on every phone width.
+ * Taking it out of flow leaves the hub the size of its toggle and the menu stacked above it.
+ */
 .fab-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
   display: grid;
   gap: 5px;
   padding: 0;

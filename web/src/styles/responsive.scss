@@ -165,7 +165,9 @@
    */
   .page {
     --frame-padding-top: 16px;
-    padding: 0 0 var(--page-bottom-padding);
+    --page-pad: 0px;
+
+    padding: 0 var(--page-pad) var(--page-bottom-padding);
   }
 
   .topbar,
@@ -174,10 +176,15 @@
   }
 
   /* Square: a full-bleed sheet with rounded top corners read as a card that had lost its sides. */
+  /* The gutter moves through the variable, never through `padding` alone: the panel heads bleed
+     out by exactly `--panel-pad`, so a hardcoded padding here left every one of them overshooting
+     the panel by the difference — 4px of head hanging off both edges, and a page that scrolled
+     sideways because of it. */
   .panel {
+    --panel-pad: 14px;
+
     border-radius: 0;
     border-inline: 0;
-    padding: 14px 12px;
   }
 
   .section-card {
@@ -227,9 +234,7 @@
     width: 100%;
   }
 
-  .panel {
-    padding: 20px;
-  }
+
 
   .form-grid {
     grid-template-columns: 1fr;

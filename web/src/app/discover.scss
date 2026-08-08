@@ -58,8 +58,11 @@
   min-width: 0;
 }
 
+/* Held against the panel's right gutter. The search box is capped at 420px so it does not sprawl on
+   a wide screen, which left both controls bunched at the left with the rest of the bar empty. */
 .discover-sort {
   flex: none;
+  margin-left: auto;
 }
 
 /* Only ever visible in the collapsed form below. Declared before that block, not after: both
