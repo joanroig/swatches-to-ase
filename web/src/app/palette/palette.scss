@@ -152,6 +152,25 @@
   padding: 14px;
 }
 
+/*
+ * A collapsed folder is just its header, so the header stops behaving like one: it rounds all four
+ * corners and drops the rule beneath it. Left as-is it kept a hairline with nothing under it and
+ * its square bottom corners showed a sliver of the card behind, which read as an empty tray.
+ */
+.library-group.is-collapsed > .section-head {
+  border-bottom-color: transparent;
+  border-radius: calc(var(--radius-lg) - 1px);
+  transition:
+    border-radius 0.24s ease,
+    border-color 0.24s ease;
+}
+
+.library-group > .section-head {
+  transition:
+    border-radius 0.24s ease,
+    border-color 0.24s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   body:not([data-motion="on"]) .library-group-body {
     transition: none;

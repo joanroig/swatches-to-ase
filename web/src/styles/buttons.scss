@@ -79,7 +79,9 @@ button.footer-link {
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--muted) 15%, transparent);
+  /* Faint on purpose — it is a build stamp, not information — but 15% read as a rendering fault
+     rather than a deliberately quiet line. */
+  color: color-mix(in srgb, var(--muted) 38%, transparent);
   font-variant-numeric: tabular-nums;
 }
 

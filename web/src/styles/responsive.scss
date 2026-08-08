@@ -49,26 +49,6 @@
     flex: 1 1 auto;
   }
 
-  .footer-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .footer-links {
-    justify-content: flex-start;
-  }
-
-  .footer-links--meta {
-    align-items: flex-start;
-  }
-
-  .footer-meta-row {
-    justify-content: flex-start;
-  }
-
-  .footer-link {
-    font-size: 0.8rem;
-  }
 }
 
 @media (max-width: 960px) {
@@ -137,6 +117,61 @@
 }
 
 @media (max-width: 720px) {
+  /*
+   * The footer stays centred. These rules left-aligned it from when it lived inside the library
+   * column; now that it sits under the whole app, alignment should match the desktop.
+   */
+  .footer {
+    margin-top: 28px;
+    gap: 14px;
+  }
+
+  .footer-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  /* Sized so all six links sit on one row at 390px: at the desktop size they wrapped 5 + 1, which
+     left "About" stranded on a line of its own. */
+  /* Sized so all six links sit on one row at 390px: at the desktop size they wrapped 5 + 1, which
+     left "About" stranded on a line of its own. */
+  .footer-links {
+    justify-content: center;
+    gap: 8px 10px;
+  }
+
+  .footer-links--meta {
+    align-items: center;
+  }
+
+  .footer-meta-row {
+    justify-content: center;
+  }
+
+  /* `button.footer-link`, not `.footer-link`: the base rule in `buttons.scss` is element-qualified
+     and outranks a bare class however late it comes in the cascade. */
+  button.footer-link {
+    font-size: 0.78rem;
+    /* A comfortable tap target without changing how the row reads. */
+    padding: 4px 0;
+  }
+
+  /*
+   * In normal flow on a phone. Absolutely positioned under the version button, it detached the
+   * moment the meta row wrapped and ended up floating over whatever followed.
+   */
+  .footer-version {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .footer-deploy {
+    position: static;
+    transform: none;
+    width: auto;
+  }
+
   /*
    * Full-bleed on phones. The page's side padding plus the panel's own inset was costing ~52px of
    * a 390px screen — most of a swatch — and it bought nothing: the panel edge already separates the
