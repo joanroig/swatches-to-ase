@@ -109,7 +109,15 @@
   min-height: min(820px, calc(100vh - 160px));
 }
 
+/*
+ * The wordmark is one lockup driven by `--brand-size`, the logo's edge length. Everything else is
+ * a ratio of it, so the two-line text block always matches the mark's height. Before this the
+ * topbar title carried a `clamp(2.2rem, 3vw, 3rem)` sized for the old single-line lockup, and once
+ * the text stacked it towered over a 38px logo at mid widths.
+ */
 .brand {
+  --brand-size: 38px;
+
   display: flex;
   align-items: center;
   gap: 12px;
@@ -128,8 +136,8 @@
 }
 
 .brand-logo {
-  width: 38px;
-  height: 38px;
+  width: var(--brand-size);
+  height: var(--brand-size);
   border-radius: 12px;
   border: 1px solid var(--stroke);
   background: var(--bg-elevated);
@@ -139,7 +147,7 @@
 }
 
 .brand-title {
-  font-size: clamp(2.2rem, 3vw, 3rem);
+  font-size: calc(var(--brand-size) * 0.55);
   /* Just over 1: at exactly 1 the line box is the font size and descenders get clipped. */
   line-height: 1.05;
 }
@@ -151,7 +159,7 @@
  * words line up whatever the translation.
  */
 .brand-subtitle {
-  font-size: 0.72rem;
+  font-size: calc(var(--brand-size) * 0.3);
   text-transform: uppercase;
   letter-spacing: 0.26em;
   color: var(--accent);

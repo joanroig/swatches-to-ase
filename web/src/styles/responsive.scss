@@ -205,18 +205,9 @@
     display: flex;
   }
 
-  .brand-logo {
-    width: 32px;
-    height: 32px;
-  }
-
-  .topbar .brand-title {
-    font-size: 1.2rem;
-  }
-
-  .topbar .brand-subtitle {
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
+  /* One value resizes the whole lockup. */
+  .brand {
+    --brand-size: 32px;
   }
 
   .topbar-actions {
