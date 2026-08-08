@@ -157,11 +157,19 @@
  * that only happens to look right in English. The `letter-spacing` is the fallback for engines
  * without inter-character justification; where it works, justification overrides it and the two
  * words line up whatever the translation.
+ *
+ * Letter-spacing is added after every glyph, the last one included, so the justified box ends a
+ * full space past the final letter and "STUDIO" reads as inset from "Palette" above it. The
+ * negative margin hands that trailing space back to the layout: the box overhangs by exactly the
+ * space it wastes, which puts the last letter's ink — not its advance — on the title's right edge.
  */
 .brand-subtitle {
-  font-size: calc(var(--brand-size) * 0.3);
+  --brand-tracking: 0.26em;
+
+  font-size: calc(var(--brand-size) * 0.33);
   text-transform: uppercase;
-  letter-spacing: 0.26em;
+  letter-spacing: var(--brand-tracking);
+  margin-right: calc(var(--brand-tracking) * -1);
   color: var(--accent);
   line-height: 1.2;
   text-align: justify;
@@ -169,17 +177,8 @@
   text-justify: inter-character;
 }
 
-.brand--sidebar .brand-logo {
-  width: 44px;
-  height: 44px;
-}
-
-.brand--sidebar .brand-title {
-  font-size: 1.45rem;
-}
-
-.brand--sidebar .brand-subtitle {
-  font-size: 0.8rem;
+.brand--sidebar {
+  --brand-size: 44px;
 }
 
 .avatar-button.ghost {
