@@ -137,8 +137,33 @@
 }
 
 @media (max-width: 720px) {
+  /*
+   * Full-bleed on phones. The page's side padding plus the panel's own inset was costing ~52px of
+   * a 390px screen — most of a swatch — and it bought nothing: the panel edge already separates the
+   * content from the background. The panel keeps its top and bottom corners and loses its side
+   * borders, so it reads as a sheet rather than a card floating in a gutter.
+   */
   .page {
-    padding: 16px 14px var(--page-bottom-padding);
+    padding: 16px 0 var(--page-bottom-padding);
+  }
+
+  .topbar,
+  .footer {
+    padding-inline: 14px;
+  }
+
+  .panel {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-inline: 0;
+    padding: 14px 12px;
+  }
+
+  .section-card {
+    border-radius: var(--radius-md);
+  }
+
+  .library-group .palette-grid {
+    padding: 10px;
   }
 
   .topbar {

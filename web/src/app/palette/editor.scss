@@ -116,7 +116,7 @@
   min-width: 0;
 }
 
-.editor-toolbar button {
+.editor-toolbar button:not(.icon-only) {
   padding: 8px 12px;
   font-size: 0.85rem;
 }
@@ -240,8 +240,9 @@
   place-items: center;
 }
 
-.color-insert {
+button.color-insert.icon-only {
   width: 26px;
+  min-width: 0;
   height: 26px;
   min-width: 0;
   min-height: 0;
@@ -701,7 +702,7 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
 }
 
 @media (max-width: 480px) {
-  .editor-toolbar button {
+  .editor-toolbar button:not(.icon-only) {
     padding: 8px 10px;
   }
 

@@ -128,13 +128,13 @@ const createPaletteChips = (palette: Palette) => {
   const remaining = palette.colors.length - previewColors.length;
   previewColors.forEach((color) => {
     const chip = document.createElement("span");
-    chip.className = "chip";
+    chip.className = "palette-chip";
     chip.style.background = rgbToHex(color.rgb);
     chips.appendChild(chip);
   });
   if (remaining > 0) {
     const more = document.createElement("span");
-    more.className = "chip chip-more";
+    more.className = "palette-chip palette-chip-more";
     more.textContent = `+${remaining}`;
     more.title = t("palette.moreColors", { count: remaining });
     chips.appendChild(more);
@@ -149,6 +149,7 @@ const createPaletteActions = (palette: Palette) => {
   const editButton = createIconButton({
     icon: "edit",
     label: t("action.edit"),
+    iconOnly: true,
     onClick: (event) => {
       event.stopPropagation();
       openEditorForPalette(palette.id);
@@ -158,6 +159,7 @@ const createPaletteActions = (palette: Palette) => {
   const duplicateButton = createIconButton({
     icon: "duplicate",
     label: t("action.duplicate"),
+    iconOnly: true,
     onClick: (event) => {
       event.stopPropagation();
       const copy = duplicatePalette(
@@ -173,6 +175,7 @@ const createPaletteActions = (palette: Palette) => {
   const playgroundButton = createIconButton({
     icon: "playground",
     label: t("action.openInPlayground"),
+    iconOnly: true,
     onClick: (event) => {
       event.stopPropagation();
       openPaletteInPlayground(palette.id);
@@ -183,6 +186,7 @@ const createPaletteActions = (palette: Palette) => {
   const exportButton = createIconButton({
     icon: "export",
     label: t("action.export"),
+    iconOnly: true,
     onClick: (event) => {
       event.stopPropagation();
       syncActivePalette(palette.id);
@@ -198,6 +202,7 @@ const createPaletteActions = (palette: Palette) => {
   const publishButton = createIconButton({
     icon: "globe",
     label: publishLabel,
+    iconOnly: true,
     onClick: (event) => {
       event.stopPropagation();
       void togglePaletteVisibility(palette.id);
@@ -216,6 +221,7 @@ const createPaletteActions = (palette: Palette) => {
   const removeButton = createIconButton({
     icon: "trash",
     label: t("action.remove"),
+    iconOnly: true,
     onClick: (event) => {
       event.stopPropagation();
       void removePalette(palette.id);

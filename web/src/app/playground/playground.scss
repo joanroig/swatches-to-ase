@@ -216,7 +216,9 @@ button.playground-swatch-action.is-on {
   transform: translateX(50%);
 }
 
-button.playground-insert {
+/* Beats the shared `button.icon-only` sizing: this one floats over the swatches and must stay a
+   small circle rather than take the toolbar control size. */
+button.playground-insert.icon-only {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -293,92 +295,13 @@ button.playground-insert {
   background: var(--surface);
 }
 
-.playground-cluster {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex: none;
-  min-width: 0;
-  height: 40px;
-  padding: 4px;
-  border-radius: 999px;
-  background: var(--bg-elevated);
-}
 
-.playground-cluster--harmony {
-  /* The only cluster allowed to give ground, and only through the value inside it. */
-  flex: 0 1 auto;
-  padding-left: 12px;
-  cursor: pointer;
-}
 
-.playground-cluster-label {
-  font-size: 0.82rem;
-  font-weight: 600;
-  line-height: 1.5;
-  color: var(--muted);
-  white-space: nowrap;
-  flex: none;
-}
 
 /* One chip shape for everything in the bar. */
-.playground-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: var(--chip-height);
-  min-height: 0;
-  min-width: 0;
-  padding-inline: 14px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink);
-  font-size: 0.85rem;
-  font-weight: 600;
-  /* Not `line-height: 1`. That makes the line box exactly the font size, and anything with a
-     descender — the "g" in "Analogous" — has its tail clipped by the overflow, which reads as a
-     different letter. Centring is flexbox's job, not the line box's. */
-  line-height: 1.5;
-  white-space: nowrap;
-  flex: none;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease;
-
-  .icon {
-    width: 17px;
-    height: 17px;
-    flex: none;
-  }
-
-  &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--ink) 10%, transparent);
-  }
-
-  &:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-}
 
 /* The current selection, exactly as the active preview tab is drawn. */
-.playground-chip--primary {
-  background: linear-gradient(130deg, var(--accent), var(--accent-3));
-  color: #fff;
 
-  &:hover:not(:disabled) {
-    background: linear-gradient(130deg, var(--accent), var(--accent-3));
-    filter: brightness(1.06);
-  }
-}
-
-.playground-chip--icon {
-  width: var(--chip-height);
-  padding-inline: 0;
-}
 
 /*
  * Holds the space-bar hint, or the "Editing <palette>" note when the playground is linked to a
@@ -444,9 +367,6 @@ button.playground-source-detach {
  * hiding the lead let the harmony collapse leftward and the control appeared to jump sides as the
  * window was resized.
  */
-.playground-cluster--harmony {
-  margin-left: auto;
-}
 
 /* ------------------------------------------------------- the harmony chip --- */
 
@@ -460,76 +380,9 @@ button.playground-source-detach {
  * an earlier attempt flattened it with `color: transparent; opacity: 0` and the transparency leaked
  * into the dropdown, which opened as a white box with every option invisible but the hovered one.
  */
-.playground-chip--select {
-  position: relative;
-  padding-inline: 14px 30px;
-  /* The one chip that may shrink. `.playground-chip` is `flex: none`, which is right for every
-     other chip and wrong for this one — it is the bar's designated give. */
-  flex: 0 1 auto;
-  min-width: 0;
-}
 
-.playground-select-sizer {
-  visibility: hidden;
-  line-height: 1.5;
-  pointer-events: none;
-  min-width: 0;
-  /* A little slack for sub-pixel rounding between the twin and the select. */
-  padding-inline-end: 4px;
-  font: inherit;
-  white-space: nowrap;
-  overflow: hidden;
-}
 
-.playground-chip--select::after {
-  content: "";
-  position: absolute;
-  right: 13px;
-  width: 6px;
-  height: 6px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: translateY(-2px) rotate(45deg);
-  pointer-events: none;
-}
 
-.playground-chip--select select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  appearance: none;
-  /* All four sides. The shared `select { padding: 10px 12px }` kept its 10px block padding through
-     a `padding-inline`-only override, leaving a 32px border-box with a 12px content area — not
-     enough for a 20.4px line, so every descender was sliced off. */
-  padding: 0 30px 0 14px;
-  border: 0;
-  border-radius: inherit;
-  background: transparent;
-  box-shadow: none;
-  font: inherit;
-  color: inherit;
-  text-overflow: ellipsis;
-  cursor: pointer;
-
-  &:focus {
-    background: transparent;
-    box-shadow: none;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--ink);
-    outline-offset: 2px;
-  }
-
-  /* The popup is drawn by the browser and inherits nothing useful from the flattened control. */
-  option {
-    color: var(--ink);
-    background: var(--bg-elevated);
-    font-weight: 500;
-  }
-}
 
 /* --------------------------------------------------------------- preview --- */
 
@@ -548,23 +401,28 @@ button.playground-source-detach {
   min-width: 0;
 }
 
+/* Same shell as the scene tabs beside it, so the whole header row is one family. */
 .playground-zoom {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  padding: 2px;
-  border-radius: 999px;
-  background: var(--bg-elevated);
+  height: 38px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
   flex: none;
 }
 
-button.playground-zoom-button {
-  width: 26px;
-  height: 26px;
+button.playground-zoom-button.icon-only {
+  width: 30px;
+  min-width: 0;
+  height: 30px;
   min-height: 0;
   padding: 0;
   border: 0;
+  border-radius: var(--radius-pill);
   background: transparent;
+  color: var(--ink);
 
   .icon {
     width: 15px;
@@ -579,15 +437,20 @@ button.playground-zoom-button {
 .playground-zoom-value {
   min-width: 3.1rem;
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
+  line-height: 1.5;
   font-variant-numeric: tabular-nums;
-  color: var(--muted);
+  color: var(--ink);
 }
 
-button.playground-fullscreen {
+button.playground-fullscreen.icon-only {
+  width: 38px;
+  min-width: 0;
+  height: 38px;
   flex: none;
-  padding: 7px;
+  padding: 0;
+  border: 1px solid var(--stroke);
 }
 
 /*
@@ -618,10 +481,12 @@ body.has-playground-fullscreen {
 
 .playground-scene-tabs {
   display: flex;
+  align-items: center;
   gap: 4px;
+  height: 38px;
   padding: 3px;
-  border-radius: 999px;
-  background: var(--bg-elevated);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
   /* Scrolls rather than wraps: a wrapped tab row pushed the stage down and looked broken. */
   overflow-x: auto;
   scrollbar-width: none;
@@ -632,8 +497,10 @@ body.has-playground-fullscreen {
 }
 
 button.playground-scene-tab {
-  padding: 6px 15px;
-  border-radius: 999px;
+  height: 32px;
+  min-height: 0;
+  padding: 0 15px;
+  border-radius: var(--radius-pill);
   border: 0;
   background: transparent;
   color: var(--muted);
@@ -1411,7 +1278,7 @@ button.ui-cta {
 
 @container playground (max-width: 700px) {
   /* "Harmony" is the least load-bearing word on the bar — the value below it says what it is. */
-  .playground-cluster-label {
+  .playground-topbar .chip-label {
     display: none;
   }
 
@@ -1425,11 +1292,11 @@ button.ui-cta {
    * Labels off the two text chips; the icons carry them and their titles still spell them out.
    * The row stays one line throughout — this is what keeps it able to.
    */
-  .playground-chip span:not(.playground-select-sizer) {
+  .playground-topbar .chip > span:not(.chip-select-label) {
     display: none;
   }
 
-  .playground-chip:not(.playground-chip--select) {
+  .playground-topbar .chip:not(.chip--select) {
     width: var(--chip-height);
     padding-inline: 0;
   }
@@ -1505,21 +1372,21 @@ button.ui-cta {
     padding-inline: 6px;
   }
 
-  .playground-cluster {
+  .playground-topbar .chip-group {
     height: 36px;
     gap: 2px;
     padding: 3px;
   }
 
-  .playground-chip--select {
+  .playground-topbar .chip--select {
     padding-inline: 10px 24px;
   }
 
-  .playground-chip--select select {
+  .playground-topbar .chip--select select {
     padding: 0 24px 0 10px;
   }
 
-  .playground-chip--select::after {
+  .playground-topbar .chip--select::after {
     right: 10px;
   }
 }

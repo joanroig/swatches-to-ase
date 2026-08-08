@@ -39,9 +39,10 @@
   justify-content: space-between;
   gap: 12px;
   min-width: 0;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--stroke);
-  background: var(--surface);
+  min-height: 56px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--stroke-strong);
+  background: var(--bg-elevated);
 }
 
 .section-title {
@@ -50,11 +51,12 @@
   gap: 8px;
   margin: 0;
   min-width: 0;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
+  line-height: 1.5;
   text-transform: uppercase;
   letter-spacing: 0.09em;
-  color: var(--muted);
+  color: var(--ink);
   white-space: nowrap;
 }
 

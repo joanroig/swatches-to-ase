@@ -135,12 +135,18 @@ button {
     background: rgba(79, 70, 229, 0.08);
   }
 
-  /* Square, at the same height as a text button, so a row of mixed buttons reads as one row. */
+  /*
+   * A circle at the same height as a text button, so a row of mixed buttons reads as one row.
+   * Context rules must not set `padding` on it — that is what turned every icon button into a
+   * slightly different oval — so they scope their padding to `:not(.icon-only)`.
+   */
   &.icon-only {
     width: var(--control-md);
     min-width: var(--control-md);
+    height: var(--control-md);
     padding: 0;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-pill);
+    flex: 0 0 auto;
 
     .icon {
       width: 18px;

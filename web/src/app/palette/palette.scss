@@ -130,6 +130,11 @@
 .library-group.is-collapsed .library-group-body > * {
   visibility: hidden;
   transition: visibility 0s linear 0.24s;
+  /* The grid keeps a `min-height` so an empty folder is a comfortable drop target, and its own
+     padding — both of which stopped the `0fr` row reaching zero and left an empty tray hanging
+     under the header of every closed folder. */
+  min-height: 0;
+  padding-block: 0;
 }
 
 /* A card being dragged is lifted out of its folder, so the wrapper must stop clipping for the
@@ -364,7 +369,7 @@ body[data-motion="off"] .palette-grid::before {
   width: 100%;
   min-width: 0;
 
-  button {
+  button:not(.icon-only) {
     flex: 0 0 auto;
     padding: 8px 12px;
     font-size: 0.85rem;
@@ -381,7 +386,7 @@ body[data-motion="off"] .palette-grid::before {
     gap: 8px;
   }
 
-  .palette-actions button {
+  .palette-actions button:not(.icon-only) {
     padding: 7px 9px;
     font-size: 0.8rem;
   }
@@ -392,7 +397,7 @@ body[data-motion="off"] .palette-grid::before {
 }
 
 @container palette-card (max-width: 520px) {
-  .palette-actions button {
+  .palette-actions button:not(.icon-only) {
     padding: 6px 8px;
   }
 }
@@ -403,7 +408,7 @@ body[data-motion="off"] .palette-grid::before {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  border-top: 1px solid var(--stroke);
+  /* No rule above the actions: the card already reads as a unit, and the line only cut it in two. */
   padding-top: 10px;
 }
 
@@ -487,7 +492,9 @@ body[data-motion="off"] .palette-grid::before {
   justify-self: end;
 }
 
-.chip {
+/* Namespaced: `.chip` now belongs to the shared control in `styles/chips.scss`, and the collision
+   made every toolbar chip 54px tall with square corners — this swatch's own styling. */
+.palette-chip {
   /* `min-width: 0` so the swatches, not the "+N" counter, absorb a narrow card. */
   flex: 1 1 0;
   min-width: 0;
@@ -497,7 +504,7 @@ body[data-motion="off"] .palette-grid::before {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-.chip-more {
+.palette-chip-more {
   display: grid;
   place-items: center;
   flex: 0 0 auto;

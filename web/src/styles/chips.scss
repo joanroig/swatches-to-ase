@@ -21,7 +21,9 @@
   height: calc(var(--control-sm) + 8px);
   padding: 4px;
   border-radius: var(--radius-pill);
-  background: var(--bg-elevated);
+  /* `--surface-2`, not `--bg-elevated`: section headers sit on `--bg-elevated`, so the bubble was
+     invisible on them and the chip inside looked like a loose block. */
+  background: var(--surface-2);
 }
 
 /* A group whose first child is a caption rather than a chip needs room before it. */

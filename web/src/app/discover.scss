@@ -5,63 +5,40 @@
   align-items: stretch;
 }
 
-/* Chrome comes from `.section-card` / `.section-head`; only the control layout lives here. */
+/*
+ * Chrome comes from `.section-card` / `.section-head`; only the control layout lives here.
+ *
+ * These selectors used to target a `.discover-controls` wrapper that no longer exists, so nothing
+ * constrained the sort chip and it stretched the full width of the header.
+ */
 .discover-shell {
   align-content: start;
 }
 
-.discover-controls {
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px 14px;
-}
-
-/* Label beside the control, matching the playground bar. Stacked labels made the header three
-   times taller than the one it is meant to match. */
-.discover-controls .field.compact {
-  display: flex;
-  /* `.field` sets `flex-direction: column`; setting `display` alone left the label stacked. */
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  flex: 0 1 auto;
-  min-width: 0;
-}
-
-.discover-controls .field.compact > span {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--muted);
-  white-space: nowrap;
-  flex: none;
-}
-
-.discover-controls .field.compact input,
-.discover-controls .field.compact select {
-  height: 34px;
-  min-width: 0;
-  padding-block: 0;
-  font-size: 0.85rem;
-}
-
-.discover-controls .discover-search input {
-  width: 190px;
-}
-
-.discover-sort {
-  width: 100%;
-  min-width: 0;
+.discover-head {
+  gap: 10px;
 }
 
 .discover-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 420px;
+}
+
+.discover-search input {
   width: 100%;
   min-width: 0;
 }
 
-.discover-sort select {
-  width: 100%;
+.discover-sort {
+  flex: none;
+}
+
+@container (max-width: 560px) {
+  /* The sort chip keeps its label; the search box gives up its width first. */
+  .discover-search {
+    max-width: none;
+  }
 }
 
 .discover-card {
