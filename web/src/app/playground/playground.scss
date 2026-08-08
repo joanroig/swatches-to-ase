@@ -413,21 +413,15 @@ button.playground-source-detach {
 }
 
 /* Same shell as the scene tabs beside it, so the whole header row is one family. */
+/* Shape, height and surface come from `.chip-group`; only the tighter gap is local. */
 .playground-zoom {
-  display: inline-flex;
-  align-items: center;
   gap: 2px;
-  height: 38px;
-  padding: 3px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-2);
-  flex: none;
 }
 
 button.playground-zoom-button.icon-only {
-  width: 30px;
+  width: var(--chip-height);
   min-width: 0;
-  height: 30px;
+  height: var(--chip-height);
   min-height: 0;
   padding: 0;
   border: 0;
@@ -455,10 +449,11 @@ button.playground-zoom-button.icon-only {
   color: var(--ink);
 }
 
+/* Square on the group height beside it, so the three controls in the bar share one line. */
 button.playground-fullscreen.icon-only {
-  width: 38px;
+  width: calc(var(--control-sm) + 8px);
   min-width: 0;
-  height: 38px;
+  height: calc(var(--control-sm) + 8px);
   flex: none;
   padding: 0;
   border: 1px solid var(--stroke);
@@ -490,14 +485,8 @@ body.has-playground-fullscreen {
   overflow: hidden;
 }
 
+/* Shape, height and surface come from `.chip-group`. */
 .playground-scene-tabs {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 38px;
-  padding: 3px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-2);
   /* Scrolls rather than wraps: a wrapped tab row pushed the stage down and looked broken. */
   overflow-x: auto;
   scrollbar-width: none;
@@ -508,7 +497,7 @@ body.has-playground-fullscreen {
 }
 
 button.playground-scene-tab {
-  height: 32px;
+  height: var(--chip-height);
   min-height: 0;
   padding: 0 15px;
   border-radius: var(--radius-pill);

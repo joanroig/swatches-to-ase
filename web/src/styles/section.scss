@@ -42,10 +42,23 @@
   min-height: 56px;
   padding: 8px 14px;
   border-bottom: 1px solid var(--stroke-strong);
-  background: var(--bg-elevated);
+  /*
+   * The same surface the playground's tool strip uses, so a `.chip-group` reads identically in
+   * both. On `--bg-elevated` it did not: the bubble's `--surface-2` is a shade *darker* on the
+   * light themes and all but identical on the dark ones (#1a2030 against #1b1e2b), so the tab and
+   * zoom groups in this bar lost their edges entirely.
+   */
+  background: var(--surface);
 }
 
-.section-title {
+/*
+ * Scoped to the head, which every title is in, purely to win a specificity fight: `.panel h2` in
+ * the shared layout is (0,1,1) and a bare `.section-title` is (0,1,0), so the generic panel heading
+ * was setting this at 1.1rem with a 6px bottom margin — which is what pushed the title 3px above
+ * the bar's centre line while the controls beside it sat centred. Third time this pattern has bitten
+ * (see `.panel p` and the playground hint).
+ */
+.section-head .section-title {
   display: flex;
   align-items: center;
   gap: 8px;
