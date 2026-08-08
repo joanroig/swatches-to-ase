@@ -139,6 +139,24 @@ test("a header button still works while the rename field is open", async ({ page
   await expect(page.locator(".library-group")).toHaveCount(1);
 });
 
+/* Opening the field used to grow the header from 56px to 67px and drag the count badge off the end
+   of the row with it. Nothing around the name may move when an edit starts. */
+test("opening the rename field moves nothing else in the header", async ({ page }) => {
+  await seed(page, ["Alpha"]);
+  await page.locator("#create-folder").click();
+  const group = page.locator(".library-group").first();
+  const header = group.locator(".library-group-header");
+  const count = group.locator(".palette-count");
+
+  const idle = { header: await boxOf(header), count: await boxOf(count) };
+  await group.locator('.library-group-actions [title="Rename folder"]').click();
+  await expect(group.locator(".library-group-rename")).toBeVisible();
+  const editing = { header: await boxOf(header), count: await boxOf(count) };
+
+  expect(editing.header.height).toBeCloseTo(idle.header.height, 1);
+  expect(editing.count.x).toBeCloseTo(idle.count.x, 1);
+});
+
 /* The field sizes itself to its value; `flex: 1 1 auto` had it swallow the whole header. */
 test("the rename field is as wide as its text, not as the header", async ({ page }) => {
   await seed(page, ["Alpha"]);

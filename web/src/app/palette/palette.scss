@@ -74,11 +74,15 @@
  * `flex: 1 1 auto` made the field swallow the whole header the moment it opened. It still shrinks
  * if the name outgrows the row, so a long one never pushes the actions off the end.
  */
-.library-group-rename {
+/* `input.`, not `.`: `input[type="text"]` in the shared controls is (0,1,1) and was winning, so the
+   field stood 38px tall whatever this said and pushed the header from 56px to 67px on every edit. */
+input.library-group-rename {
   flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
-  height: 30px;
+  /* Inside the toggle's own 38px, so opening the field cannot change the row's height. */
+  height: 26px;
+  min-height: 0;
   padding: 0 10px;
   border-radius: 9px;
   border: 1px solid var(--accent);
@@ -109,8 +113,12 @@
   white-space: nowrap;
 }
 
+/* Held at the end of the row by its own margin rather than by the name growing into the space
+   beside it: the rename field takes only the width of its text, so with nothing to push the badge
+   it jumped from the end of the header to right beside the name the moment an edit started. */
 .library-group-toggle .palette-count {
   flex: 0 0 auto;
+  margin-left: auto;
 }
 
 /* Always visible. Hiding them until hover meant folders looked unmanageable at a glance, and on
