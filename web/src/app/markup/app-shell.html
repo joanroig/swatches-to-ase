@@ -45,6 +45,15 @@
           <button class="ghost export-trigger" id="open-export" disabled data-i18n="action.exportAll">Export all</button>
           <button class="primary" id="open-generate" data-i18n="action.generate">New</button>
         </div>
+
+        <div class="fab-hub" id="fab-hub">
+          <div class="fab-menu" id="fab-menu" role="menu">
+            <button class="ghost fab-action" data-fab-action="import" type="button" role="menuitem"></button>
+            <button class="ghost fab-action" data-fab-action="export" type="button" role="menuitem"></button>
+            <button class="primary fab-action" data-fab-action="generate" type="button" role="menuitem"></button>
+          </div>
+          <button class="primary fab-toggle" id="fab-toggle" type="button" aria-expanded="false" aria-controls="fab-menu"></button>
+        </div>
       </section>
 
       <section class="panel panel-discover view-section view-discover" data-view-section="discover" style="--delay: 0.2s">
@@ -223,14 +232,6 @@
 
   <div data-slot="modals"></div>
 
-  <div class="fab-hub" id="fab-hub">
-    <div class="fab-menu" id="fab-menu" role="menu">
-      <button class="ghost fab-action" data-fab-action="import" type="button" role="menuitem"></button>
-      <button class="ghost fab-action" data-fab-action="export" type="button" role="menuitem"></button>
-      <button class="primary fab-action" data-fab-action="generate" type="button" role="menuitem"></button>
-    </div>
-    <button class="primary fab-toggle" id="fab-toggle" type="button" aria-expanded="false" aria-controls="fab-menu"></button>
-  </div>
 
   <nav class="bottom-nav" aria-label="Primary">
     <button class="nav-item" type="button" data-view-target="library"></button>

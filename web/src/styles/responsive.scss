@@ -1,4 +1,11 @@
 @media (min-width: 960px) {
+  /* Centred on the content column rather than the page: with the rail beside it, page-centred put
+     the footer noticeably left of the panel it belongs to. Tracks the rail's collapsed width too,
+     because `--sidebar-width` is set on the shell and inherited here. */
+  .footer {
+    margin-left: calc(var(--sidebar-width, 178px) + 24px);
+  }
+
   .shell {
     grid-template-columns: var(--sidebar-width, 178px) minmax(0, 1fr);
     grid-template-areas: "sidebar main";
@@ -141,14 +148,6 @@
     gap: 8px 10px;
   }
 
-  .footer-links--meta {
-    align-items: center;
-  }
-
-  .footer-meta-row {
-    justify-content: center;
-  }
-
   /* `button.footer-link`, not `.footer-link`: the base rule in `buttons.scss` is element-qualified
      and outranks a bare class however late it comes in the cascade. */
   button.footer-link {
@@ -157,20 +156,6 @@
     padding: 4px 0;
   }
 
-  /*
-   * In normal flow on a phone. Absolutely positioned under the version button, it detached the
-   * moment the meta row wrapped and ended up floating over whatever followed.
-   */
-  .footer-version {
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .footer-deploy {
-    position: static;
-    transform: none;
-    width: auto;
-  }
 
   /*
    * Full-bleed on phones. The page's side padding plus the panel's own inset was costing ~52px of
@@ -187,8 +172,9 @@
     padding-inline: 14px;
   }
 
+  /* Square: a full-bleed sheet with rounded top corners read as a card that had lost its sides. */
   .panel {
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-radius: 0;
     border-inline: 0;
     padding: 14px 12px;
   }

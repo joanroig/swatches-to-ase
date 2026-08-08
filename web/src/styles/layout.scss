@@ -482,9 +482,11 @@
 }
 
 .footer-row {
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 18px;
 }
 
 .footer-links {
@@ -507,9 +509,14 @@
   align-items: center;
 }
 
+/*
+ * Centred, like everything else in the footer. These were `flex-end` from when the footer was a
+ * two-column strip inside the library panel; once it moved below the whole app the meta row sat
+ * off-centre at every width above the phone breakpoint.
+ */
 .footer-links--meta {
-  justify-content: flex-end;
-  align-items: flex-end;
+  justify-content: center;
+  align-items: center;
   flex-direction: column;
   gap: 8px;
 }
@@ -518,24 +525,24 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  align-items: center;
-  justify-content: flex-end;
+  /* Top-aligned: the version column carries the build stamp under its badge, so centring the row
+     balanced GitHub against badge-plus-stamp and pushed it below the badge beside it. */
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .footer-version {
-  position: relative;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 6px;
 }
 
+/* In flow beneath the version badge it stamps. Absolutely positioned it detached whenever the meta
+   row wrapped and floated over whatever followed. */
 .footer-deploy {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  width: max-content;
 }
 
 .grid {
@@ -612,6 +619,24 @@
 .panel-palettes .panel-palettes-spacer {
   flex: 1 1 auto;
   min-height: 4px;
+}
+
+/*
+ * Below the rail breakpoint the action dock is replaced by the FAB, which is anchored to the
+ * palette panel rather than to the viewport — pinned to the viewport it floated over whatever
+ * happened to be under it and sat outside the box whose actions it carries.
+ */
+@media (max-width: 960px) {
+  .panel-palettes {
+    position: relative;
+  }
+
+  .fab-hub {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 4;
+  }
 }
 
 .action-dock {
