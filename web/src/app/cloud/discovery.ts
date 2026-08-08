@@ -10,6 +10,7 @@ import { firebaseClient } from "./context";
 import { createDiscoveryCard, createDiscoverySkeleton } from "./discovery-card";
 import { openDiscoveryProfile, refreshDiscoveryProfileIfOpen, setDiscoveryProfileHandlers } from "./discovery-profile";
 import { logCloudError } from "./errors";
+import { colorFamiliesOf, isPaletteColorFamily, isPaletteStyle, stylesOf } from "./palette-traits";
 
 /** Bounded so a large public collection cannot turn into an unbounded live query. */
 const DISCOVERY_PAGE_SIZE = 120;
@@ -68,6 +69,27 @@ const matchesDiscoverySearch = (palette: PublicPalette, searchQuery: string) => 
   return palette.name.toLowerCase().includes(searchQuery) || (palette.ownerName?.toLowerCase() ?? "").includes(searchQuery);
 };
 
+/*
+ * Style and colour are computed per palette on every render rather than cached.
+ *
+ * The feed is capped at `DISCOVERY_PAGE_SIZE`, and classifying a hundred-odd palettes of five
+ * colours is a few thousand HSL conversions — far cheaper than the cache invalidation a live
+ * Firestore snapshot would need, since the list changes under us whenever anyone publishes.
+ */
+const matchesDiscoveryTraits = (palette: PublicPalette) => {
+  const { style, color } = discoveryState;
+  if (style && !stylesOf(palette.colors).has(style as never)) {
+    return false;
+  }
+  if (color && !colorFamiliesOf(palette.colors).has(color as never)) {
+    return false;
+  }
+  return true;
+};
+
+/** How many filters are narrowing the feed, for the badge on the filter button. */
+export const countDiscoveryFilters = () => (discoveryState.style ? 1 : 0) + (discoveryState.color ? 1 : 0);
+
 export const renderDiscovery = () => {
   if (!discoverList || !discoverEmpty) {
     return;
@@ -86,13 +108,13 @@ export const renderDiscovery = () => {
   const searchQuery = discoveryState.search.trim().toLowerCase();
   const palettes = sortDiscoveryPalettes(discoveryState.palettes);
   const bySearch = searchQuery ? palettes.filter((palette) => matchesDiscoverySearch(palette, searchQuery)) : palettes;
-  const filtered = bySearch;
+  const filtered = countDiscoveryFilters() > 0 ? bySearch.filter(matchesDiscoveryTraits) : bySearch;
 
   discoverEmpty.textContent = hasLoadError
     ? t("toast.discoveryLoadFailed")
     : discoveryState.followingOnly
       ? t("discover.emptyFollowing")
-      : searchQuery
+      : searchQuery || countDiscoveryFilters() > 0
         ? t("discover.emptySearch")
         : t("discover.empty");
   discoverEmpty.classList.toggle("is-hidden", filtered.length > 0);
@@ -122,6 +144,23 @@ export const setDiscoverySort = (value: string) => {
 
 export const setDiscoverySearch = (value: string) => {
   discoveryState.search = value;
+  renderDiscovery();
+};
+
+/** `null` clears the filter. An unknown value is treated as a clear rather than as no-op. */
+export const setDiscoveryStyle = (value: string | null) => {
+  discoveryState.style = value && isPaletteStyle(value) ? value : null;
+  renderDiscovery();
+};
+
+export const setDiscoveryColor = (value: string | null) => {
+  discoveryState.color = value && isPaletteColorFamily(value) ? value : null;
+  renderDiscovery();
+};
+
+export const clearDiscoveryFilters = () => {
+  discoveryState.style = null;
+  discoveryState.color = null;
   renderDiscovery();
 };
 

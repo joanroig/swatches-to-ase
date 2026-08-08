@@ -363,3 +363,164 @@ body[data-motion="off"] .discover-card.is-skeleton::after {
     width: 100%;
   }
 }
+
+/* ------------------------------------------------------------- filters --- */
+
+/*
+ * Sort, style and colour in one disclosure.
+ *
+ * The bar had a sort chip and nothing else, so the only question it could answer was "which of
+ * these is newest". These three sit together because they are the same kind of decision — narrowing
+ * the feed — and a panel keeps them off a bar that has to stay one line on a phone.
+ */
+.discover-filter {
+  position: relative;
+  flex: none;
+  margin-left: auto;
+}
+
+button.discover-filter-toggle {
+  gap: 8px;
+  padding-inline: 14px;
+
+  &.has-filters {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    color: var(--accent);
+  }
+}
+
+/* The count sits on the button so the bar says how narrowed the feed is without being opened. */
+.discover-filter-count:not(:empty) {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 6px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(130deg, var(--accent), var(--accent-3));
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.discover-filter-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 14;
+  display: none;
+  width: min(280px, calc(100vw - 32px));
+  max-height: min(60vh, 520px);
+  padding: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.discover-filter.is-open .discover-filter-panel {
+  display: grid;
+  gap: 2px;
+}
+
+.discover-filter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px 6px;
+}
+
+.discover-filter-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+button.discover-filter-clear {
+  font-size: 0.78rem;
+}
+
+.discover-filter-group {
+  display: grid;
+  gap: 1px;
+  padding-block: 4px;
+  border-top: 1px solid var(--stroke);
+}
+
+/* A section caption, in the same micro-caps the section headers use. */
+.discover-filter-label {
+  margin: 0;
+  padding: 6px 10px 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+button.discover-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: left;
+  justify-content: flex-start;
+
+  &.is-selected {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+  }
+}
+
+.discover-filter-option-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The colour rows are read by their swatch first and their name second. */
+.discover-filter-swatch {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--stroke-strong);
+}
+
+.discover-filter-tick {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+/* Below this the button is a circle: the bar has to stay one line, and the icon plus the count
+   badge say as much as the words did. */
+@container (max-width: 560px) {
+  .discover-filter-text {
+    display: none;
+  }
+
+  button.discover-filter-toggle {
+    padding-inline: 0;
+    width: var(--control-md);
+  }
+
+  .discover-filter-count:not(:empty) {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+  }
+}

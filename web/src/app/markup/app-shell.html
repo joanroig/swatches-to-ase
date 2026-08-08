@@ -71,7 +71,18 @@
                 />
               </div>
 
-              <div class="chip-group chip-group--labelled discover-sort">
+              <div class="discover-filter">
+                <button class="ghost discover-filter-toggle" id="discover-filter-toggle" type="button" aria-expanded="false" aria-haspopup="true" data-i18n-title="discover.filter.open" data-i18n-aria-label="discover.filter.open">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <use href="/icons/sort.svg#icon" xlink:href="/icons/sort.svg#icon" />
+                  </svg>
+                  <span class="discover-filter-text" data-i18n="discover.filter.open">Filter palettes</span>
+                  <span class="discover-filter-count" aria-hidden="true"></span>
+                </button>
+                <div class="discover-filter-panel" id="discover-filter-panel" role="dialog" aria-modal="false" data-i18n-aria-label="discover.filter.title"></div>
+              </div>
+
+              <div class="chip-group chip-group--labelled discover-sort is-hidden">
                 <span class="chip-label" data-i18n="discover.sort.label">Sort by</span>
                 <span class="chip chip--primary chip--select">
                   <!-- Shown only when the chip collapses to a circle; see `.discover-sort .chip-icon`. -->

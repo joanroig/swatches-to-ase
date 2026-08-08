@@ -54,4 +54,11 @@ export const discoveryState = {
   followerCounts: new Map<string, number>(),
   /** Restrict the feed to creators the user follows. */
   followingOnly: false,
+  /**
+   * Browse filters, derived from the colours rather than stored on the palette — see
+   * `cloud/palette-traits.ts`. `null` means "any"; both are single-select, like the sort beside
+   * them, because two styles at once has no obvious meaning.
+   */
+  style: null as string | null,
+  color: null as string | null,
 };

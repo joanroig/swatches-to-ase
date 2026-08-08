@@ -17,6 +17,7 @@ const ICONS = {
   chevronUp: "/icons/chevronUp.svg#icon",
   chevronDown: "/icons/chevronDown.svg#icon",
   chevronLeft: "/icons/chevronLeft.svg#icon",
+  check: "/icons/check.svg#icon",
   grip: "/icons/grip.svg#icon",
   link: "/icons/link.svg#icon",
   share: "/icons/share.svg#icon",

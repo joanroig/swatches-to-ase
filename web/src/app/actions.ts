@@ -15,6 +15,7 @@ import {
   unpublishPalette,
 } from "./cloud/lazy";
 import { setupCloudAuthBindings } from "./cloud/auth-bindings";
+import { refreshDiscoveryFilters, setupDiscoveryFilters } from "./cloud/discovery-filters";
 import { createSelectChip } from "./ui/select-chip";
 import { resetRecaptcha, setupRecaptcha } from "./cloud/recaptcha";
 import {
@@ -246,6 +247,8 @@ export const setupActions = () => {
   onLanguageChange(() => {
     setCloudAuthMode(getCloudAuthMode());
     syncGeneratedPalettePreviewName();
+    // The filter panel is built from script, so nothing else re-translates its twenty-odd rows.
+    refreshDiscoveryFilters();
   });
 
   openSettingsButtons.forEach((button) => {
@@ -550,6 +553,8 @@ export const setupActions = () => {
     }
     syncGeneratedPalettePreviewBaseColor();
   });
+
+  setupDiscoveryFilters();
 
   if (discoverSortSelect) {
     discoverSortSelect.value = discoveryState.sort;
