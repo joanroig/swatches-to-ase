@@ -722,7 +722,7 @@
 
 /* The phone's nav is a row, so the panels are a row too — and it travels further, because a
    horizontal step across a narrow screen needs the distance to register. */
-@media (max-width: 960px) {
+@media (max-width: 959.98px) {
   .view-section.panel {
     --view-from: 22px;
 
@@ -795,7 +795,7 @@
  * palette panel rather than to the viewport — pinned to the viewport it floated over whatever
  * happened to be under it and sat outside the box whose actions it carries.
  */
-@media (max-width: 960px) {
+@media (max-width: 959.98px) {
   .panel-palettes {
     position: relative;
   }
