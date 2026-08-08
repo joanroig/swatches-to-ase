@@ -29,13 +29,13 @@ import { renderPaletteList, syncPaletteColorNames } from "../palette/ui";
 import { persistPreferences } from "../persistence";
 import { applyRemotePreferences, getPreferencesPayload } from "../preferences";
 import { cloudState, discoveryState, state } from "../state";
-import type { CloudUser, Palette } from "../types";
+import type { CloudUser, Folder, Palette } from "../types";
 import { showToast } from "../ui/notifications";
 import { ensureAppCheckToken, firebaseClient, firebaseConfigStatus } from "./context";
 import { fetchUserInteractions, renderDiscovery } from "./discovery";
 import { getFirebaseErrorCode, logCloudError } from "./errors";
 import { fetchFollowing } from "./follow";
-import { mergePalettes, palettesEquivalent, resolveMergedActivePaletteId } from "./merge";
+import { mergeLibraries, palettesEquivalent, resolveMergedActivePaletteId } from "./merge";
 import { syncCloudProfileForm } from "./profile";
 import { ensureUserAvatar } from "./profile-store";
 import { unpublishPalette, upsertPublicPalette } from "./public";
@@ -325,10 +325,12 @@ export const refreshCloudUser = async () => {
   renderPaletteList();
 };
 
+/** `folders` defaults to the remote list; the merge path passes the reconciled one instead. */
 const applyRemoteStateWithPalettes = (
   payload: ReturnType<typeof parseSyncPayload>,
   palettes: Palette[],
   activePaletteId: string | null,
+  folders?: Folder[],
 ) => {
   if (!payload) {
     return;
@@ -336,7 +338,7 @@ const applyRemoteStateWithPalettes = (
   cloudState.applyingRemote = true;
   cloudState.lastRevision = payload.revision;
   state.palettes = palettes;
-  state.folders = payload.folders;
+  state.folders = folders ?? payload.folders;
   state.activePaletteId = activePaletteId;
   applyRemotePreferences(payload.preferences);
   persistPreferences();
@@ -382,9 +384,12 @@ const listenToCloudState = () => {
         t("cloud.sync.mergeConfirm", { localCount: state.palettes.length, cloudCount: payload.palettes.length }),
       );
       if (shouldMerge) {
-        const merged = mergePalettes(state.palettes, payload.palettes);
-        const activePaletteId = resolveMergedActivePaletteId(payload.activePaletteId ?? null, state.activePaletteId, merged);
-        applyRemoteStateWithPalettes(payload, merged, activePaletteId);
+        const merged = mergeLibraries(
+          { palettes: state.palettes, folders: state.folders },
+          { palettes: payload.palettes, folders: payload.folders },
+        );
+        const activePaletteId = resolveMergedActivePaletteId(payload.activePaletteId ?? null, state.activePaletteId, merged.palettes);
+        applyRemoteStateWithPalettes(payload, merged.palettes, activePaletteId, merged.folders);
         cloudState.lastSyncedAt = new Date().toLocaleTimeString();
         updateCloudControls();
         void syncToCloud();

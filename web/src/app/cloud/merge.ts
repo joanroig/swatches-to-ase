@@ -1,4 +1,4 @@
-import type { Palette } from "../types";
+import type { Folder, Palette } from "../types";
 import { createId } from "../utils/id";
 
 /**
@@ -21,6 +21,9 @@ export const clonePalette = (palette: Palette): Palette => ({
   lastModified: typeof palette.lastModified === "number" ? palette.lastModified : 0,
   isPublic: palette.isPublic ?? false,
   publicId: palette.publicId ?? null,
+  // Carried deliberately: a clone that lost its folder reappeared in Drafts, which looks like the
+  // merge unfiled it.
+  folderId: palette.folderId ?? null,
 });
 
 export const buildPaletteFingerprint = (palette: Palette) => {
@@ -79,6 +82,70 @@ export const mergePalettes = (localPalettes: Palette[], remotePalettes: Palette[
   });
 
   return merged;
+};
+
+/*
+ * Folders are merged by name, not by id.
+ *
+ * Two devices that never synced give the same folder two different ids, so matching on id would
+ * leave you with "Brand" twice. Matching on name treats them as the one folder people meant, which
+ * is what happens when the same project is set up on a second machine.
+ *
+ * Remote ids win, so the folder keeps the identity the cloud already knows. The returned `remap`
+ * says which local id each local palette should follow.
+ */
+const folderKey = (name: string) => name.trim().toLocaleLowerCase();
+
+export type FolderMerge = { folders: Folder[]; remap: Map<string, string> };
+
+export const mergeFolders = (localFolders: Folder[], remoteFolders: Folder[]): FolderMerge => {
+  const folders = [...remoteFolders];
+  const byName = new Map(remoteFolders.map((folder) => [folderKey(folder.name), folder]));
+  const remap = new Map<string, string>();
+
+  localFolders.forEach((folder) => {
+    const twin = byName.get(folderKey(folder.name));
+    if (twin) {
+      remap.set(folder.id, twin.id);
+      return;
+    }
+    // Local-only: keep it, so the palettes filed in it stay filed.
+    folders.push(folder);
+    byName.set(folderKey(folder.name), folder);
+    remap.set(folder.id, folder.id);
+  });
+
+  return { folders, remap };
+};
+
+export type LibrarySnapshot = { palettes: Palette[]; folders: Folder[] };
+
+/**
+ * Reconcile a whole local library against the cloud one.
+ *
+ * The single entry point for the merge, so folders and palettes cannot get out of step. They used
+ * to: palettes were merged while `state.folders` was overwritten with the remote list wholesale, so
+ * a palette in a local-only folder kept an id that no longer resolved. Such a palette matches
+ * neither a folder group nor the unfiled group, and vanished from the library until the next reload
+ * normalised it.
+ */
+export const mergeLibraries = (local: LibrarySnapshot, remote: LibrarySnapshot): LibrarySnapshot => {
+  const { folders, remap } = mergeFolders(local.folders, remote.folders);
+  const known = new Set(folders.map((folder) => folder.id));
+
+  const relocatedLocal = local.palettes.map((palette) => ({
+    ...palette,
+    folderId: palette.folderId ? (remap.get(palette.folderId) ?? palette.folderId) : null,
+  }));
+
+  const palettes = mergePalettes(relocatedLocal, remote.palettes).map((palette) => ({
+    ...palette,
+    // Last line of defence: anything still pointing at a folder that did not survive falls back to
+    // Drafts rather than disappearing.
+    folderId: palette.folderId && known.has(palette.folderId) ? palette.folderId : null,
+  }));
+
+  return { palettes, folders };
 };
 
 export const resolveMergedActivePaletteId = (remoteActiveId: string | null, localActiveId: string | null, palettes: Palette[]) => {
