@@ -16,11 +16,16 @@
     display: grid;
   }
 
+  /* The topbar is hidden at this width, so the shell starts right under the frame's top padding and
+     the rail's height is the viewport less the frame's padding on both sides — which is the panel's
+     height too, so the two columns end on the same line. The old `100vh - 104px` counted the page's
+     72px bottom padding, which is below the frame rather than inside it, and left the rail's bottom
+     controls floating short of the panel. */
   .sidebar-stack {
     position: sticky;
-    top: 32px;
+    top: var(--frame-padding-top);
     align-self: start;
-    min-height: calc(100vh - 104px);
+    min-height: calc(100dvh - var(--frame-padding-top) - var(--frame-padding-bottom));
     justify-content: flex-start;
     width: var(--sidebar-width, 178px);
     transition: width 0.25s ease;
