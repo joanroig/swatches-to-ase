@@ -3,14 +3,14 @@
   max-width: 1800px;
   margin: 0 auto;
   /* The top padding belongs to the frame, which has to measure exactly one viewport. */
-  padding: 0 24px 44px;
+  padding: 0 16px 36px;
   --topbar-offset: 0px;
   --bottom-nav-height: 0px;
-  --frame-padding-top: 32px;
-  --frame-padding-bottom: 32px;
+  --frame-padding-top: 22px;
+  --frame-padding-bottom: 22px;
   /* The channel between the rail and the content. One variable because the footer has to line up
      with the panel, and a gap declared twice drifts. */
-  --rail-gap: 14px;
+  --rail-gap: 12px;
 }
 
 /*
@@ -641,13 +641,17 @@
   gap: 18px;
 }
 
+/*
+ * The view's container, and nothing more.
+ *
+ * It used to be a card in its own right — surface, border, radius, shadow, 22px of padding — with
+ * the folders, the palettes and the preview drawn as cards *inside* it. Two frames around every
+ * colour, and the outer one carried no information: there is only ever one view on screen, so the
+ * box around it was drawing a boundary nobody needed. The boxes that remain are the ones holding
+ * actual content, and the palettes have the page to themselves.
+ */
 .panel {
-  background: var(--card);
-  border: 1px solid var(--stroke-strong);
-  border-radius: var(--radius-xl);
-  padding: 22px;
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(12px);
+  padding: 0;
   /* Short, and no stagger. `--delay` exists to cascade the panels on first paint, but a view
      section replays the whole animation every time you switch tab, and 600ms plus a 200ms delay
      made changing tab feel like waiting for something to load. */

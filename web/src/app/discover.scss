@@ -20,13 +20,31 @@
  * also narrower than the viewport by whatever the rail is taking, and the rail collapses, so its
  * own width is the honest thing to ask about.
  */
+/*
+ * Flat, unlike the other section cards.
+ *
+ * A folder's card frames palettes that belong together; this one framed the whole view, which is
+ * the same box the panel around it used to draw. Its head keeps the controls in a row and drops the
+ * bar, so the feed's own cards are the only boxes on the page.
+ */
 .discover-shell {
   align-content: start;
   container-type: inline-size;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
 }
 
 .discover-head {
   gap: 10px;
+  padding-inline: 0;
+  border-bottom: 0;
+  background: transparent;
+}
+
+.discover-shell > .section-body {
+  padding: 0;
 }
 
 .discover-search {
