@@ -650,10 +650,12 @@
  * is the only place a border says something.
  */
 .panel {
+  --panel-pad: 16px;
+
   background: var(--card);
   border: 1px solid var(--stroke-strong);
   border-radius: var(--radius-xl);
-  padding: 16px;
+  padding: var(--panel-pad);
   box-shadow: var(--shadow);
   backdrop-filter: blur(12px);
   /* Short, and no stagger. `--delay` exists to cascade the panels on first paint, but a view

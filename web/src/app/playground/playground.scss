@@ -287,18 +287,11 @@ button.playground-insert.icon-only {
 .playground-topbar {
   --chip-height: 32px;
 
-  display: flex;
-  align-items: center;
+  /* Shape, surface and full-bleed come from `.panel-head`; the fixed height is what keeps the strip
+     to exactly one line, and the wider gap is local to the clusters. */
   gap: 12px;
   height: 56px;
-  /* Full-bleed: negative margins pull it out to the panel's edges, and the padding puts its
-     contents back on the panel's own gutter. */
-  margin-inline: -16px;
-  padding-inline: 16px;
-  border-radius: 0;
-  border: 0;
-  border-bottom: 1px solid var(--stroke-strong);
-  background: var(--surface);
+  padding-block: 0;
 }
 
 
@@ -1408,12 +1401,15 @@ button.ui-cta {
   overflow: visible;
 }
 
+/* A rule above as well as below: the preview sits directly under the ramp, and with only a bottom
+   border the two read as one block that happened to have a caption in the middle. */
 .playground-preview > .section-head {
-  margin-inline: -16px;
-  padding-inline: 16px;
+  margin-inline: calc(var(--panel-pad) * -1);
+  padding-inline: var(--panel-pad);
   border-radius: 0;
+  border-top: 1px solid var(--stroke-strong);
 }
 
 .playground-preview > .playground-stage {
-  margin-inline: -16px;
+  margin-inline: calc(var(--panel-pad) * -1);
 }

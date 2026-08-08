@@ -33,6 +33,30 @@
   border-radius: calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px) 0 0;
 }
 
+/*
+ * The strip of controls at the top of a view.
+ *
+ * One shape for all three, because switching tabs used to change what the top of the app looked
+ * like: the playground had a bordered strip floating inside the panel, Discover and the library had
+ * bare rows on the panel's surface. It is flush with the panel's top edge — full-bleed on three
+ * sides, so no sliver of panel shows above it — and a rule underneath separates it from the view.
+ *
+ * `--panel-pad` is the panel's own gutter, so the strip's contents stay on the same left edge as
+ * everything below it however that gutter changes.
+ */
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 56px;
+  margin: calc(var(--panel-pad) * -1) calc(var(--panel-pad) * -1) var(--panel-pad);
+  padding: 8px var(--panel-pad);
+  border-bottom: 1px solid var(--stroke-strong);
+  border-radius: calc(var(--radius-xl) - 1px) calc(var(--radius-xl) - 1px) 0 0;
+  background: var(--surface);
+}
+
 .section-head {
   display: flex;
   align-items: center;

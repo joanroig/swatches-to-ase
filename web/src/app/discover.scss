@@ -36,11 +36,9 @@
   overflow: visible;
 }
 
+/* Shape comes from `.panel-head`. */
 .discover-head {
   gap: 10px;
-  padding-inline: 0;
-  border-bottom: 0;
-  background: transparent;
 }
 
 .discover-shell > .section-body {

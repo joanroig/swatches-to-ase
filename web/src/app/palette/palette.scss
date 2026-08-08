@@ -2,12 +2,10 @@
 
 /* One line at every width. It used to wrap, which on a phone put "New folder" on a row of its own
    and cost the list a whole button's height of chrome before the first folder. */
+/* Shape comes from `.panel-head`; only the no-wrap rule is local, and it is what keeps the search
+   and the folder button on one line at every width. */
 .library-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   flex-wrap: nowrap;
-  margin-bottom: 16px;
 }
 
 /*
@@ -43,9 +41,14 @@
   }
 }
 
+/*
+ * No gap between folders. Each one opens with a full-bleed header band, and that band is what
+ * separates it from the folder above — an 18px trench as well left the list looking like a stack of
+ * loose slabs rather than one library.
+ */
 .library-groups {
   display: grid;
-  gap: 18px;
+  gap: 0;
 }
 
 
@@ -64,11 +67,21 @@
   overflow: visible;
 }
 
-/* Full-bleed: with no card to sit inside, the header spans the panel and reads as a divider. */
+/*
+ * Full-bleed: with no card to sit inside, the header spans the panel and reads as a divider. It
+ * carries a rule on both edges, so a folder is bracketed by its header and the next one rather than
+ * trailing off into whatever follows.
+ */
 .library-group > .section-head {
-  margin-inline: -16px;
-  padding-inline: 16px;
+  margin-inline: calc(var(--panel-pad) * -1);
+  padding-inline: var(--panel-pad);
   border-radius: 0;
+  border-top: 1px solid var(--stroke-strong);
+}
+
+/* Except the first, which meets the panel head's own rule. */
+.library-group:first-child > .section-head {
+  border-top: 0;
 }
 
 /*
@@ -263,8 +276,13 @@ input.library-group-rename {
   grid-template-rows: 0fr;
 }
 
+/*
+ * The cards line up with the panel's gutter, not with a gutter of their own. The grid used to add
+ * 14px of its own padding on top of the panel's, so a palette sat further in than the folder header
+ * naming it and the two columns never agreed on a left edge.
+ */
 .library-group .palette-grid {
-  padding: 14px;
+  padding: 14px 0 18px;
 }
 
 /* ------------------------------------------------------ folder navigation --- */
