@@ -387,7 +387,7 @@ const es: TranslationMap = {
   "folder.rename": "Renombrar carpeta",
   "folder.renamePrompt": "Nombre de la carpeta",
   "folder.delete": "Eliminar carpeta",
-  "folder.deleteConfirm": "¿Eliminar la carpeta {name}? Sus {count} paletas vuelven a Sin carpeta y no se borran.",
+  "folder.deleteConfirm": "¿Eliminar la carpeta {name}? Sus {count} paletas vuelven a Borradores y no se borran.",
   "palette.empty": "Aún no se han cargado paletas.",
   "palette.colors": { one: "{count} color", other: "{count} colores" },
   "palette.noColors": "Aún no hay colores.",

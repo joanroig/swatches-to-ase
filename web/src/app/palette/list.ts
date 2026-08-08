@@ -426,7 +426,37 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
     input.value = folder.name;
     input.setAttribute("aria-label", t("folder.rename"));
 
+    /*
+     * The field grows with its text instead of stretching across the header. A hidden twin carries
+     * the same typography, so measuring it gives the exact width the value needs — the same trick
+     * the select chip uses to size itself to its value rather than its longest option.
+     */
+    const sizer = document.createElement("span");
+    sizer.className = "library-group-rename-sizer";
+    sizer.setAttribute("aria-hidden", "true");
+    const fitToValue = () => {
+      sizer.textContent = input.value || folder.name;
+      const style = getComputedStyle(input);
+      const chrome =
+        Number.parseFloat(style.paddingLeft) +
+        Number.parseFloat(style.paddingRight) +
+        Number.parseFloat(style.borderLeftWidth) +
+        Number.parseFloat(style.borderRightWidth);
+      // The extra two pixels are the caret's, which sits past the last glyph.
+      input.style.width = `${Math.ceil(sizer.getBoundingClientRect().width + chrome) + 2}px`;
+    };
+    input.addEventListener("input", fitToValue);
+
     let settled = false;
+    /*
+     * Puts the label back itself rather than re-rendering the library.
+     *
+     * Blur commits, and a full re-render on blur replaced the header while the pointer was still
+     * down on it: mousedown blurred the field, the button it was heading for was thrown away, and
+     * mouseup landed on its replacement — so no click ever fired and the delete button did nothing.
+     * A rename changes one string and neither the order nor the counts, so swapping that one node
+     * back is the whole update.
+     */
     const finish = (commit: boolean) => {
       if (settled) {
         return;
@@ -435,7 +465,9 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
       if (commit) {
         renameFolder(folder.id, input.value);
       }
-      renderPaletteList();
+      label.textContent = folder.name;
+      sizer.remove();
+      input.replaceWith(label);
     };
 
     input.addEventListener("keydown", (event) => {
@@ -451,6 +483,8 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
     input.addEventListener("blur", () => finish(true));
 
     label.replaceWith(input);
+    input.after(sizer);
+    fitToValue();
     input.focus();
     input.select();
   };

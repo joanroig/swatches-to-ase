@@ -119,6 +119,43 @@ test("deleting a folder keeps its palettes", async ({ page }) => {
   expect(await titlesInFolder(page, "__unfiled__")).toEqual(["Alpha"]);
 });
 
+/*
+ * Committing the rename used to re-render the whole library, which threw the header away between
+ * the delete button's mousedown and its mouseup — so the click never fired and deleting a folder
+ * silently did nothing whenever the name had just been edited.
+ */
+test("a header button still works while the rename field is open", async ({ page }) => {
+  await seed(page, ["Alpha"]);
+  await page.locator("#create-folder").click();
+  await expect(page.locator(".library-group")).toHaveCount(2);
+  const group = page.locator(".library-group").first();
+
+  await group.locator('.library-group-actions [title="Rename folder"]').click();
+  await expect(group.locator(".library-group-rename")).toBeVisible();
+
+  page.on("dialog", (dialog) => dialog.accept());
+  await group.getByRole("button", { name: "Delete folder" }).click();
+
+  await expect(page.locator(".library-group")).toHaveCount(1);
+});
+
+/* The field sizes itself to its value; `flex: 1 1 auto` had it swallow the whole header. */
+test("the rename field is as wide as its text, not as the header", async ({ page }) => {
+  await seed(page, ["Alpha"]);
+  await page.locator("#create-folder").click();
+  const group = page.locator(".library-group").first();
+  await group.locator('.library-group-actions [title="Rename folder"]').click();
+
+  const input = group.locator(".library-group-rename");
+  await expect(input).toBeVisible();
+  const narrow = (await boxOf(input)).width;
+  const header = (await boxOf(group.locator(".library-group-header"))).width;
+  expect(narrow).toBeLessThan(header / 2);
+
+  await input.fill("A folder name considerably longer than the last one");
+  expect((await boxOf(input)).width).toBeGreaterThan(narrow);
+});
+
 test("a folder can be collapsed and expanded", async ({ page }) => {
   await seed(page, ["Alpha"]);
   const group = page.locator('.library-group[data-folder-id="__unfiled__"]');

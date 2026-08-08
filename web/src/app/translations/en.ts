@@ -385,7 +385,7 @@ const en: TranslationMap = {
   "folder.rename": "Rename folder",
   "folder.renamePrompt": "Folder name",
   "folder.delete": "Delete folder",
-  "folder.deleteConfirm": "Delete the folder {name}? Its {count} palettes move back to Unfiled and are not deleted.",
+  "folder.deleteConfirm": "Delete the folder {name}? Its {count} palettes move back to Drafts and are not deleted.",
   "palette.empty": "No palettes loaded yet.",
   "palette.colors": { one: "{count} color", other: "{count} colors" },
   "palette.noColors": "No colors yet.",

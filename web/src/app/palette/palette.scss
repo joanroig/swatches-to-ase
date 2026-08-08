@@ -69,9 +69,15 @@
   color: var(--accent);
 }
 
+/*
+ * Sized to its text by `startRename`, which sets an explicit width from the hidden twin below —
+ * `flex: 1 1 auto` made the field swallow the whole header the moment it opened. It still shrinks
+ * if the name outgrows the row, so a long one never pushes the actions off the end.
+ */
 .library-group-rename {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
+  max-width: 100%;
   height: 30px;
   padding: 0 10px;
   border-radius: 9px;
@@ -79,6 +85,17 @@
   background: var(--bg-elevated);
   color: var(--ink);
   font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* The measuring twin. Out of flow and unpainted, but laid out — a `display: none` box has no width
+   to read. Its typography has to track the field's exactly. */
+.library-group-rename-sizer {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: pre;
   font-size: 0.95rem;
   font-weight: 600;
 }
