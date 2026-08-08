@@ -280,6 +280,10 @@ button.playground-insert.icon-only {
  * **It is always exactly one line.** Fixed height, `nowrap`, and the only thing that may shrink is
  * the harmony value, which ellipsises.
  */
+/*
+ * A band across the panel rather than a strip inside it: the panel is the one box, so this loses
+ * its own border and spans the full width, with a rule under it doing the separating.
+ */
 .playground-topbar {
   --chip-height: 32px;
 
@@ -287,11 +291,13 @@ button.playground-insert.icon-only {
   align-items: center;
   gap: 12px;
   height: 56px;
-  padding-inline: 10px;
-  border-radius: 16px;
-  /* The strong stroke: on the dark themes a hairline against `--surface` inside an already dark
-     panel left the bar with no visible edge at all. */
-  border: 1px solid var(--stroke-strong);
+  /* Full-bleed: negative margins pull it out to the panel's edges, and the padding puts its
+     contents back on the panel's own gutter. */
+  margin-inline: -16px;
+  padding-inline: 16px;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid var(--stroke-strong);
   background: var(--surface);
 }
 
@@ -1389,4 +1395,25 @@ button.ui-cta {
   .playground-topbar .chip--select::after {
     right: 10px;
   }
+}
+
+/*
+ * The preview is the third band, not a card. Same reasoning as the folder groups: the panel is the
+ * one box, and its header is what separates the preview from the ramp above it.
+ */
+.playground-preview {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.playground-preview > .section-head {
+  margin-inline: -16px;
+  padding-inline: 16px;
+  border-radius: 0;
+}
+
+.playground-preview > .playground-stage {
+  margin-inline: -16px;
 }

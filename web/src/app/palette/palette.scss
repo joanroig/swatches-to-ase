@@ -49,9 +49,26 @@
 }
 
 
-/* Chrome comes from `.section-card` / `.section-head`; only the folder-specific bits live here. */
+/*
+ * A band in the panel, not a card in it.
+ *
+ * The folder used to draw its own border and surface inside the panel's, which put two frames
+ * around every palette. Its header is what separates one folder from the next — that is the job a
+ * heading does — so the box around it is redundant and the palettes get the panel's full width.
+ */
 .library-group {
   align-content: start;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+/* Full-bleed: with no card to sit inside, the header spans the panel and reads as a divider. */
+.library-group > .section-head {
+  margin-inline: -16px;
+  padding-inline: 16px;
+  border-radius: 0;
 }
 
 /*

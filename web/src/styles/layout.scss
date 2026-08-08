@@ -642,16 +642,20 @@
 }
 
 /*
- * The view's container, and nothing more.
+ * The one box on the right.
  *
- * It used to be a card in its own right — surface, border, radius, shadow, 22px of padding — with
- * the folders, the palettes and the preview drawn as cards *inside* it. Two frames around every
- * colour, and the outer one carried no information: there is only ever one view on screen, so the
- * box around it was drawing a boundary nobody needed. The boxes that remain are the ones holding
- * actual content, and the palettes have the page to themselves.
+ * Everything a view shows lives inside this frame, and nothing draws a second one around a group of
+ * things: the wrappers that used to — a folder's card, Discover's shell, the playground's preview —
+ * are bands within it now. What is left boxed is the leaf content, a palette and its colours, which
+ * is the only place a border says something.
  */
 .panel {
-  padding: 0;
+  background: var(--card);
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
   /* Short, and no stagger. `--delay` exists to cascade the panels on first paint, but a view
      section replays the whole animation every time you switch tab, and 600ms plus a 200ms delay
      made changing tab feel like waiting for something to load. */
