@@ -308,11 +308,11 @@
     height: 48px;
   }
 
-  .topbar-actions button {
-    width: auto;
-    padding: 8px 12px;
-    font-size: 0.85rem;
-  }
+  /*
+   * `width: auto` plus padding, from when these were labelled buttons that shed their text on a
+   * phone. They are icon-only controls now and size themselves square; overriding the width here
+   * made both of them ovals, wider than they were tall.
+   */
 
   .topbar-actions .topbar-label {
     display: none;
@@ -333,9 +333,6 @@
 }
 
 @media (max-width: 560px) {
-  .topbar-actions button {
-    padding: 8px;
-  }
 }
 
 @media (max-width: 720px) {

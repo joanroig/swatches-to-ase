@@ -226,8 +226,10 @@
   border: 1px solid var(--stroke);
   background: var(--bg-elevated);
   box-shadow: var(--shadow-soft);
-  width: 40px;
-  height: 40px;
+  /* The control size, so it matches the icon button it sits beside rather than being 2px larger. */
+  width: var(--control-md);
+  height: var(--control-md);
+  min-width: var(--control-md);
   display: grid;
   place-items: center;
 }
