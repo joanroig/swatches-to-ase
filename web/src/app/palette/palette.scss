@@ -970,3 +970,79 @@ button.collection-preview {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 18%, var(--surface-2));
 }
+
+
+/* ------------------------------------------------- collection navigation --- */
+
+/* The head's rule is the boundary; the boxes need air under it rather than sitting on the line. */
+.library-groups {
+  padding-top: var(--panel-pad);
+}
+
+/*
+ * Inside a collection.
+ *
+ * The view is the panel's contents, not a card within it: a frame here would put a box around a box
+ * of boxes. The crumb is the same bar the top level shows, so stepping in changes what is listed
+ * rather than what the page is made of.
+ */
+.library-group--open {
+  display: grid;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.library-group--open > .section-head {
+  margin: calc(var(--panel-pad) * -1) calc(var(--panel-pad) * -1) 0;
+  padding: 8px var(--panel-pad);
+  border-radius: 0;
+  border-top: 0;
+  border-bottom: 1px solid var(--stroke-strong);
+  background: var(--surface);
+}
+
+.library-group--open > .library-group-body {
+  background: transparent;
+}
+
+.library-group--open .palette-grid {
+  padding: var(--panel-pad) 0 0;
+}
+
+/*
+ * Opening a collection zooms into it and closing zooms back out, the way a phone's home screen
+ * does. It reads as going *inside* the box you tapped rather than as a new screen sliding over the
+ * old one, which is the whole point of the box being the thing you opened.
+ */
+@keyframes library-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+}
+
+@keyframes library-zoom-out {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+.library-groups.is-entering-in {
+  animation: library-zoom-in 0.22s ease both;
+  transform-origin: center 30%;
+}
+
+.library-groups.is-entering-out {
+  animation: library-zoom-out 0.22s ease both;
+  transform-origin: center 30%;
+}
+
+/* The way back is also the way out: a palette dropped on it leaves the collection. */
+.library-crumb.is-drop-target {
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  box-shadow: inset 0 0 0 1px var(--accent);
+}

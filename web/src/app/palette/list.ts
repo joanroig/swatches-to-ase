@@ -106,7 +106,10 @@ let collectionDropTarget: HTMLElement | null = null;
 let paletteDroppedOnCollection: string | null = null;
 
 const markCollectionUnderPointer = (x: number, y: number) => {
-  const box = document.elementFromPoint(x, y)?.closest<HTMLElement>(".collection-box[data-folder-id]") ?? null;
+  const under = document.elementFromPoint(x, y);
+  // The crumb is a target too: inside a collection it is the only way out, since there is no
+  // top-level grid on screen to drag back to.
+  const box = under?.closest<HTMLElement>(".collection-box[data-folder-id], .library-crumb") ?? null;
   if (box === collectionDropTarget) {
     return;
   }
@@ -136,8 +139,9 @@ const setupCollectionDrops = () => {
     }
     const dragged = document.querySelector<HTMLElement>(".palette-card.is-sort-dragging[data-palette-id]");
     const paletteId = dragged?.dataset.paletteId;
-    const folderId = target.dataset.folderId;
-    if (!paletteId || !folderId) {
+    // No folder id on the crumb: dropping there means the top level.
+    const folderId = target.dataset.folderId ?? null;
+    if (!paletteId) {
       return;
     }
     // Appended, not inserted: there is no slot under the pointer to take a position from — the
@@ -765,7 +769,10 @@ export const renderPaletteList = () => {
   const openId = getOpenFolderId();
   const openGroup = openId ? allGroups.find((group) => group.id === openId) : undefined;
 
-  paletteList.dataset.level = openGroup ? "folder" : "library";
+  const level = openGroup ? "folder" : "library";
+  // Read before the write: this is the level we are coming *from*.
+  const changed = paletteList.dataset.level !== undefined && paletteList.dataset.level !== level;
+  paletteList.dataset.level = level;
   // Folders do not nest, so offering to make one while you are inside one offers something that
   // cannot happen. The toolbar keeps its search.
   createFolderButton?.classList.toggle("is-hidden", Boolean(openGroup));
@@ -799,6 +806,17 @@ export const renderPaletteList = () => {
       grid.appendChild(empty);
     }
     paletteList.appendChild(grid);
+  }
+
+  /*
+   * Only when the level actually changes. The list re-renders on every rename, every drop and every
+   * cloud update, and zooming through all of those would leave the panel pulsing.
+   */
+  if (changed) {
+    paletteList.classList.remove("is-entering-in", "is-entering-out");
+    // Forces the removal to land, so stepping between two collections replays the animation.
+    void paletteList.offsetWidth;
+    paletteList.classList.add(openGroup ? "is-entering-in" : "is-entering-out");
   }
 
   updateExportAvailability();
