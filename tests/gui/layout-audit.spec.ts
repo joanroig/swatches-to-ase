@@ -91,3 +91,23 @@ test("no view is cut off or pushed off screen at any width", async ({ page }) =>
   }
   expect(faults, faults.join("\n")).toEqual([]);
 });
+
+/* The rail is navigation: it may not scroll away, at any scroll position. */
+test("the rail stays put while the page scrolls", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await seed(page);
+  const brandTop = () => page.locator(".brand--sidebar").evaluate((el) => Math.round(el.getBoundingClientRect().top));
+
+  const atRest = await brandTop();
+  expect(atRest).toBeGreaterThan(0);
+
+  await page.evaluate(() => window.scrollTo(0, 400));
+  await page.waitForTimeout(200);
+  expect(await brandTop()).toBe(atRest);
+
+  // The far bottom is where it used to fail: the footer sits below the app frame, and the rail was
+  // dragged up with it.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(200);
+  expect(await brandTop()).toBe(atRest);
+});

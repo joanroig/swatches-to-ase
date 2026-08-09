@@ -21,11 +21,25 @@
      height too, so the two columns end on the same line. The old `100vh - 104px` counted the page's
      72px bottom padding, which is below the frame rather than inside it, and left the rail's bottom
      controls floating short of the panel. */
+  /*
+   * Fixed, not sticky.
+   *
+   * Sticky can only travel within its containing block, and the rail's is the shell — which ends
+   * where the app frame does. Scrolling far enough to reveal the footer therefore dragged the rail
+   * up with it and the wordmark and the first nav item left the screen, which is not something a
+   * navigation rail should ever do.
+   *
+   * `inset-inline: auto` is what makes this work without hard-coding a left edge: a fixed box with
+   * no inline offset keeps its static position, which here is the grid column it was placed in, so
+   * it stays put horizontally while the page is centred, the rail collapses, or the window resizes.
+   * The column keeps its width because the track is sized explicitly, not by its contents.
+   */
   .sidebar-stack {
-    position: sticky;
+    position: fixed;
     top: var(--frame-padding-top);
+    inset-inline: auto;
     align-self: start;
-    min-height: calc(100dvh - var(--frame-padding-top) - var(--frame-padding-bottom));
+    height: calc(100dvh - var(--frame-padding-top) - var(--frame-padding-bottom));
     justify-content: flex-start;
     width: var(--sidebar-width, 164px);
     transition: width 0.25s ease;
