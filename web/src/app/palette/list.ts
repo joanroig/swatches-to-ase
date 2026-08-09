@@ -717,7 +717,12 @@ const createFolderCrumb = (group: LibraryGroup) => {
 /** One folder, filling the panel on its own. */
 const createFolderView = (group: LibraryGroup, isSearching: boolean) => {
   const section = document.createElement("section");
-  section.className = "section-card section-card--open library-group library-group--open";
+  /*
+   * No `.section-card`, for the same reason the collection tiles dropped it: that class rounds its
+   * first header's top corners, and this header is a full-bleed bar across the panel. It was the
+   * last place still re-imposing card chrome on something that is not a card.
+   */
+  section.className = "library-group library-group--open";
   section.dataset.folderId = group.id;
   section.appendChild(createFolderCrumb(group));
 
