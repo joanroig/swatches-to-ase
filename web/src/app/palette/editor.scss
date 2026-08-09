@@ -359,15 +359,28 @@ button.color-card-text {
   }
 }
 
+/*
+ * The hex is the identifier and the name is a convenience, so the name is what gives way.
+ *
+ * Both used to shrink together, which truncated the codes — "#115…" — and left every row starting
+ * its text at a different place, since the ellipsis lands wherever that particular value ran out.
+ * The hex keeps its full width now, so the column of codes lines up and the name ellipsises.
+ */
 .color-card-value,
 .color-card-name {
   display: block;
   white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+}
+
+.color-card-value {
+  flex: none;
+}
+
+.color-card-name {
   min-width: 0;
-  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
 }
 
 .color-card-value {

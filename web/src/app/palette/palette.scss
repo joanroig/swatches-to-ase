@@ -60,10 +60,10 @@
  * heading does — so the box around it is redundant and the palettes get the panel's full width.
  */
 .library-group {
+  display: grid;
   align-content: start;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  min-width: 0;
+  /* Visible, so a card dragged out of one folder and over another is not clipped at the boundary. */
   overflow: visible;
 }
 
@@ -291,8 +291,10 @@ input.library-group-rename {
  * 14px of its own padding on top of the panel's, so a palette sat further in than the folder header
  * naming it and the two columns never agreed on a left edge.
  */
+/* Snug against the panel's own gutter. The grid used to add 14px of its own on top of it, which put
+   a palette further in than the folder header naming it. */
 .library-group .palette-grid {
-  padding: 14px 0 18px;
+  padding: 10px 0 14px;
 }
 
 /* ------------------------------------------------------ folder navigation --- */

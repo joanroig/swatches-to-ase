@@ -600,7 +600,13 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
 
 const createLibraryGroup = (group: LibraryGroup, isSearching: boolean) => {
   const section = document.createElement("section");
-  section.className = "section-card section-card--open library-group";
+  /*
+   * Not a `.section-card`. A folder is a band in the panel, and the card's rules kept re-imposing
+   * card chrome on it — `.section-card--open > .section-head:first-child` rounds the header's top
+   * corners, which is exactly the curve that made a list of folders read as a heap of separate
+   * objects. Everything the class provided is declared for `.library-group` directly.
+   */
+  section.className = "library-group";
   section.dataset.folderId = group.id;
 
   const collapsed = !isSearching && isFolderCollapsed(group.id);
