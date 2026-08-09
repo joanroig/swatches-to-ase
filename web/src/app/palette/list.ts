@@ -96,28 +96,37 @@ const ensureSortables = () => {
  * flags that on `body`, which is also what opens a collapsed target.
  */
 /*
- * Where the zoom comes from.
+ * Opening a collection grows the tile into the screen, the way a phone opens a folder.
  *
- * A phone does not zoom a folder open from the middle of the screen — it grows out of the tile you
- * touched, and shrinks back into it. That means the transform origin has to be the box's own centre
- * expressed against the list, captured at the moment it is opened and reused on the way back so the
- * view collapses into the same place it came from.
+ * A scale with a clever transform-origin only approximates this: the box you touched has its own
+ * position *and* its own aspect, and a uniform zoom from a point gets the second one wrong. This is
+ * a FLIP instead — measure the tile, render the destination, then play the destination from the
+ * transform that would lay it exactly over that tile. It ends on the identity, so what you watch is
+ * the tile itself growing until it fits.
  */
-let zoomOrigin = "center 30%";
+let zoomAnchor: DOMRect | null = null;
+let zoomFolderId: string | null = null;
 
-const captureZoomOrigin = (box: HTMLElement) => {
-  const list = paletteList;
-  if (!list) {
+const playFolderZoom = (element: HTMLElement, from: DOMRect | null) => {
+  if (!from || from.width === 0 || from.height === 0) {
     return;
   }
-  const listRect = list.getBoundingClientRect();
-  const boxRect = box.getBoundingClientRect();
-  if (listRect.width === 0 || listRect.height === 0) {
+  const to = element.getBoundingClientRect();
+  if (to.width === 0 || to.height === 0) {
     return;
   }
-  const x = ((boxRect.left + boxRect.width / 2 - listRect.left) / listRect.width) * 100;
-  const y = ((boxRect.top + boxRect.height / 2 - listRect.top) / listRect.height) * 100;
-  zoomOrigin = `${x.toFixed(2)}% ${y.toFixed(2)}%`;
+  const scaleX = from.width / to.width;
+  const scaleY = from.height / to.height;
+  const shiftX = from.left + from.width / 2 - (to.left + to.width / 2);
+  const shiftY = from.top + from.height / 2 - (to.top + to.height / 2);
+  element.animate(
+    [
+      { transform: `translate(${shiftX}px, ${shiftY}px) scale(${scaleX}, ${scaleY})`, opacity: 0 },
+      { transform: "none", opacity: 1 },
+    ],
+    // Out, not in-out: the movement should arrive quickly and settle rather than be played at you.
+    { duration: 280, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)" },
+  );
 };
 
 let collectionDropTarget: HTMLElement | null = null;
@@ -668,7 +677,9 @@ const createCollectionBox = (group: LibraryGroup) => {
     if (isSortableClickSuppressed()) {
       return;
     }
-    captureZoomOrigin(box);
+    // Measured before the render replaces it.
+    zoomAnchor = box.getBoundingClientRect();
+    zoomFolderId = folder.id;
     openFolder(folder.id);
     renderPaletteList();
   });
@@ -849,12 +860,21 @@ export const renderPaletteList = () => {
    * cloud update, and zooming through all of those would leave the panel pulsing.
    */
   if (changed) {
-    paletteList.classList.remove("is-entering-in", "is-entering-out");
-    // The tile's own position, so the view grows out of it and shrinks back into it.
-    paletteList.style.transformOrigin = zoomOrigin;
-    // Forces the removal to land, so stepping between two collections replays the animation.
-    void paletteList.offsetWidth;
-    paletteList.classList.add(openGroup ? "is-entering-in" : "is-entering-out");
+    /*
+     * Closing measures the tile *after* the grid is back, since that is where the collection now
+     * sits; opening uses the rect captured before the click replaced it.
+     */
+    const anchor = openGroup
+      ? zoomAnchor
+      : (paletteList.querySelector<HTMLElement>(`.collection-box[data-folder-id="${zoomFolderId ?? ""}"]`)?.getBoundingClientRect() ?? null);
+    const target = paletteList.firstElementChild;
+    if (target instanceof HTMLElement) {
+      playFolderZoom(target, anchor);
+    }
+    if (!openGroup) {
+      zoomAnchor = null;
+      zoomFolderId = null;
+    }
   }
 
   updateExportAvailability();

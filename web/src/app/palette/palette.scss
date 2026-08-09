@@ -1013,39 +1013,10 @@ button.collection-preview {
 }
 
 /*
- * Opening a collection zooms into it and closing zooms back out, the way a phone's home screen
- * does. It reads as going *inside* the box you tapped rather than as a new screen sliding over the
- * old one, which is the whole point of the box being the thing you opened.
+ * The open/close movement is played from script — see `playFolderZoom`. It is a FLIP from the tile's
+ * measured rect, which needs its width and height as well as its position, and neither a keyframe
+ * nor a transform-origin can express that.
  */
-@keyframes library-zoom-in {
-  from {
-    opacity: 0;
-    transform: scale(0.6);
-  }
-}
-
-@keyframes library-zoom-out {
-  from {
-    opacity: 0;
-    transform: scale(1.35);
-  }
-}
-
-/*
- * The origin is set from script — the centre of the tile that was opened — so the contents grow out
- * of that box and shrink back into it. A fixed origin here would zoom from the middle of the panel
- * however far from the middle the box happened to be.
- *
- * Eased out rather than in-out: the movement should arrive quickly and settle, which is what makes
- * it feel attached to the tap rather than played at you.
- */
-.library-groups.is-entering-in {
-  animation: library-zoom-in 0.26s cubic-bezier(0.2, 0.8, 0.3, 1) both;
-}
-
-.library-groups.is-entering-out {
-  animation: library-zoom-out 0.24s cubic-bezier(0.2, 0.8, 0.3, 1) both;
-}
 
 /* The way back is also the way out: a palette dropped on it leaves the collection. */
 .library-crumb.is-drop-target {
