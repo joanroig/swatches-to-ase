@@ -95,6 +95,31 @@ const ensureSortables = () => {
  * Bound once, on `document`, and it does nothing at all unless a drag is in flight — the sortable
  * flags that on `body`, which is also what opens a collapsed target.
  */
+/*
+ * Where the zoom comes from.
+ *
+ * A phone does not zoom a folder open from the middle of the screen — it grows out of the tile you
+ * touched, and shrinks back into it. That means the transform origin has to be the box's own centre
+ * expressed against the list, captured at the moment it is opened and reused on the way back so the
+ * view collapses into the same place it came from.
+ */
+let zoomOrigin = "center 30%";
+
+const captureZoomOrigin = (box: HTMLElement) => {
+  const list = paletteList;
+  if (!list) {
+    return;
+  }
+  const listRect = list.getBoundingClientRect();
+  const boxRect = box.getBoundingClientRect();
+  if (listRect.width === 0 || listRect.height === 0) {
+    return;
+  }
+  const x = ((boxRect.left + boxRect.width / 2 - listRect.left) / listRect.width) * 100;
+  const y = ((boxRect.top + boxRect.height / 2 - listRect.top) / listRect.height) * 100;
+  zoomOrigin = `${x.toFixed(2)}% ${y.toFixed(2)}%`;
+};
+
 let collectionDropTarget: HTMLElement | null = null;
 /*
  * Set when a drop lands on a collection, and read by the sortable's own drop handler.
@@ -643,6 +668,7 @@ const createCollectionBox = (group: LibraryGroup) => {
     if (isSortableClickSuppressed()) {
       return;
     }
+    captureZoomOrigin(box);
     openFolder(folder.id);
     renderPaletteList();
   });
@@ -814,6 +840,8 @@ export const renderPaletteList = () => {
    */
   if (changed) {
     paletteList.classList.remove("is-entering-in", "is-entering-out");
+    // The tile's own position, so the view grows out of it and shrinks back into it.
+    paletteList.style.transformOrigin = zoomOrigin;
     // Forces the removal to land, so stepping between two collections replays the animation.
     void paletteList.offsetWidth;
     paletteList.classList.add(openGroup ? "is-entering-in" : "is-entering-out");
