@@ -493,6 +493,16 @@ body[data-motion="off"] .library-group-body {
   transform: scale(1);
 }
 
+/*
+ * Not at the top level. This outline meant "the folder you are about to drop into" back when each
+ * folder had a grid of its own; with one grid holding every box it traces the whole view instead,
+ * running along the tiles' edges and saying nothing. Inside a collection the grid *is* the folder,
+ * so there it still means what it says.
+ */
+.palette-grid.library-root::before {
+  content: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   body:not([data-motion="on"]) .palette-grid::before {
     transition: none;
@@ -964,11 +974,22 @@ button.collection-preview {
   font-size: 0.8rem;
 }
 
-/* A collection under the pointer during a drag is about to swallow what you are holding. */
+/*
+ * A collection under the pointer is about to swallow what you are holding, and it has to say so
+ * loudly: the hint used to be a border colour on the preview, which sits on the tile's inner edge —
+ * a hairline, in the one moment the pointer is nowhere near it and the card being dragged is on
+ * top of it. The whole tile lights instead.
+ */
+.collection-box.is-drop-target {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
 .collection-box.is-drop-target button.collection-preview {
   border-style: solid;
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 18%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
 }
 
 
@@ -1044,6 +1065,6 @@ button.collection-preview {
 
 /* The way back is also the way out: a palette dropped on it leaves the collection. */
 .library-crumb.is-drop-target {
-  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
-  box-shadow: inset 0 0 0 1px var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
