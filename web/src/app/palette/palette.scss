@@ -287,6 +287,27 @@ input.library-group-rename {
 }
 
 /*
+ * A collapsed folder opens far enough to be dropped into while a drag is in the air.
+ *
+ * Collapse animates the row to `0fr`, so a closed folder is literally zero pixels tall — there was
+ * nothing on screen to aim at, and filing a palette into one was impossible without opening it
+ * first. It closes again by itself when the drag ends.
+ */
+body.is-dragging .library-group.is-collapsed .library-group-body {
+  grid-template-rows: 1fr;
+}
+
+body.is-dragging .library-group.is-collapsed .library-group-body > * {
+  visibility: visible;
+  transition: none;
+}
+
+body.is-dragging .library-group.is-collapsed .palette-grid {
+  min-height: 72px;
+  padding-block: 10px 14px;
+}
+
+/*
  * The cards line up with the panel's gutter, not with a gutter of their own. The grid used to add
  * 14px of its own padding on top of the panel's, so a palette sat further in than the folder header
  * naming it and the two columns never agreed on a left edge.
@@ -298,6 +319,27 @@ input.library-group-rename {
 }
 
 /* ------------------------------------------------------ folder navigation --- */
+
+/*
+ * The folder view's own header, matched to the folder headers it replaces: full-bleed, square, and
+ * a rule underneath. It was inheriting the section card's inset and radius, so the bar it stood in
+ * did not line up with the one the list shows for the same folder.
+ */
+.library-group--open > .section-head {
+  margin-inline: calc(var(--panel-pad) * -1);
+  padding-inline: var(--panel-pad);
+  border-radius: 0;
+}
+
+/* A plain glyph, like the folder chevrons: the ringed circle read as a control of a different kind
+   from everything else on the bar. */
+.library-crumb .icon-only {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  border: 0;
+  background: transparent;
+}
 
 .library-crumb-title {
   display: flex;

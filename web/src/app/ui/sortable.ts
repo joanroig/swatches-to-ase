@@ -441,6 +441,10 @@ export const createSortable = (options: SortableOptions) => {
     measureSlots();
     item.classList.add(SORTABLE_ITEM_CLASS);
     container.classList.add(SORTABLE_CONTAINER_CLASS);
+    // A page-level flag, so anything that has folded itself shut can open enough to be a drop
+    // target while a drag is in the air. A collapsed folder is zero pixels tall and cannot be
+    // dropped into otherwise.
+    document.body.classList.add("is-dragging");
     scrollParent = getScrollParent(container);
     stopAutoscroll();
     autoscrollFrame = window.requestAnimationFrame(stepAutoscroll);
@@ -486,6 +490,7 @@ export const createSortable = (options: SortableOptions) => {
   const detach = () => {
     detachListeners();
     if (item) {
+      document.body.classList.remove("is-dragging");
       item.classList.remove(SORTABLE_ITEM_CLASS);
       item.style.transform = "";
     }
@@ -556,6 +561,7 @@ export const createSortable = (options: SortableOptions) => {
     clearSession();
     suppressClickUntil = Date.now() + CLICK_SUPPRESSION_MS;
 
+    document.body.classList.remove("is-dragging");
     dragged?.classList.remove(SORTABLE_ITEM_CLASS);
     draggedContainer?.classList.remove(SORTABLE_CONTAINER_CLASS);
     originContainer?.classList.remove(SORTABLE_CONTAINER_CLASS);
