@@ -92,22 +92,35 @@ test("no view is cut off or pushed off screen at any width", async ({ page }) =>
   expect(faults, faults.join("\n")).toEqual([]);
 });
 
-/* The rail is navigation: it may not scroll away, at any scroll position. */
-test("the rail stays put while the page scrolls", async ({ page }) => {
+/*
+ * The rail does two things at once, and they used to be in conflict: its top must never scroll
+ * away, and its bottom belongs on the panel's lower edge rather than out over the footer.
+ */
+test("the rail's top stays put and its bottom lands on the panel", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await seed(page);
-  const brandTop = () => page.locator(".brand--sidebar").evaluate((el) => Math.round(el.getBoundingClientRect().top));
+  const measure = () =>
+    page.evaluate(() => {
+      const brand = document.querySelector<HTMLElement>(".brand--sidebar")!.getBoundingClientRect();
+      const bottom = document.querySelector<HTMLElement>(".sidebar-bottom")!.getBoundingClientRect();
+      const panel = document.querySelector<HTMLElement>(".panel.is-active")!.getBoundingClientRect();
+      return { brandTop: Math.round(brand.top), overshoot: Math.round(bottom.bottom - panel.bottom) };
+    });
 
-  const atRest = await brandTop();
-  expect(atRest).toBeGreaterThan(0);
+  const atRest = await measure();
+  expect(atRest.brandTop).toBeGreaterThan(0);
+  // Never past the panel's lower edge — how far short depends on how tall the library happens to be.
+  expect(atRest.overshoot).toBeLessThanOrEqual(0);
 
-  await page.evaluate(() => window.scrollTo(0, 400));
-  await page.waitForTimeout(200);
-  expect(await brandTop()).toBe(atRest);
+  await page.evaluate(() => window.scrollTo(0, 300));
+  await page.waitForTimeout(220);
+  expect((await measure()).brandTop).toBe(atRest.brandTop);
 
-  // The far bottom is where it used to fail: the footer sits below the app frame, and the rail was
-  // dragged up with it.
+  // The far bottom is where both used to fail — the whole rail was dragged up with the footer.
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-  await page.waitForTimeout(200);
-  expect(await brandTop()).toBe(atRest);
+  await page.waitForTimeout(250);
+  const atEnd = await measure();
+  expect(atEnd.brandTop).toBe(atRest.brandTop);
+  // Settled exactly on the panel's edge, which is the whole point of sticking to the bottom.
+  expect(atEnd.overshoot).toBe(0);
 });

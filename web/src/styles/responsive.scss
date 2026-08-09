@@ -16,33 +16,38 @@
     display: grid;
   }
 
-  /* The topbar is hidden at this width, so the shell starts right under the frame's top padding and
-     the rail's height is the viewport less the frame's padding on both sides — which is the panel's
-     height too, so the two columns end on the same line. The old `100vh - 104px` counted the page's
-     72px bottom padding, which is below the frame rather than inside it, and left the rail's bottom
-     controls floating short of the panel. */
   /*
-   * Fixed, not sticky.
+   * Two sticky pieces, not one.
    *
-   * Sticky can only travel within its containing block, and the rail's is the shell — which ends
-   * where the app frame does. Scrolling far enough to reveal the footer therefore dragged the rail
-   * up with it and the wordmark and the first nav item left the screen, which is not something a
-   * navigation rail should ever do.
+   * The rail has to do two different things at once, and a single positioned box can only do one of
+   * them. Sticky as a whole, it was dragged off screen at the bottom of the page: sticky only
+   * travels inside its containing block, the shell ends where the app frame does, and the footer
+   * sits below that — so revealing the footer took the wordmark with it. Fixed as a whole, it stayed
+   * put but its lower controls hung past the panel they belong beside, out over the footer.
    *
-   * `inset-inline: auto` is what makes this work without hard-coding a left edge: a fixed box with
-   * no inline offset keeps its static position, which here is the grid column it was placed in, so
-   * it stays put horizontally while the page is centred, the rail collapses, or the window resizes.
-   * The column keeps its width because the track is sized explicitly, not by its contents.
+   * Split, each half gets the behaviour it wants. The column stretches to the shell, the top group
+   * sticks to the top of the window, and the bottom group sticks to the *bottom* — which pins it to
+   * the window while there is still page below, then lets it settle exactly on the panel's bottom
+   * edge once you reach the end. Both groups are short, so neither can be pushed off screen.
    */
   .sidebar-stack {
-    position: fixed;
-    top: var(--frame-padding-top);
-    inset-inline: auto;
-    align-self: start;
-    height: calc(100dvh - var(--frame-padding-top) - var(--frame-padding-bottom));
-    justify-content: flex-start;
+    align-self: stretch;
+    justify-content: space-between;
     width: var(--sidebar-width, 164px);
     transition: width 0.25s ease;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: var(--frame-padding-top);
+    /* Its own height, not the column's. The base rule grows it to fill the stack, which leaves a
+       sticky box exactly as tall as its container and therefore nowhere to stick. */
+    flex: 0 0 auto;
+  }
+
+  .sidebar-bottom {
+    position: sticky;
+    bottom: var(--frame-padding-bottom);
   }
 
   .app-shell:not([data-sidebar-ready]) .shell,
