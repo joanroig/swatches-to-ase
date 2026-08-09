@@ -397,10 +397,12 @@ body[data-motion="off"] .library-group-body {
   }
 }
 
+/* Modest: three empty folders in a row were three tall dashed slabs, and the whole library read as
+   emptiness with a few headings in it. Enough to be an obvious drop target, no more. */
 .library-group-empty {
   grid-column: 1 / -1;
   margin: 0;
-  padding: 22px 16px;
+  padding: 14px 16px;
   text-align: center;
   border: 1px dashed var(--stroke);
   border-radius: 16px;

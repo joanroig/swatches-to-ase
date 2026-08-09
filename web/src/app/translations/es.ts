@@ -411,6 +411,7 @@ const es: TranslationMap = {
   "folder.defaultName": "Nueva carpeta",
   "folder.unfiled": "Borradores",
   "folder.empty": "Arrastra paletas aquí para archivarlas.",
+  "folder.emptyOpen": "Esta carpeta está vacía. Usa Nuevo para crear una paleta aquí.",
   "folder.open": "Abrir carpeta",
   "folder.expand": "Expandir carpeta",
   "folder.collapse": "Contraer carpeta",

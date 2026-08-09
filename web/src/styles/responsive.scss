@@ -50,6 +50,18 @@
     bottom: var(--frame-padding-bottom);
   }
 
+  /*
+   * Two things stuck to opposite edges of a window shorter than both of them together will meet in
+   * the middle, and the rail's did: the nav and the lower controls printed on top of each other.
+   * Under this height the lower group gives up its perch and simply sits at the end of the column,
+   * which scrolls — nothing overlaps, and the nav stays where it is.
+   */
+  @media (max-height: 640px) {
+    .sidebar-bottom {
+      position: static;
+    }
+  }
+
   .app-shell:not([data-sidebar-ready]) .shell,
   .app-shell:not([data-sidebar-ready]) .sidebar-stack {
     transition: none;
@@ -71,7 +83,9 @@
   .main-content {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 104px);
+    /* The frame is already exactly one viewport; the column just fills it. The old
+       `100vh - 104px` was a second, different guess at the same thing. */
+    min-height: 0;
   }
 
   .panel-palettes,
@@ -206,9 +220,23 @@
     border-inline: 0;
   }
 
-  .section-card {
-    border-radius: var(--radius-md);
+  /* The head rounds its top corners to sit inside the panel's; a full-bleed panel has none, so the
+     head's showed as two curls against a square edge. */
+  .panel-head {
+    border-radius: 0;
   }
+
+  /* Full width, so its rounded top corners had nothing to sit inside either. */
+  .bottom-nav {
+    border-radius: 0;
+  }
+
+  /*
+   * `.section-card` used to be a card inside a full-bleed panel and softened its corners here to
+   * suit. The folders and the preview are bands now, with `border-radius: 0` — but that is (0,1,0)
+   * and so was this, and this comes later in the cascade, so it won: every band on a phone had two
+   * rounded corners curling away from a square panel edge.
+   */
 
   .library-group .palette-grid {
     padding: 10px;
@@ -266,27 +294,14 @@
     align-items: stretch;
   }
 
-  .palette-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    flex-wrap: nowrap;
-  }
-
-  .palette-actions button {
-    width: auto;
-    padding: 8px 10px;
-    justify-content: center;
-  }
-
-  .palette-actions button span {
-    display: none;
-  }
-
-  .palette-actions button:nth-child(2) {
-    margin-right: auto;
-  }
+  /*
+   * The row used to be `edit, duplicate | spacer | publish, remove`, and these rules dressed it for
+   * a phone: labels off, padding down, and an auto margin after the second button to hold the last
+   * two against the right edge. The spacer is long gone and the row is an overflow row now, so all
+   * that margin did was split six circles into two clumps with 64px of nothing between them. The
+   * buttons are icon-only at every width already, and the container query on the card handles the
+   * rest — none of this had anything left to do.
+   */
 
   input[type="color"] {
     width: 48px;

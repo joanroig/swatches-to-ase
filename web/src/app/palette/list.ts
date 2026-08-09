@@ -1,7 +1,7 @@
 import { trackEvent } from "../cloud/analytics";
 import { unpublishPalette, upsertPublicPalette } from "../cloud/lazy";
 import { isCloudUserVerified, requireVerifiedCloudUser } from "../cloud/verification";
-import { exportModal, libraryEmptySearch, paletteList } from "../dom";
+import { createFolderButton, exportModal, libraryEmptySearch, paletteList } from "../dom";
 import { setExportMode, updateExportAvailability } from "../export/manager";
 import { t } from "../i18n";
 import { persistPalettes } from "../persistence";
@@ -690,7 +690,9 @@ const createFolderView = (group: LibraryGroup, isSearching: boolean) => {
   if (group.palettes.length === 0) {
     const empty = document.createElement("p");
     empty.className = "empty library-group-empty";
-    empty.textContent = isSearching ? t("library.search.emptyFolder") : t("folder.empty");
+    // Inside the folder there is nothing to drag a palette *from*, so the invitation to drop one
+    // reads as an instruction you cannot follow. It points at the dock instead.
+    empty.textContent = isSearching ? t("library.search.emptyFolder") : t("folder.emptyOpen");
     grid.appendChild(empty);
   }
 
@@ -752,6 +754,9 @@ export const renderPaletteList = () => {
   const openGroup = openId ? allGroups.find((group) => group.id === openId) : undefined;
 
   paletteList.dataset.level = openGroup ? "folder" : "library";
+  // Folders do not nest, so offering to make one while you are inside one offers something that
+  // cannot happen. The toolbar keeps its search.
+  createFolderButton?.classList.toggle("is-hidden", Boolean(openGroup));
   if (openGroup) {
     paletteList.appendChild(createFolderView(openGroup, Boolean(query)));
   } else {

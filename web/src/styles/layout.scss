@@ -134,7 +134,13 @@
 .panel-playground.view-section.is-active {
   display: flex;
   flex-direction: column;
-  min-height: min(820px, calc(100vh - 160px));
+  /*
+   * `100dvh`, and the frame's own padding rather than a guessed 160px. `100vh` on a phone is the
+   * window with the browser's bars *retracted*, so the panel was taller than the space it had and
+   * left a band of empty page under the preview. The 160px was a guess at the chrome above it,
+   * which is now two variables that say what they are.
+   */
+  min-height: min(820px, calc(100dvh - var(--frame-padding-top) - var(--frame-padding-bottom) - var(--bottom-nav-height)));
 }
 
 /*

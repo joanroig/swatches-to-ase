@@ -409,6 +409,7 @@ const en: TranslationMap = {
   "folder.defaultName": "New folder",
   "folder.unfiled": "Drafts",
   "folder.empty": "Drop palettes here to file them.",
+  "folder.emptyOpen": "Nothing in this folder yet. Use New to make a palette here.",
   "folder.open": "Open folder",
   "folder.expand": "Expand folder",
   "folder.collapse": "Collapse folder",
