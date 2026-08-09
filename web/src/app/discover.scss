@@ -389,6 +389,15 @@ button.discover-filter-toggle {
   }
 }
 
+/*
+ * With no filters on, the badge is an empty span — and an empty flex item still takes its share of
+ * the row's `gap`, which pushed the icon 4px left of centre in the collapsed circular button. It
+ * has to be out of the layout, not merely unstyled.
+ */
+.discover-filter-count:empty {
+  display: none;
+}
+
 /* The count sits on the button so the bar says how narrowed the feed is without being opened. */
 .discover-filter-count:not(:empty) {
   display: inline-grid;
