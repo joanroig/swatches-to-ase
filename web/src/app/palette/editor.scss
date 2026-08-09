@@ -332,6 +332,16 @@ button.color-insert.icon-only {
    target, so hovering either half offers the same thing and there is one focus stop, not two. */
 button.color-card-text {
   display: flex;
+  /*
+   * Left, explicitly. The shared `button` rule centres its content, and this is a button, so each
+   * row centred its own hex-and-name pair inside whatever width that pair happened to need — every
+   * row started its text at a different place. Starting them all at the group's leading edge is
+   * what puts the codes in a column.
+   */
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
   padding: 0;
