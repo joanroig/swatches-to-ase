@@ -68,20 +68,30 @@
 }
 
 /*
- * Full-bleed: with no card to sit inside, the header spans the panel and reads as a divider. It
- * carries a rule on both edges, so a folder is bracketed by its header and the next one rather than
- * trailing off into whatever follows.
+ * Full-bleed, and square.
+ *
+ * One rule per folder, on its top edge: it opens the folder, and the next folder's rule closes it.
+ * A rule on both edges doubled up between two adjacent headers, and rounding the corners — which is
+ * what a card would do — made a list of folders read as a heap of separate objects rather than as
+ * one library divided into sections.
  */
 .library-group > .section-head {
   margin-inline: calc(var(--panel-pad) * -1);
   padding-inline: var(--panel-pad);
   border-radius: 0;
   border-top: 1px solid var(--stroke-strong);
+  border-bottom: 0;
 }
 
 /* Except the first, which meets the panel head's own rule. */
 .library-group:first-child > .section-head {
   border-top: 0;
+}
+
+/* The palettes sit on the panel's own surface while the header sits on `--surface`, so the lighter
+   band is the folder's name and everything under it until the next band is its contents. */
+.library-group-body {
+  background: var(--card);
 }
 
 /*
@@ -341,23 +351,12 @@ input.library-group-rename {
 }
 
 /*
- * A collapsed folder is just its header, so the header stops behaving like one: it rounds all four
- * corners and drops the rule beneath it. Left as-is it kept a hairline with nothing under it and
- * its square bottom corners showed a sliver of the card behind, which read as an empty tray.
+ * This used to round a collapsed folder's corners and drop the rule under it, from when a folder
+ * was a card and a closed one had to stop looking like a lid over nothing. As a band it did the
+ * opposite of what it says: several closed folders in a row lost every divider between them and
+ * merged into one slab of near-identical bars, with two rounded corners where the list met the
+ * panel. Which folder you were looking at, and where it ended, stopped being visible at all.
  */
-.library-group.is-collapsed > .section-head {
-  border-bottom-color: transparent;
-  border-radius: calc(var(--radius-lg) - 1px);
-  transition:
-    border-radius 0.24s ease,
-    border-color 0.24s ease;
-}
-
-.library-group > .section-head {
-  transition:
-    border-radius 0.24s ease,
-    border-color 0.24s ease;
-}
 
 @media (prefers-reduced-motion: reduce) {
   body:not([data-motion="on"]) .library-group-body {
@@ -476,10 +475,12 @@ body[data-motion="off"] .palette-grid::before {
   min-width: 0;
   border-radius: 16px;
   border: 1px solid var(--stroke);
-  padding: 18px;
+  /* Snugger than it was. At 18px of padding and a 14px gap the card was mostly margin: the colours
+     are the content, and they were the smallest thing on it. */
+  padding: 12px;
   background: var(--surface);
   display: grid;
-  gap: 14px;
+  gap: 10px;
   text-align: left;
   transition:
     border-color 0.2s ease,
@@ -608,16 +609,31 @@ body[data-motion="off"] .palette-grid::before {
  * `display: contents` on the group that fits, so its buttons are laid out by `.palette-actions`
  * itself and the wrapper adds no box to measure around.
  */
+/* The left group: takes the free space, and is the only side that gives any up. */
+.palette-actions-lead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: inherit;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The right pair, held apart from the tools and never collapsed. */
+.palette-actions-trailing {
+  display: flex;
+  align-items: center;
+  gap: inherit;
+  flex: none;
+  margin-left: auto;
+}
+
 .palette-actions-primary {
   display: contents;
 }
 
-.palette-actions-more {
-  margin-left: auto;
-
-  &.is-hidden {
-    display: none;
-  }
+.palette-actions-more.is-hidden {
+  display: none;
 }
 
 .palette-actions-menu {
@@ -662,11 +678,6 @@ body[data-motion="off"] .palette-grid::before {
  * clipping the symptom.
  */
 @container palette-card (max-width: 420px) {
-  .palette-actions {
-    position: relative;
-    justify-content: flex-end;
-  }
-
   .palette-actions-more {
     display: inline-flex;
   }

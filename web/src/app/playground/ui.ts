@@ -25,6 +25,8 @@ import { syncActivePalette } from "../palette/mutations";
 import { state } from "../state";
 import type { Palette } from "../types";
 import { createIconButton } from "../ui/buttons";
+import { createOverflowRow } from "../ui/overflow-row";
+import { setupPopover } from "../ui/popover";
 import { createIcon, setButtonContent, type IconName } from "../ui/icons";
 import { appendLog, showToast } from "../ui/notifications";
 import { createSelectChip } from "../ui/select-chip";
@@ -206,11 +208,42 @@ const renderRamp = () => {
   });
 };
 
+/*
+ * The tabs are rebuilt whenever the scene changes, so the overflow row that manages them has to be
+ * torn down and rebuilt with them — each one owns a `ResizeObserver`, and leaving the old one
+ * watching a detached strip would leak one per click.
+ */
+let sceneOverflow: { destroy: () => void } | null = null;
+
 const renderSceneTabs = () => {
   if (!playgroundSceneTabs) {
     return;
   }
+  sceneOverflow?.destroy();
+  sceneOverflow = null;
   playgroundSceneTabs.innerHTML = "";
+
+  /*
+   * Four scene names do not fit a phone-width preview header, and a strip that scrolls sideways is
+   * a poor way to offer four choices: the ones off the end are invisible rather than merely small.
+   * Whatever fits stays a tab, and the rest fold into a menu — the same arrangement the palette
+   * cards use for their tools.
+   */
+  const primary = document.createElement("div");
+  primary.className = "playground-scene-primary";
+
+  const menu = document.createElement("div");
+  menu.className = "playground-scene-menu";
+
+  const more = createIconButton({
+    icon: "more",
+    label: t("action.moreActions"),
+    iconOnly: true,
+    className: "chip chip--icon playground-scene-more",
+  });
+  more.setAttribute("aria-expanded", "false");
+  more.setAttribute("aria-haspopup", "true");
+
   SCENE_IDS.forEach((scene) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -227,7 +260,17 @@ const renderSceneTabs = () => {
       renderStage();
       trackEvent("playground_scene_changed", { scene });
     });
-    playgroundSceneTabs.appendChild(button);
+    primary.appendChild(button);
+  });
+
+  playgroundSceneTabs.append(primary, more, menu);
+  const popover = setupPopover({ root: playgroundSceneTabs, trigger: more, panel: menu });
+  sceneOverflow = createOverflowRow({
+    row: playgroundSceneTabs,
+    primary,
+    menu,
+    trigger: more,
+    onCollapse: popover.close,
   });
 };
 

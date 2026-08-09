@@ -238,9 +238,20 @@ const createPaletteActions = (palette: Palette) => {
    * for four buttons shows four. The order below is the order they are given up in, most useful
    * first, so editing survives longest and deleting — which nobody needs in a hurry — goes first.
    */
+  /*
+   * Two groups, and only one of them collapses.
+   *
+   * Publishing and deleting sit apart at the right because they are the two that change what the
+   * palette *is* — everything else opens it somewhere. That separation should survive a narrow
+   * card, so the right pair is never folded away; it is the working tools on the left that spill
+   * into a "more" menu when the row runs out of room, keeping whatever fits.
+   */
+  const lead = document.createElement("div");
+  lead.className = "palette-actions-lead";
+
   const primary = document.createElement("div");
   primary.className = "palette-actions-primary";
-  primary.append(editButton, playgroundButton, publishButton, duplicateButton, exportButton, removeButton);
+  primary.append(editButton, playgroundButton, duplicateButton, exportButton);
 
   const menu = document.createElement("div");
   menu.className = "palette-actions-menu";
@@ -254,10 +265,17 @@ const createPaletteActions = (palette: Palette) => {
   });
   moreButton.setAttribute("aria-expanded", "false");
   moreButton.setAttribute("aria-haspopup", "true");
+  lead.append(primary, moreButton, menu);
 
-  actions.append(primary, moreButton, menu);
-  const popover = setupPopover({ root: actions, trigger: moreButton, panel: menu });
-  createOverflowRow({ row: actions, primary, menu, trigger: moreButton, onCollapse: popover.close });
+  const trailing = document.createElement("div");
+  trailing.className = "palette-actions-trailing";
+  trailing.append(publishButton, removeButton);
+
+  actions.append(lead, trailing);
+  const popover = setupPopover({ root: lead, trigger: moreButton, panel: menu });
+  // Measured against the lead, not the whole row: the right pair is fixed, so the space the left
+  // group actually has is its own box rather than the card's width.
+  createOverflowRow({ row: lead, primary, menu, trigger: moreButton, onCollapse: popover.close });
   return actions;
 };
 

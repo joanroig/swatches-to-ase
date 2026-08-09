@@ -484,15 +484,47 @@ body.has-playground-fullscreen {
   overflow: hidden;
 }
 
-/* Shape, height and surface come from `.chip-group`. */
+/*
+ * Shape, height and surface come from `.chip-group`. It no longer scrolls: `ui/overflow-row.ts`
+ * folds the tabs that do not fit into the menu below, so there is nothing hidden off the end to
+ * scroll to.
+ */
 .playground-scene-tabs {
-  /* Scrolls rather than wraps: a wrapped tab row pushed the stage down and looked broken. */
-  overflow-x: auto;
-  scrollbar-width: none;
+  position: relative;
+}
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
+.playground-scene-primary {
+  display: contents;
+}
+
+.playground-scene-more.is-hidden {
+  display: none;
+}
+
+.playground-scene-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 12;
+  min-width: 160px;
+  gap: 2px;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+}
+
+.playground-scene-tabs.is-open .playground-scene-menu {
+  display: grid;
+}
+
+/* In the menu a tab is a row, not a pill in a strip. */
+.playground-scene-menu .playground-scene-tab {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: var(--radius-sm);
 }
 
 button.playground-scene-tab {
