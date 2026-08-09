@@ -825,10 +825,15 @@ export const renderPaletteList = () => {
     const loose = allGroups.find((group) => !group.folder);
     loose?.palettes.forEach((palette) => grid.appendChild(createPaletteCard(palette)));
 
-    if (grid.children.length === 0) {
+    /*
+     * Only when the library is genuinely empty. A search that matches nothing is already reported
+     * by `#library-empty-search` above the grid, and saying it again inside a dashed drop zone both
+     * repeated the sentence and offered a target for something that does not exist.
+     */
+    if (grid.children.length === 0 && !query) {
       const empty = document.createElement("p");
       empty.className = "empty library-group-empty";
-      empty.textContent = query ? t("library.search.empty") : t("folder.emptyOpen");
+      empty.textContent = t("folder.emptyOpen");
       grid.appendChild(empty);
     }
     paletteList.appendChild(grid);
