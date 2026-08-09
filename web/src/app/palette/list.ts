@@ -22,13 +22,11 @@ import {
   UNFILED_FOLDER_ID,
   deleteFolder,
   getOpenFolderId,
-  isFolderCollapsed,
   matchesLibrarySearch,
   moveFolderToIndex,
   movePaletteToFolderIndex,
   openFolder,
   renameFolder,
-  toggleFolderCollapsed,
 } from "./folders";
 import { syncActivePalette } from "./mutations";
 import { openViewForPalette, renderViewModal } from "./view";
@@ -45,6 +43,7 @@ const ensureSortables = () => {
   if (!paletteList || paletteSortable) {
     return;
   }
+  setupCollectionDrops();
   paletteSortable = createSortable({
     root: paletteList,
     itemSelector: ".palette-card[data-palette-id]",
@@ -56,6 +55,12 @@ const ensureSortables = () => {
     onDrop: ({ item, toContainer, toIndex }) => {
       const paletteId = item.dataset.paletteId;
       if (!paletteId) {
+        return;
+      }
+      // Already filed into a collection by the drop handler above; re-filing it here would put it
+      // straight back where it came from.
+      if (paletteDroppedOnCollection === paletteId) {
+        paletteDroppedOnCollection = null;
         return;
       }
       movePaletteToFolderIndex(paletteId, toContainer.dataset.folderId ?? null, toIndex);
@@ -70,12 +75,79 @@ const ensureSortables = () => {
   // handle back to the folder sortable.
   createSortable({
     root: paletteList,
-    itemSelector: ".library-group[data-folder-id]:not([data-folder-id='__unfiled__'])",
+    itemSelector: ".collection-box[data-folder-id]",
     handleSelector: ".library-group-grip",
     onDrop: ({ fromIndex, toIndex }) => {
       moveFolderToIndex(fromIndex, toIndex);
       renderPaletteList();
     },
+  });
+};
+
+/*
+ * Dropping a palette *onto* a collection.
+ *
+ * The sortable moves items between containers, which reorders and re-files within a grid — but at
+ * the top level a collection is a single box, not a container of cards, so there is no slot to drop
+ * into. This watches the pointer for the duration of a drag instead: whichever collection is under
+ * it is marked, and releasing there files the palette into that collection.
+ *
+ * Bound once, on `document`, and it does nothing at all unless a drag is in flight — the sortable
+ * flags that on `body`, which is also what opens a collapsed target.
+ */
+let collectionDropTarget: HTMLElement | null = null;
+/*
+ * Set when a drop lands on a collection, and read by the sortable's own drop handler.
+ *
+ * Both fire for the same release. The sortable sees the release inside the top-level grid and files
+ * the palette back out again, so without this the two handlers fought and the move was undone.
+ * This listener is registered first, so the flag is always set before the sortable reads it.
+ */
+let paletteDroppedOnCollection: string | null = null;
+
+const markCollectionUnderPointer = (x: number, y: number) => {
+  const box = document.elementFromPoint(x, y)?.closest<HTMLElement>(".collection-box[data-folder-id]") ?? null;
+  if (box === collectionDropTarget) {
+    return;
+  }
+  collectionDropTarget?.classList.remove("is-drop-target");
+  collectionDropTarget = box;
+  collectionDropTarget?.classList.add("is-drop-target");
+};
+
+const setupCollectionDrops = () => {
+  document.addEventListener(
+    "pointermove",
+    (event) => {
+      if (!document.body.classList.contains("is-dragging")) {
+        return;
+      }
+      markCollectionUnderPointer(event.clientX, event.clientY);
+    },
+    { passive: true },
+  );
+
+  document.addEventListener("pointerup", (event) => {
+    const target = collectionDropTarget;
+    collectionDropTarget?.classList.remove("is-drop-target");
+    collectionDropTarget = null;
+    if (!target || !document.body.classList.contains("is-dragging")) {
+      return;
+    }
+    const dragged = document.querySelector<HTMLElement>(".palette-card.is-sort-dragging[data-palette-id]");
+    const paletteId = dragged?.dataset.paletteId;
+    const folderId = target.dataset.folderId;
+    if (!paletteId || !folderId) {
+      return;
+    }
+    // Appended, not inserted: there is no slot under the pointer to take a position from — the
+    // whole collection is the target.
+    const destination = state.palettes.filter((item) => (item.folderId ?? null) === folderId).length;
+    paletteDroppedOnCollection = paletteId;
+    movePaletteToFolderIndex(paletteId, folderId, destination);
+    // After the sortable has finished its own drop handling, or this render is undone by it.
+    runAfterSortableDrag(renderPaletteList);
+    void event;
   });
 };
 
@@ -413,88 +485,21 @@ type LibraryGroup = {
   palettes: Palette[];
 };
 
-const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
-  const header = document.createElement("div");
-  header.className = "section-head library-group-header";
-
-  /*
-   * Two targets, not one.
-   *
-   * The whole header used to collapse the folder, which left no way to say "show me this folder and
-   * nothing else". The chevron keeps the collapse; the name opens the folder on its own.
-   */
-  const toggle = document.createElement("button");
-  toggle.type = "button";
-  toggle.className = "library-group-toggle";
-  toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
-  toggle.setAttribute("aria-label", t(collapsed ? "folder.expand" : "folder.collapse"));
-  toggle.title = t(collapsed ? "folder.expand" : "folder.collapse");
-  const chevron = createIcon(collapsed ? "chevronDown" : "chevronUp");
-  chevron.classList.add("library-group-chevron");
-  toggle.appendChild(chevron);
-  toggle.addEventListener("click", () => {
-    if (header.querySelector(".library-group-rename")) {
-      return;
-    }
-    toggleFolderCollapsed(group.id);
-    renderPaletteList();
-  });
-
-  const open = document.createElement("button");
-  open.type = "button";
-  open.className = "library-group-open";
-  open.title = t("folder.open");
-  // A folder icon on real folders, a tray on Drafts: the two are different kinds of thing, and the
-  // name alone did not say so.
-  const kind = createIcon(group.folder ? "folder" : "inbox");
-  kind.classList.add("library-group-icon");
-  const label = document.createElement("span");
-  label.className = "library-group-name";
-  label.textContent = group.folder ? group.folder.name : t("folder.unfiled");
-  const count = document.createElement("span");
-  count.className = "palette-count";
-  count.textContent = t("folder.count", { count: group.palettes.length });
-  open.append(kind, label, count);
-  open.addEventListener("click", () => {
-    // Mid-rename the name is a text field, and clicking inside it must not navigate away.
-    if (header.querySelector(".library-group-rename")) {
-      return;
-    }
-    openFolder(group.id);
-    renderPaletteList();
-  });
-
-  header.append(toggle, open);
-
-  if (!group.folder) {
-    return header;
-  }
-
-  const folder = group.folder;
+/*
+ * A collection's own controls: rename in place, and delete.
+ *
+ * Renaming edits the tile's title where it sits rather than through `window.prompt`, which is a
+ * no-op in Electron — the desktop build simply could not rename a folder.
+ */
+const createCollectionActions = (group: LibraryGroup, folder: Folder) => {
   const actions = document.createElement("div");
-  actions.className = "section-actions library-group-actions";
+  actions.className = "palette-actions collection-actions";
 
-  /*
-   * The same grip the palette cards use, in the same place: a bare glyph at the start of the row
-   * rather than a circular icon button sitting among the actions. It was reading as a third action
-   * — something to press — and it is not one; it is where you take hold of the folder.
-   */
-  const grip = document.createElement("span");
-  grip.className = "library-group-grip";
-  grip.setAttribute("role", "button");
-  grip.setAttribute("aria-label", t("action.dragToReorder"));
-  grip.title = t("action.dragToReorder");
-  grip.appendChild(createIcon("grip"));
+  const label = () => actions.closest(".collection-box")?.querySelector<HTMLElement>(".collection-name") ?? null;
 
-  /*
-   * Rename in place rather than through `window.prompt`.
-   *
-   * The prompt is a no-op in Electron — it returns immediately without showing anything — so the
-   * desktop build simply could not rename a folder. Editing the name where it sits works
-   * everywhere, and is a better interaction on the web too.
-   */
   const startRename = () => {
-    if (header.querySelector(".library-group-rename")) {
+    const title = label();
+    if (!title || title.parentElement?.querySelector(".library-group-rename")) {
       return;
     }
     const input = document.createElement("input");
@@ -503,37 +508,7 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
     input.value = folder.name;
     input.setAttribute("aria-label", t("folder.rename"));
 
-    /*
-     * The field grows with its text instead of stretching across the header. A hidden twin carries
-     * the same typography, so measuring it gives the exact width the value needs — the same trick
-     * the select chip uses to size itself to its value rather than its longest option.
-     */
-    const sizer = document.createElement("span");
-    sizer.className = "library-group-rename-sizer";
-    sizer.setAttribute("aria-hidden", "true");
-    const fitToValue = () => {
-      sizer.textContent = input.value || folder.name;
-      const style = getComputedStyle(input);
-      const chrome =
-        Number.parseFloat(style.paddingLeft) +
-        Number.parseFloat(style.paddingRight) +
-        Number.parseFloat(style.borderLeftWidth) +
-        Number.parseFloat(style.borderRightWidth);
-      // The extra two pixels are the caret's, which sits past the last glyph.
-      input.style.width = `${Math.ceil(sizer.getBoundingClientRect().width + chrome) + 2}px`;
-    };
-    input.addEventListener("input", fitToValue);
-
     let settled = false;
-    /*
-     * Puts the label back itself rather than re-rendering the library.
-     *
-     * Blur commits, and a full re-render on blur replaced the header while the pointer was still
-     * down on it: mousedown blurred the field, the button it was heading for was thrown away, and
-     * mouseup landed on its replacement — so no click ever fired and the delete button did nothing.
-     * A rename changes one string and neither the order nor the counts, so swapping that one node
-     * back is the whole update.
-     */
     const finish = (commit: boolean) => {
       if (settled) {
         return;
@@ -542,9 +517,8 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
       if (commit) {
         renameFolder(folder.id, input.value);
       }
-      label.textContent = folder.name;
-      sizer.remove();
-      input.replaceWith(label);
+      title.textContent = folder.name;
+      input.replaceWith(title);
     };
 
     input.addEventListener("keydown", (event) => {
@@ -556,30 +530,27 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
         finish(false);
       }
     });
-    // Blur commits: clicking away from a half-typed name reads as "yes, that one".
     input.addEventListener("blur", () => finish(true));
-
-    label.replaceWith(input);
-    input.after(sizer);
-    fitToValue();
+    input.addEventListener("click", (event) => event.stopPropagation());
+    title.replaceWith(input);
     input.focus();
     input.select();
   };
 
-  // Icon-only: the labels are long enough to crowd the name out of a narrow header.
   const renameButton = createIconButton({
     icon: "edit",
     label: t("folder.rename"),
+    iconOnly: true,
     onClick: (event) => {
       event.stopPropagation();
       startRename();
     },
-    iconOnly: true,
   });
 
   const removeButton = createIconButton({
     icon: "trash",
     label: t("folder.delete"),
+    iconOnly: true,
     onClick: (event) => {
       event.stopPropagation();
       if (!window.confirm(t("folder.deleteConfirm", { name: folder.name, count: group.palettes.length }))) {
@@ -588,75 +559,92 @@ const createFolderHeader = (group: LibraryGroup, collapsed: boolean) => {
       deleteFolder(folder.id);
       renderPaletteList();
     },
-    iconOnly: true,
   });
 
   actions.append(renameButton, removeButton);
-  // The grip leads the row, before the chevron, like the one on a palette card.
-  header.prepend(grip);
-  header.appendChild(actions);
-  return header;
+  return actions;
 };
-
-const createLibraryGroup = (group: LibraryGroup, isSearching: boolean) => {
-  const section = document.createElement("section");
-  /*
-   * Not a `.section-card`. A folder is a band in the panel, and the card's rules kept re-imposing
-   * card chrome on it — `.section-card--open > .section-head:first-child` rounds the header's top
-   * corners, which is exactly the curve that made a list of folders read as a heap of separate
-   * objects. Everything the class provided is declared for `.library-group` directly.
-   */
-  section.className = "library-group";
-  section.dataset.folderId = group.id;
-
-  const collapsed = !isSearching && isFolderCollapsed(group.id);
-  section.classList.toggle("is-collapsed", collapsed);
-  section.appendChild(createFolderHeader(group, collapsed));
-
-  // A wrapper the collapse animation can size: the grid itself is the sortable container and must
-  // keep its own layout.
-  const body = document.createElement("div");
-  body.className = "library-group-body";
-
-  const grid = document.createElement("div");
-  grid.className = "palette-grid";
-  // The drop target for cross-folder drags; `null` folders use the sentinel id.
-  grid.dataset.folderId = group.folder ? group.folder.id : UNFILED_FOLDER_ID;
-  group.palettes.forEach((palette) => grid.appendChild(createPaletteCard(palette)));
-
-  if (group.palettes.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "empty library-group-empty";
-    empty.textContent = isSearching ? t("library.search.emptyFolder") : t("folder.empty");
-    grid.appendChild(empty);
-  }
-
-  body.appendChild(grid);
-  section.appendChild(body);
-  return section;
-};
-
-let lastLevelKey = "";
 
 /*
- * The step between the list of folders and one folder on its own.
+ * A collection: one box, the same size as a palette, holding palettes instead of colours.
  *
- * Only when the level actually changes. The list re-renders on every rename, every drop and every
- * cloud update, and animating all of those would leave the panel twitching. Direction follows the
- * move: opening a folder comes in from the right, going back from the left.
+ * The library used to stack full-width folder bands, each containing a grid — so a folder and a
+ * palette were different kinds of object in different places, and the top level was mostly chrome.
+ * Both are boxes in one grid now, the way a phone's home screen holds apps and folders together.
+ * What is inside decides what a box shows: a palette shows its colours, a collection shows a
+ * preview of the palettes it holds.
  */
-const playLevelTransition = (root: HTMLElement) => {
-  const key = `${root.dataset.level ?? ""}:${getOpenFolderId() ?? ""}`;
-  const previous = lastLevelKey;
-  lastLevelKey = key;
-  if (!previous || previous === key) {
-    return;
+const COLLECTION_PREVIEW_LIMIT = 4;
+
+const createCollectionBox = (group: LibraryGroup) => {
+  const folder = group.folder;
+  if (!folder) {
+    return document.createElement("div");
   }
-  root.classList.remove("is-entering-in", "is-entering-out");
-  // Forces the removal to take effect, so stepping between two folders replays the animation
-  // instead of being treated as no change at all.
-  void root.offsetWidth;
-  root.classList.add(root.dataset.level === "folder" ? "is-entering-in" : "is-entering-out");
+
+  const box = document.createElement("section");
+  box.className = "collection-box";
+  box.dataset.folderId = folder.id;
+
+  const header = document.createElement("div");
+  header.className = "palette-card-header collection-header";
+
+  const grip = document.createElement("span");
+  grip.className = "palette-card-grip library-group-grip";
+  grip.setAttribute("role", "button");
+  grip.setAttribute("aria-label", t("action.dragToReorder"));
+  grip.title = t("action.dragToReorder");
+  grip.appendChild(createIcon("grip"));
+
+  const kind = createIcon("folder");
+  kind.classList.add("library-group-icon");
+
+  const title = document.createElement("div");
+  title.className = "palette-title collection-name";
+  title.textContent = folder.name;
+
+  const count = document.createElement("span");
+  count.className = "palette-count";
+  count.textContent = t("folder.count", { count: group.palettes.length });
+  header.append(grip, kind, title, count);
+
+  /*
+   * The preview stands in for the box's contents, so it has to be openable: the whole tile is the
+   * target, which is how a folder behaves everywhere else.
+   */
+  const open = document.createElement("button");
+  open.type = "button";
+  open.className = "collection-preview";
+  open.title = t("folder.open");
+  open.setAttribute("aria-label", folder.name);
+
+  if (group.palettes.length === 0) {
+    const empty = document.createElement("span");
+    empty.className = "empty collection-empty";
+    empty.textContent = t("folder.empty");
+    open.appendChild(empty);
+  } else {
+    group.palettes.slice(0, COLLECTION_PREVIEW_LIMIT).forEach((palette) => {
+      const mini = document.createElement("span");
+      mini.className = "collection-mini";
+      palette.colors.slice(0, 6).forEach((color) => {
+        const chip = document.createElement("span");
+        chip.style.background = rgbToHex(color.rgb);
+        mini.appendChild(chip);
+      });
+      open.appendChild(mini);
+    });
+  }
+  open.addEventListener("click", () => {
+    if (isSortableClickSuppressed()) {
+      return;
+    }
+    openFolder(folder.id);
+    renderPaletteList();
+  });
+
+  box.append(header, open, createCollectionActions(group, folder));
+  return box;
 };
 
 /*
@@ -784,12 +772,34 @@ export const renderPaletteList = () => {
   if (openGroup) {
     paletteList.appendChild(createFolderView(openGroup, Boolean(query)));
   } else {
-    // While searching, folders with no match are hidden rather than shown empty.
+    /*
+     * One grid of boxes. Collections come first and unfiled palettes follow, which is the only
+     * ordering the stored data can express: folders and palettes are two lists, each with its own
+     * order, and nothing records how they interleave.
+     */
+    const grid = document.createElement("div");
+    grid.className = "palette-grid library-root";
+    // The sentinel marks it as the top level for a drag: a palette dropped here leaves whatever
+    // collection it was in.
+    grid.dataset.folderId = UNFILED_FOLDER_ID;
+
     allGroups
-      .filter((group) => !query || group.palettes.length > 0 || (!group.folder && !hasMatches))
-      .forEach((group) => paletteList.appendChild(createLibraryGroup(group, Boolean(query))));
+      .filter((group) => group.folder)
+      // While searching, a collection with no match is not worth showing.
+      .filter((group) => !query || group.palettes.length > 0)
+      .forEach((group) => grid.appendChild(createCollectionBox(group)));
+
+    const loose = allGroups.find((group) => !group.folder);
+    loose?.palettes.forEach((palette) => grid.appendChild(createPaletteCard(palette)));
+
+    if (grid.children.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "empty library-group-empty";
+      empty.textContent = query ? t("library.search.empty") : t("folder.emptyOpen");
+      grid.appendChild(empty);
+    }
+    paletteList.appendChild(grid);
   }
-  playLevelTransition(paletteList);
 
   updateExportAvailability();
   renderViewModal();

@@ -880,3 +880,93 @@ body[data-motion="off"] .palette-grid::before {
   background: var(--surface);
   border-left: 1px solid var(--stroke);
 }
+
+
+/* ------------------------------------------------------------ collections --- */
+
+/*
+ * A collection is a box the size of a palette, because at the top level they are the same kind of
+ * thing: something you can open, name, move and delete. Only the middle differs — a palette shows
+ * its colours there, a collection shows the palettes it holds.
+ */
+.collection-box {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+  text-align: left;
+}
+
+.collection-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.collection-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-header .palette-count {
+  flex: none;
+}
+
+/*
+ * The preview is the whole middle of the tile and is the way in, so it is one large target rather
+ * than a decoration with a separate "open" control beside it.
+ */
+button.collection-preview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  min-height: 54px;
+  height: 100%;
+  padding: 8px;
+  border: 1px dashed var(--stroke);
+  border-radius: 14px;
+  background: var(--surface-2);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface-2));
+  }
+}
+
+/* One palette, shrunk to a bar: enough to recognise what is inside without reading a name. */
+.collection-mini {
+  display: flex;
+  height: 16px;
+  border-radius: 5px;
+  overflow: hidden;
+
+  span {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+.collection-empty {
+  grid-column: 1 / -1;
+  align-self: center;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+/* A collection under the pointer during a drag is about to swallow what you are holding. */
+.collection-box.is-drop-target button.collection-preview {
+  border-style: solid;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-2));
+}
