@@ -41,8 +41,9 @@
   gap: 10px;
 }
 
+/* Its own air under the bar, now that the bar no longer carries a margin for everyone. */
 .discover-shell > .section-body {
-  padding: 0;
+  padding: var(--panel-pad) 0 0;
 }
 
 .discover-search {

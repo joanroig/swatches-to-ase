@@ -50,7 +50,13 @@
   gap: 10px;
   min-width: 0;
   min-height: 56px;
-  margin: calc(var(--panel-pad) * -1) calc(var(--panel-pad) * -1) var(--panel-pad);
+  /*
+   * No gap under it. The head's own rule is the boundary; a margin below it left a strip of bare
+   * panel between that rule and the first thing in the view, which read as a second, floating
+   * divider. Views that need air under the bar — the playground's ramp, Discover's cards — ask for
+   * it themselves.
+   */
+  margin: calc(var(--panel-pad) * -1) calc(var(--panel-pad) * -1) 0;
   padding: 8px var(--panel-pad);
   border-bottom: 1px solid var(--stroke-strong);
   border-radius: calc(var(--radius-xl) - 1px) calc(var(--radius-xl) - 1px) 0 0;

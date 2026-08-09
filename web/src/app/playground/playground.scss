@@ -1442,8 +1442,12 @@ button.ui-cta {
   border-top: 1px solid var(--stroke-strong);
 }
 
+/* Bled on three sides, not two. The stage reached the panel's left and right edges but stopped
+   short of its bottom, leaving a strip of bare panel under the preview and above the phone's nav. */
 .playground-preview > .playground-stage {
   margin-inline: calc(var(--panel-pad) * -1);
+  margin-bottom: calc(var(--panel-pad) * -1);
+  border-radius: 0;
 }
 
 /*
