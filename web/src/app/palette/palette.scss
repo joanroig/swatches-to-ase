@@ -49,6 +49,8 @@
 .library-groups {
   display: grid;
   gap: 0;
+  /* The departing level is laid over this one while it animates away. */
+  position: relative;
 }
 
 

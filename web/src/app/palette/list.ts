@@ -107,25 +107,65 @@ const ensureSortables = () => {
 let zoomAnchor: DOMRect | null = null;
 let zoomFolderId: string | null = null;
 
-const playFolderZoom = (element: HTMLElement, from: DOMRect | null) => {
-  if (!from || from.width === 0 || from.height === 0) {
-    return;
-  }
+const ZOOM_DURATION = 300;
+const ZOOM_EASING = "cubic-bezier(0.2, 0.8, 0.3, 1)";
+
+/*
+ * The layer being left behind. Opening pushes it back and away from the tile; closing lets it fall
+ * back into the tile it belongs to. It is laid over the new content and cannot be clicked, so it is
+ * purely something to watch on the way through.
+ */
+const playFolderExit = (element: HTMLElement, from: DOMRect | null, opening: boolean) => {
+  element.style.position = "absolute";
+  element.style.inset = "0";
+  element.style.pointerEvents = "none";
+  element.style.zIndex = "3";
+  const collapsed = from ? collapseTransform(element, from) : null;
+  const finish = () => element.remove();
+  const frames = opening
+    ? [
+        { transform: "none", opacity: 1 },
+        // Away from the viewer, so the folder appears to come forward through it.
+        { transform: "scale(1.14)", opacity: 0 },
+      ]
+    : [
+        { transform: "none", opacity: 1 },
+        { transform: collapsed ?? "scale(0.86)", opacity: 0 },
+      ];
+  const animation = element.animate(frames, { duration: ZOOM_DURATION, easing: ZOOM_EASING });
+  animation.addEventListener("finish", finish);
+  animation.addEventListener("cancel", finish);
+};
+
+/** The transform that lays `element` exactly over `from`. */
+const collapseTransform = (element: HTMLElement, from: DOMRect) => {
   const to = element.getBoundingClientRect();
   if (to.width === 0 || to.height === 0) {
-    return;
+    return null;
   }
   const scaleX = from.width / to.width;
   const scaleY = from.height / to.height;
   const shiftX = from.left + from.width / 2 - (to.left + to.width / 2);
   const shiftY = from.top + from.height / 2 - (to.top + to.height / 2);
+  return `translate(${shiftX}px, ${shiftY}px) scale(${scaleX}, ${scaleY})`;
+};
+
+const playFolderZoom = (element: HTMLElement, from: DOMRect | null, opening: boolean) => {
+  if (!from || from.width === 0 || from.height === 0) {
+    return;
+  }
+  // Opening grows out of the tile; closing comes forward from behind, where the folder just was.
+  const start = opening ? collapseTransform(element, from) : "scale(1.14)";
+  if (!start) {
+    return;
+  }
   element.animate(
     [
-      { transform: `translate(${shiftX}px, ${shiftY}px) scale(${scaleX}, ${scaleY})`, opacity: 0 },
+      { transform: start, opacity: 0 },
       { transform: "none", opacity: 1 },
     ],
     // Out, not in-out: the movement should arrive quickly and settle rather than be played at you.
-    { duration: 280, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)" },
+    { duration: ZOOM_DURATION, easing: ZOOM_EASING },
   );
 };
 
@@ -786,6 +826,14 @@ export const renderPaletteList = () => {
     return;
   }
   ensureSortables();
+  /*
+   * Detached rather than destroyed. A phone does not simply swap one screen for another when a
+   * folder opens: the grid behind it pushes *away* — scaling up and fading — while the folder grows
+   * forward out of its tile. Two layers moving in opposite directions is most of what the gesture
+   * is, and animating only the arriving one left the departing one blinking out.
+   */
+  const outgoing = paletteList.firstElementChild instanceof HTMLElement ? paletteList.firstElementChild : null;
+  outgoing?.remove();
   paletteList.innerHTML = "";
 
   const query = libraryState.search.trim().toLowerCase();
@@ -869,7 +917,11 @@ export const renderPaletteList = () => {
       : (paletteList.querySelector<HTMLElement>(`.collection-box[data-folder-id="${zoomFolderId ?? ""}"]`)?.getBoundingClientRect() ?? null);
     const target = paletteList.firstElementChild;
     if (target instanceof HTMLElement) {
-      playFolderZoom(target, anchor);
+      playFolderZoom(target, anchor, Boolean(openGroup));
+    }
+    if (outgoing) {
+      paletteList.appendChild(outgoing);
+      playFolderExit(outgoing, anchor, Boolean(openGroup));
     }
     if (!openGroup) {
       zoomAnchor = null;
