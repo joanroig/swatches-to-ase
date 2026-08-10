@@ -2,7 +2,7 @@
   <div class="app-frame">
     <header class="topbar">
       <div class="brand">
-        <img class="brand-logo" src="/favicon.svg" alt="Palette Studio" />
+        <img class="brand-logo" src="favicon.svg" alt="Palette Studio" />
         <div class="brand-text">
           <span class="brand-title">Palette</span>
           <span class="brand-subtitle">Studio</span>
@@ -17,7 +17,7 @@
           data-i18n-aria-label="action.cloud"
           data-i18n-title="action.cloud"
         >
-          <img class="user-avatar" data-cloud-avatar src="/avatar-placeholder.svg" alt="" />
+          <img class="user-avatar" data-cloud-avatar src="avatar-placeholder.svg" alt="" />
         </button>
       </div>
     </header>
@@ -72,14 +72,38 @@
               </div>
 
               <div class="discover-filter">
-                <button class="ghost discover-filter-toggle" id="discover-filter-toggle" type="button" aria-expanded="false" aria-haspopup="true" data-i18n-title="discover.filter.open" data-i18n-aria-label="discover.filter.open">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <use href="/icons/sort.svg#icon" xlink:href="/icons/sort.svg#icon" />
+                <button
+                  class="ghost discover-filter-toggle"
+                  id="discover-filter-toggle"
+                  type="button"
+                  aria-expanded="false"
+                  aria-haspopup="true"
+                  data-i18n-title="discover.filter.open"
+                  data-i18n-aria-label="discover.filter.open"
+                >
+                  <svg
+                    class="icon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <use href="icons/sort.svg#icon" xlink:href="icons/sort.svg#icon" />
                   </svg>
                   <span class="discover-filter-text" data-i18n="discover.filter.open">Filter palettes</span>
                   <span class="discover-filter-count" aria-hidden="true"></span>
                 </button>
-                <div class="discover-filter-panel" id="discover-filter-panel" role="dialog" aria-modal="false" data-i18n-aria-label="discover.filter.title"></div>
+                <div
+                  class="discover-filter-panel"
+                  id="discover-filter-panel"
+                  role="dialog"
+                  aria-modal="false"
+                  data-i18n-aria-label="discover.filter.title"
+                ></div>
               </div>
 
               <div class="chip-group chip-group--labelled discover-sort is-hidden">
@@ -97,7 +121,7 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                   >
-                    <use href="/icons/sort.svg#icon" xlink:href="/icons/sort.svg#icon" />
+                    <use href="icons/sort.svg#icon" xlink:href="icons/sort.svg#icon" />
                   </svg>
                   <select id="discover-sort" aria-label="Sort by" data-i18n-aria-label="discover.sort.label">
                     <option value="recent" data-i18n="discover.sort.recent">Most recent</option>
@@ -190,7 +214,7 @@
       <div class="sidebar-stack">
         <aside class="sidebar">
           <div class="brand brand--sidebar">
-            <img class="brand-logo" src="/favicon.svg" alt="Palette Studio" />
+            <img class="brand-logo" src="favicon.svg" alt="Palette Studio" />
             <div class="brand-text">
               <span class="brand-title">Palette</span>
               <span class="brand-subtitle">Studio</span>
@@ -208,7 +232,7 @@
             <button class="nav-item sidebar-toggle" type="button" data-action="toggle-sidebar"></button>
             <button class="nav-item" type="button" data-action="open-settings" data-context="sidebar"></button>
             <button class="nav-item nav-user" type="button" data-action="open-cloud" data-context="sidebar" data-i18n-aria-label="nav.user">
-              <img class="user-avatar" data-cloud-avatar src="/avatar-placeholder.svg" alt="" />
+              <img class="user-avatar" data-cloud-avatar src="avatar-placeholder.svg" alt="" />
               <span class="nav-label" data-i18n="nav.user">User</span>
             </button>
           </div>
@@ -231,7 +255,7 @@
         <div class="footer-meta-row">
           <a class="footer-button github-button" href="https://github.com/joanroig/palette-studio" target="_blank" rel="noreferrer">
             <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-              <use href="/icons/github.svg#icon"></use>
+              <use href="icons/github.svg#icon"></use>
             </svg>
             <span data-i18n="footer.github">GitHub</span>
           </a>

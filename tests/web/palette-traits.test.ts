@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { colorFamilyOf, colorFamiliesOf, stylesOf } from "../../web/src/app/cloud/palette-traits.js";
+import { colorFamiliesOf, colorFamilyOf, stylesOf } from "../../web/src/app/cloud/palette-traits.js";
 import { hexToRgb } from "../../web/src/app/utils/color.js";
 
 const palette = (...hexes: string[]) => hexes.map((hex) => ({ rgb: hexToRgb(hex) }));
 
-test("a colour lands in the family a person would name", () => {
+test("a color lands in the family a person would name", () => {
   assert.equal(colorFamilyOf(hexToRgb("#e11d48")), "red");
   assert.equal(colorFamilyOf(hexToRgb("#f97316")), "orange");
   assert.equal(colorFamilyOf(hexToRgb("#facc15")), "yellow");
@@ -72,9 +72,9 @@ test("monochromatic holds across the red seam", () => {
 
 test("a gradient runs one way in even steps", () => {
   assert.ok(stylesOf(palette("#0b3d2e", "#14684d", "#1f9370", "#2bbe93")).has("gradient"));
-  // Doubles back, so it is a set of colours rather than a ramp.
+  // Doubles back, so it is a set of colors rather than a ramp.
   assert.ok(!stylesOf(palette("#0b3d2e", "#2bbe93", "#14684d")).has("gradient"));
-  // Two colours are a pair, not a ramp.
+  // Two colors are a pair, not a ramp.
   assert.ok(!stylesOf(palette("#0b3d2e", "#2bbe93")).has("gradient"));
 });
 

@@ -579,7 +579,6 @@
 /* The footer and the FAB both belong to the library: the FAB's actions are import/export/generate,
    and none of them apply anywhere else. */
 
-
 .page[data-view="discover"] .fab-hub,
 .page[data-view="playground"] .fab-hub {
   display: none;
@@ -676,7 +675,7 @@
  *
  * Everything a view shows lives inside this frame, and nothing draws a second one around a group of
  * things: the wrappers that used to — a folder's card, Discover's shell, the playground's preview —
- * are bands within it now. What is left boxed is the leaf content, a palette and its colours, which
+ * are bands within it now. What is left boxed is the leaf content, a palette and its colors, which
  * is the only place a border says something.
  */
 .panel {

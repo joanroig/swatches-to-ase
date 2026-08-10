@@ -125,7 +125,7 @@ test("generate empty palette, edit colors, and apply notation", async ({ page })
 
   const initialValue = await page.locator(".color-card-value").first().innerText();
 
-  // Colours are edited through the colour tools popover rather than a native input.
+  // colors are edited through the color tools popover rather than a native input.
   await page.locator(".color-card-value").first().click();
   await expect(page.locator(".color-tools")).toBeVisible();
   await page.locator(".color-hex-input").fill("#00FF88");

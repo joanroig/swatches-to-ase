@@ -3,10 +3,10 @@
  *
  * Sorting only ever answered "which of these is newest or most liked". Finding a palette you can
  * actually use means asking for warm ones, or dark ones, or ones with a green in them — questions
- * about the colours themselves. Nothing on the public record answers those, so they are derived
- * here from the colours every palette already carries.
+ * about the colors themselves. Nothing on the public record answers those, so they are derived
+ * here from the colors every palette already carries.
  *
- * Deliberately pure and free of DOM or state: these are judgements about a list of colours, and
+ * Deliberately pure and free of DOM or state: these are judgements about a list of colors, and
  * they are the kind of thing that is easy to get subtly wrong, so they are unit-tested directly.
  */
 
@@ -36,8 +36,7 @@ export type PaletteColorFamily = (typeof PALETTE_COLORS)[number];
 
 export const isPaletteStyle = (value: string): value is PaletteStyle => (PALETTE_STYLES as readonly string[]).includes(value);
 
-export const isPaletteColorFamily = (value: string): value is PaletteColorFamily =>
-  (PALETTE_COLORS as readonly string[]).includes(value);
+export const isPaletteColorFamily = (value: string): value is PaletteColorFamily => (PALETTE_COLORS as readonly string[]).includes(value);
 
 /*
  * Hue, plus both saturations, on 0–1.
@@ -71,10 +70,10 @@ const hueDistance = (a: number, b: number) => {
   return raw > 180 ? 360 - raw : raw;
 };
 
-/** A colour with so little saturation that its hue is noise rather than information. */
+/** A color with so little saturation that its hue is noise rather than information. */
 const isNeutral = (hsl: Hsl) => hsl.s < 0.12;
 
-/* ------------------------------------------------------------------ colour --- */
+/* ------------------------------------------------------------------ color --- */
 
 /*
  * Hue bands, in degrees. Brown has no band of its own — it is a dark, unsaturated orange — so it is
@@ -93,7 +92,7 @@ const HUE_BANDS: { family: PaletteColorFamily; from: number; to: number }[] = [
 
 const inBand = (hue: number, from: number, to: number) => (from > to ? hue >= from || hue < to : hue >= from && hue < to);
 
-/** Which family a single colour belongs to. Every colour belongs to exactly one. */
+/** Which family a single color belongs to. Every color belongs to exactly one. */
 export const colorFamilyOf = (rgb: [number, number, number]): PaletteColorFamily => {
   const hsl = toHsl(rgb);
   if (hsl.l <= 0.12) {
@@ -102,7 +101,7 @@ export const colorFamilyOf = (rgb: [number, number, number]): PaletteColorFamily
   /*
    * Chroma, not HSL saturation. `#f7f8fa` is an off-white with a breath of blue in it, and HSL puts
    * its saturation at 0.23 — enough to fail a saturation gate and be filed under blue, which is not
-   * a colour anybody would say that swatch is.
+   * a color anybody would say that swatch is.
    */
   if (hsl.l >= 0.9 && hsl.chroma < 0.12) {
     return "white";
@@ -119,7 +118,7 @@ export const colorFamilyOf = (rgb: [number, number, number]): PaletteColorFamily
   return HUE_BANDS.find((band) => inBand(hsl.h, band.from, band.to))?.family ?? "grey";
 };
 
-/** The families present in a palette. A palette matches a colour filter if it contains one. */
+/** The families present in a palette. A palette matches a color filter if it contains one. */
 export const colorFamiliesOf = (colors: PublicPaletteColor[]) => new Set(colors.map((color) => colorFamilyOf(color.rgb)));
 
 /* ------------------------------------------------------------------- style --- */
@@ -129,11 +128,11 @@ const isWarmHue = (hue: number) => hue >= 330 || hue < 75;
 const isColdHue = (hue: number) => hue >= 150 && hue < 280;
 
 /**
- * A ramp: the colours step through lightness in one direction, without doubling back.
+ * A ramp: the colors step through lightness in one direction, without doubling back.
  *
- * Checked on lightness rather than hue because that is what a gradient palette is — one colour
+ * Checked on lightness rather than hue because that is what a gradient palette is — one color
  * getting lighter or darker — and a two-hue blend still reads as a gradient if its lightness runs
- * one way. Needs at least three colours; two of anything is a pair, not a ramp.
+ * one way. Needs at least three colors; two of anything is a pair, not a ramp.
  */
 const isRamp = (list: Hsl[]) => {
   if (list.length < 3) {
@@ -170,7 +169,7 @@ export const stylesOf = (colors: PublicPaletteColor[]): Set<PaletteStyle> => {
   if (majority(chromatic.filter((hsl) => isColdHue(hsl.h)).length)) {
     styles.add("cold");
   }
-  // Strong colour that is also lit: chroma alone would let a deep maroon through.
+  // Strong color that is also lit: chroma alone would let a deep maroon through.
   if (avgChroma >= 0.6 && avgValue >= 0.6) {
     styles.add("bright");
   }
@@ -185,7 +184,7 @@ export const stylesOf = (colors: PublicPaletteColor[]): Set<PaletteStyle> => {
   if (avgChroma > 0.12 && avgChroma <= 0.5 && avgValue > 0.35 && avgValue < 0.85 && avgLightness < 0.72) {
     styles.add("vintage");
   }
-  // One hue throughout. Measured against the first chromatic colour rather than an average, since
+  // One hue throughout. Measured against the first chromatic color rather than an average, since
   // averaging hues across the 360° seam is meaningless.
   if (chromatic.length > 0 && chromatic.every((hsl) => hueDistance(hsl.h, chromatic[0].h) <= 25)) {
     styles.add("monochromatic");

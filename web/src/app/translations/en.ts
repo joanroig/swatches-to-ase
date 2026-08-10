@@ -41,7 +41,7 @@ const en: TranslationMap = {
   "playground.scene.ui.metric1": "Completion",
   "playground.scene.ui.metric2": "Sessions",
   "playground.scene.ui.metric3": "Open tasks",
-  "playground.scene.poster.heading": "Colour in motion",
+  "playground.scene.poster.heading": "color in motion",
   "playground.scene.poster.lede": "Every shuffle is a new composition. Lock what you like and roll again.",
   "playground.scene.ui.brand": "Northwind",
   "playground.scene.ui.subtitle": "Last 7 days",
@@ -339,9 +339,11 @@ const en: TranslationMap = {
   "cookies.essential.title": "Essential storage",
   "cookies.essential.body": "Needed for core features like preferences, local palettes, session state, and cloud sync.",
   "cookies.analytics.title": "Analytics",
-  "cookies.analytics.body": "We use Google Analytics for Firebase to count anonymous, aggregated product usage. We do not use advertising or cross-site tracking cookies, and analytics is switched off when your browser sends a Do Not Track or Global Privacy Control signal.",
+  "cookies.analytics.body":
+    "We use Google Analytics for Firebase to count anonymous, aggregated product usage. We do not use advertising or cross-site tracking cookies, and analytics is switched off when your browser sends a Do Not Track or Global Privacy Control signal.",
   "privacy.analytics.title": "Analytics",
-  "privacy.analytics.body": "We use Google Analytics for Firebase to understand which features are used, in aggregate. It records events such as creating, publishing or exporting a palette, together with a device identifier and coarse technical data. It never records the contents of your palettes. Analytics is disabled if your browser sends a Do Not Track or Global Privacy Control signal.",
+  "privacy.analytics.body":
+    "We use Google Analytics for Firebase to understand which features are used, in aggregate. It records events such as creating, publishing or exporting a palette, together with a device identifier and coarse technical data. It never records the contents of your palettes. Analytics is disabled if your browser sends a Do Not Track or Global Privacy Control signal.",
   "cookies.security.title": "Security",
   "cookies.security.body": "Firebase App Check and Google reCAPTCHA Enterprise may set cookies or device identifiers to prevent abuse.",
   "contact.title": "Contact",

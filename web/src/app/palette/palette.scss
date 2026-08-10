@@ -51,7 +51,6 @@
   gap: 0;
 }
 
-
 /*
  * A band in the panel, not a card in it.
  *
@@ -519,7 +518,7 @@ body[data-motion="off"] .palette-grid::before {
   min-width: 0;
   border-radius: 16px;
   border: 1px solid var(--stroke);
-  /* Snugger than it was. At 18px of padding and a 14px gap the card was mostly margin: the colours
+  /* Snugger than it was. At 18px of padding and a 14px gap the card was mostly margin: the colors
      are the content, and they were the smallest thing on it. */
   padding: 12px;
   background: var(--surface);
@@ -750,7 +749,7 @@ body[data-motion="off"] .palette-grid::before {
     display: none;
   }
 
-  /* The colour count goes with them. The swatches below it are the count, drawn — and on a card this
+  /* The color count goes with them. The swatches below it are the count, drawn — and on a card this
      narrow the badge was taking width from the name beside it.
 
      `.palette-card` qualifies the selector only to outrank the (0,1,0) `.palette-meta-badges` rule
@@ -881,13 +880,12 @@ body[data-motion="off"] .palette-grid::before {
   border-left: 1px solid var(--stroke);
 }
 
-
 /* ------------------------------------------------------------ collections --- */
 
 /*
  * A collection is a box the size of a palette, because at the top level they are the same kind of
  * thing: something you can open, name, move and delete. Only the middle differs — a palette shows
- * its colours there, a collection shows the palettes it holds.
+ * its colors there, a collection shows the palettes it holds.
  */
 .collection-box {
   position: relative;
@@ -966,7 +964,7 @@ button.collection-preview {
 
 /*
  * A collection under the pointer is about to swallow what you are holding, and it has to say so
- * loudly: the hint used to be a border colour on the preview, which sits on the tile's inner edge —
+ * loudly: the hint used to be a border color on the preview, which sits on the tile's inner edge —
  * a hairline, in the one moment the pointer is nowhere near it and the card being dragged is on
  * top of it. The whole tile lights instead.
  */
@@ -1022,7 +1020,6 @@ button.collection-preview {
 .collection-box.is-insert-target[data-insert-edge="bottom"]::after {
   bottom: -10px;
 }
-
 
 /* ------------------------------------------------- collection navigation --- */
 

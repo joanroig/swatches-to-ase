@@ -1,10 +1,11 @@
+import { closeColorTools, openColorTools } from "../color/tools";
 import {
   addColorButton,
   editorExportButton,
-  editorTools,
   editorLayoutToggle,
   editorModal,
   editorSubtitle,
+  editorTools,
   paletteEditor,
   paletteNameInput,
 } from "../dom";
@@ -14,13 +15,12 @@ import { getColorNotation } from "../preferences";
 import { state } from "../state";
 import type { Palette, PaletteColor } from "../types";
 import { setButtonContent } from "../ui/icons";
-import { closeColorTools, openColorTools } from "../color/tools";
-import { readStoredText, writeStoredText } from "../utils/storage";
 import { setModalOpen } from "../ui/modals";
 import { showToast } from "../ui/notifications";
 import { createSortable } from "../ui/sortable";
 import { formatColorValue, getContrastColor, rgbToHex } from "../utils/color";
 import { createId } from "../utils/id";
+import { readStoredText, writeStoredText } from "../utils/storage";
 import { resetEditorSession, startEditorSession, updateEditorDirtyState } from "./editor-session";
 import { resolveActiveNameFormat } from "./format";
 import { insertColorAt, moveColorToIndex, syncActivePalette, updatePalette } from "./mutations";
@@ -107,7 +107,7 @@ const copyColorValue = async (value: string) => {
   }
 };
 
-/** Bind the colour-row sortable once against the stable editor root. */
+/** Bind the color-row sortable once against the stable editor root. */
 const ensureColorListSortable = () => {
   if (colorListSortable || !paletteEditor) {
     return;
@@ -137,7 +137,7 @@ const getRowIndex = (row: HTMLElement) => {
 };
 
 /**
- * A "+" that inserts a colour at a specific position, revealed by hovering the edge between two
+ * A "+" that inserts a color at a specific position, revealed by hovering the edge between two
  * swatches. It lives inside a row rather than as its own grid item, because an extra grid item
  * would add a track and resize every swatch.
  */
@@ -200,7 +200,7 @@ const createColorRow = (palette: Palette, color: PaletteColor, index: number, no
     valueLabel.textContent = formatColorValue({ ...color, rgb, name }, notation);
   };
 
-  /** Apply a colour to the palette without recording an undo step (used while dragging). */
+  /** Apply a color to the palette without recording an undo step (used while dragging). */
   const previewColor = (rgb: [number, number, number]) => {
     const target = palette.colors.find((entry) => entry.id === color.id);
     const nextName = nameColor(rgbToHex(rgb).toUpperCase(), nameFormat, getRowIndex(row));

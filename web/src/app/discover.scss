@@ -364,7 +364,6 @@ body[data-motion="off"] .discover-grid.is-revealing .discover-card:not(.is-skele
   animation: none;
 }
 
-
 .discover-follow {
   justify-self: end;
   min-width: 116px;
@@ -388,7 +387,7 @@ body[data-motion="off"] .discover-grid.is-revealing .discover-card:not(.is-skele
 /* ------------------------------------------------------------- filters --- */
 
 /*
- * Sort, style and colour in one disclosure.
+ * Sort, style and color in one disclosure.
  *
  * The bar had a sort chip and nothing else, so the only question it could answer was "which of
  * these is newest". These three sit together because they are the same kind of decision — narrowing
@@ -521,7 +520,7 @@ button.discover-filter-option {
   white-space: nowrap;
 }
 
-/* The colour rows are read by their swatch first and their name second. */
+/* The color rows are read by their swatch first and their name second. */
 .discover-filter-swatch {
   width: 14px;
   height: 14px;

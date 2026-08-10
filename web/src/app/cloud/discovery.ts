@@ -71,10 +71,10 @@ const matchesDiscoverySearch = (palette: PublicPalette, searchQuery: string) => 
 };
 
 /*
- * Style and colour are computed per palette on every render rather than cached.
+ * Style and color are computed per palette on every render rather than cached.
  *
  * The feed is capped at `DISCOVERY_PAGE_SIZE`, and classifying a hundred-odd palettes of five
- * colours is a few thousand HSL conversions — far cheaper than the cache invalidation a live
+ * colors is a few thousand HSL conversions — far cheaper than the cache invalidation a live
  * Firestore snapshot would need, since the list changes under us whenever anyone publishes.
  */
 const matchesDiscoveryTraits = (palette: PublicPalette) => {
@@ -234,5 +234,5 @@ export const stopListeningToDiscovery = () => {
   discoveryUnsubscribe = null;
 };
 
-export { fetchUserInteractions, savePublicPalette, toggleLikePublicPalette } from "./interactions";
 export { setupDiscoveryProfileControls } from "./discovery-profile";
+export { fetchUserInteractions, savePublicPalette, toggleLikePublicPalette } from "./interactions";

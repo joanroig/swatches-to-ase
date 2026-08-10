@@ -3,7 +3,7 @@ import convert from "color-convert";
 export type Rgb255 = [number, number, number];
 
 /**
- * Median-cut colour quantisation.
+ * Median-cut color quantisation.
  *
  * Chosen over k-means because it is deterministic — the same image always yields the same palette,
  * which matters when someone re-imports a picture — and it needs no iteration count or seeding.
@@ -46,15 +46,12 @@ const splitBox = (box: Box): [Box, Box] | null => {
 };
 
 const averageOf = (pixels: Rgb255[]): Rgb255 => {
-  const total = pixels.reduce(
-    (sum, pixel) => [sum[0] + pixel[0], sum[1] + pixel[1], sum[2] + pixel[2]],
-    [0, 0, 0],
-  );
+  const total = pixels.reduce((sum, pixel) => [sum[0] + pixel[0], sum[1] + pixel[1], sum[2] + pixel[2]], [0, 0, 0]);
   const count = Math.max(1, pixels.length);
   return [Math.round(total[0] / count), Math.round(total[1] / count), Math.round(total[2] / count)];
 };
 
-/** Perceptual distance (CIE76). Good enough for "are these two swatches the same colour?". */
+/** Perceptual distance (CIE76). Good enough for "are these two swatches the same color?". */
 export const colorDistance = (a: Rgb255, b: Rgb255) => {
   const [l1, a1, b1] = convert.rgb.lab(a);
   const [l2, a2, b2] = convert.rgb.lab(b);
@@ -62,7 +59,7 @@ export const colorDistance = (a: Rgb255, b: Rgb255) => {
 };
 
 /**
- * Drop colours that sit within `threshold` of one already kept.
+ * Drop colors that sit within `threshold` of one already kept.
  *
  * Photographs are full of near-duplicates — a sky is a hundred barely different blues — and a
  * palette of near-duplicates is useless, so this is exposed as a slider in the UI.
@@ -80,7 +77,7 @@ export const mergeSimilar = (colors: Rgb255[], threshold: number): Rgb255[] => {
   return kept;
 };
 
-/** Reduce a pixel set to at most `count` representative colours. */
+/** Reduce a pixel set to at most `count` representative colors. */
 export const quantize = (pixels: Rgb255[], count: number): Rgb255[] => {
   if (pixels.length === 0) {
     return [];
@@ -108,7 +105,5 @@ export const quantize = (pixels: Rgb255[], count: number): Rgb255[] => {
   }
 
   // Darkest first reads as a natural ramp rather than an arbitrary order.
-  return boxes
-    .map((box) => averageOf(box.pixels))
-    .sort((a, b) => convert.rgb.lab(a)[0] - convert.rgb.lab(b)[0]);
+  return boxes.map((box) => averageOf(box.pixels)).sort((a, b) => convert.rgb.lab(a)[0] - convert.rgb.lab(b)[0]);
 };

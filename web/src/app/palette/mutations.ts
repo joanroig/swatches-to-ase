@@ -5,8 +5,8 @@ import { persistPalettes } from "../persistence";
 import { state } from "../state";
 import type { Palette } from "../types";
 import { createId } from "../utils/id";
-import { getEditorPalette, isEditorDirty, isEditorSessionActive, recordEditorSnapshot } from "./editor-session";
 import { renderEditor } from "./editor";
+import { getEditorPalette, isEditorDirty, isEditorSessionActive, recordEditorSnapshot } from "./editor-session";
 import { getColorName, resolveActiveNameFormat } from "./format";
 import { renderPaletteList } from "./list";
 import { renderViewModal } from "./view";
@@ -87,7 +87,7 @@ export const syncPaletteColorNames = (formatOverride?: string) => {
   }
 };
 
-/** Insert a new colour at `index`, so the inline "+" affordances can add anywhere in a palette. */
+/** Insert a new color at `index`, so the inline "+" affordances can add anywhere in a palette. */
 export const insertColorAt = (paletteId: string, index: number, rgb: [number, number, number] = [0.5, 0.5, 0.5]) => {
   const nameFormat = resolveActiveNameFormat();
   updatePalette(paletteId, (palette) => {
@@ -100,7 +100,7 @@ export const insertColorAt = (paletteId: string, index: number, rgb: [number, nu
   });
 };
 
-/** Move a colour inside a palette. `toIndex` is the destination slot in the final array. */
+/** Move a color inside a palette. `toIndex` is the destination slot in the final array. */
 export const moveColorToIndex = (paletteId: string, fromIndex: number, toIndex: number, options: UpdatePaletteOptions = {}) => {
   updatePalette(
     paletteId,

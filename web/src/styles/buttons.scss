@@ -125,7 +125,7 @@ button {
    * of them ripples as the pointer crosses it. The tone changes instead, and nothing moves.
    *
    * Two treatments because there are two kinds of button: a flat one takes a tint, and a gradient
-   * one has no flat colour to tint, so it brightens. `.primary` and `.danger` are excluded from
+   * one has no flat color to tint, so it brightens. `.primary` and `.danger` are excluded from
    * the tint by name rather than by specificity, since `button:hover` (0,1,1) would otherwise beat
    * their (0,1,0) backgrounds and paint over the gradient.
    */
@@ -135,11 +135,13 @@ button {
    * A text link zeroes out the padding, the border and the min-height that make a button look like
    * one, so a hover fill lands as a pill sized by the base rule above rather than by the words
    * inside it — a wide lozenge floating around two words of text. Each of them already declares an
-   * underline or a colour change on hover, which is the whole feedback a link needs. They are
+   * underline or a color change on hover, which is the whole feedback a link needs. They are
    * listed by name because there is no selector for "styled as a link"; anything else that strips
    * button chrome belongs in this list too.
    */
-  &:hover:not(:disabled):not(.primary):not(.danger):not(.text-link):not(.footer-link):not(.discover-author-button):not(.playground-source-detach) {
+  &:hover:not(:disabled):not(.primary):not(.danger):not(.text-link):not(.footer-link):not(.discover-author-button):not(
+      .playground-source-detach
+    ) {
     background: color-mix(in srgb, var(--ink) 8%, transparent);
   }
 

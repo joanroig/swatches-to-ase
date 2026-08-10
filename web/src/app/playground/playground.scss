@@ -88,7 +88,7 @@ button.playground-source-detach {
  * Locked shows the padlock and nothing else — no ring, no grip, no bin.
  *
  * The ring plus a full row of icons made a locked swatch the loudest thing on the ramp, when the
- * point of locking is to take a colour *out* of consideration while you shuffle the rest. Hovering
+ * point of locking is to take a color *out* of consideration while you shuffle the rest. Hovering
  * brings the other controls back.
  */
 .playground-swatch.is-locked .playground-swatch-grip,
@@ -237,7 +237,7 @@ button.playground-insert.icon-only {
   cursor: pointer;
   opacity: 0;
   transform: scale(0.8);
-  /* A ring from `--ink`, not `--stroke`: the button floats over arbitrary swatch colours and a
+  /* A ring from `--ink`, not `--stroke`: the button floats over arbitrary swatch colors and a
      fixed hairline simply vanished against mid-tones. */
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--ink) 55%, transparent),
@@ -297,13 +297,9 @@ button.playground-insert.icon-only {
   padding-block: 0;
 }
 
-
-
-
 /* One chip shape for everything in the bar. */
 
 /* The current selection, exactly as the active preview tab is drawn. */
-
 
 /*
  * Holds the space-bar hint, or the "Editing <palette>" note when the playground is linked to a
@@ -393,9 +389,6 @@ button.playground-source-detach {
  * an earlier attempt flattened it with `color: transparent; opacity: 0` and the transparency leaked
  * into the dropdown, which opened as a white box with every option invisible but the hovered one.
  */
-
-
-
 
 /* --------------------------------------------------------------- preview --- */
 
@@ -582,7 +575,7 @@ button.playground-scene-tab {
   min-height: 300px;
   height: 100%;
 
-  /* Scenes colour themselves from the palette, so nothing inside may keep an app text colour. A
+  /* Scenes color themselves from the palette, so nothing inside may keep an app text color. A
      `<p>` picking up `var(--muted)` was invisible on a dark scene surface. */
   h3,
   p,
@@ -1337,7 +1330,7 @@ button.ui-cta {
 }
 
 @container playground (max-width: 620px) {
-  /* Columns get unreadably narrow past a handful of colours, so the ramp turns into rows. */
+  /* Columns get unreadably narrow past a handful of colors, so the ramp turns into rows. */
   .playground-ramp {
     grid-auto-flow: row;
     grid-auto-columns: auto;

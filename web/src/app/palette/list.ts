@@ -59,8 +59,7 @@ const getCollectionGapHover = (grid: HTMLElement, x: number, y: number): Collect
   const items = Array.from(grid.children)
     .filter(
       (child): child is HTMLElement =>
-        child instanceof HTMLElement &&
-        child.matches(".collection-box[data-folder-id], .palette-card[data-palette-id]"),
+        child instanceof HTMLElement && child.matches(".collection-box[data-folder-id], .palette-card[data-palette-id]"),
     )
     .map((element) => ({ element, rect: element.getBoundingClientRect() }));
   const candidates: { hover: CollectionHover; span: number; distance: number }[] = [];
@@ -77,13 +76,7 @@ const getCollectionGapHover = (grid: HTMLElement, x: number, y: number): Collect
       const right = left === first ? second : first;
       const overlapTop = Math.max(left.rect.top, right.rect.top);
       const overlapBottom = Math.min(left.rect.bottom, right.rect.bottom);
-      if (
-        overlapBottom > overlapTop &&
-        left.rect.right <= x &&
-        x <= right.rect.left &&
-        overlapTop <= y &&
-        y <= overlapBottom
-      ) {
+      if (overlapBottom > overlapTop && left.rect.right <= x && x <= right.rect.left && overlapTop <= y && y <= overlapBottom) {
         const span = right.rect.left - left.rect.right;
         candidates.push({
           hover: { box: right.element, intent: "before", edge: "left" },
@@ -96,13 +89,7 @@ const getCollectionGapHover = (grid: HTMLElement, x: number, y: number): Collect
       const bottom = top === first ? second : first;
       const overlapLeft = Math.max(top.rect.left, bottom.rect.left);
       const overlapRight = Math.min(top.rect.right, bottom.rect.right);
-      if (
-        overlapRight > overlapLeft &&
-        top.rect.bottom <= y &&
-        y <= bottom.rect.top &&
-        overlapLeft <= x &&
-        x <= overlapRight
-      ) {
+      if (overlapRight > overlapLeft && top.rect.bottom <= y && y <= bottom.rect.top && overlapLeft <= x && x <= overlapRight) {
         const span = bottom.rect.top - top.rect.bottom;
         candidates.push({
           hover: { box: bottom.element, intent: "before", edge: "top" },
@@ -140,9 +127,7 @@ const getCollectionHover = (x: number, y: number): CollectionHover | null => {
         ...verticalDistances,
       ];
   const inCentre =
-    (singleColumn || (x >= rect.left + edgeX && x <= rect.right - edgeX)) &&
-    y >= rect.top + edgeY &&
-    y <= rect.bottom - edgeY;
+    (singleColumn || (x >= rect.left + edgeX && x <= rect.right - edgeX)) && y >= rect.top + edgeY && y <= rect.bottom - edgeY;
   if (inCentre) {
     return { box, intent: "inside", edge: null };
   }
@@ -420,9 +405,7 @@ const setupCollectionDrops = () => {
     } else if (insertTarget?.parentElement) {
       // Edge releases are explicit insertions even when the pointer is released before the
       // spring-reorder timer has had time to move the live preview.
-      const order = getContainerLibraryOrder(insertTarget.parentElement).filter(
-        (key) => key !== paletteLibraryKey(paletteId),
-      );
+      const order = getContainerLibraryOrder(insertTarget.parentElement).filter((key) => key !== paletteLibraryKey(paletteId));
       const folderIndex = order.indexOf(getLibraryBoxKey(insertTarget));
       const after = insertEdge === "right" || insertEdge === "bottom";
       order.splice(Math.max(0, folderIndex + (after ? 1 : 0)), 0, paletteLibraryKey(paletteId));
@@ -861,12 +844,12 @@ const createCollectionActions = (group: LibraryGroup, folder: Folder) => {
 };
 
 /*
- * A collection: one box, the same size as a palette, holding palettes instead of colours.
+ * A collection: one box, the same size as a palette, holding palettes instead of colors.
  *
  * The library used to stack full-width folder bands, each containing a grid — so a folder and a
  * palette were different kinds of object in different places, and the top level was mostly chrome.
  * Both are boxes in one grid now, the way a phone's home screen holds apps and folders together.
- * What is inside decides what a box shows: a palette shows its colours, a collection shows a
+ * What is inside decides what a box shows: a palette shows its colors, a collection shows a
  * preview of the palettes it holds.
  */
 const COLLECTION_PREVIEW_LIMIT = 4;
@@ -1117,8 +1100,6 @@ const renderPaletteListNow = () => {
     }
     paletteList.appendChild(grid);
   }
-
-
 
   /*
    * A short cross-fade with a nudge in the direction of travel, and only when the level actually

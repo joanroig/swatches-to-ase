@@ -2,7 +2,7 @@ import type { Rgb255 } from "./quantize";
 import { mergeSimilar, quantize } from "./quantize";
 
 /**
- * Reads pixels out of an image so colours can be extracted from it.
+ * Reads pixels out of an image so colors can be extracted from it.
  *
  * The image is drawn once into an offscreen canvas at a reduced size: quantising a 12-megapixel
  * photo pixel-by-pixel would block the main thread for seconds, and a downscale changes the result
@@ -10,15 +10,15 @@ import { mergeSimilar, quantize } from "./quantize";
  */
 
 const MAX_SAMPLE_EDGE = 240;
-/** Pixels this transparent carry no useful colour. */
+/** Pixels this transparent carry no useful color. */
 const MIN_ALPHA = 128;
 
 export type ImageSampler = {
   width: number;
   height: number;
-  /** Colour at a normalised (0..1, 0..1) point on the image. */
+  /** color at a normalised (0..1, 0..1) point on the image. */
   sampleAt: (x: number, y: number) => Rgb255;
-  /** The `count` most representative colours, with near-duplicates merged. */
+  /** The `count` most representative colors, with near-duplicates merged. */
   extract: (count: number, similarity: number) => Rgb255[];
 };
 
@@ -68,7 +68,7 @@ export const loadImageSampler = async (source: Blob | string): Promise<ImageSamp
           }
         }
         // Over-quantise first so merging has candidates to choose between, then merge, then trim.
-        // `count` is a ceiling, not a quota: if the image genuinely holds four colours, asking for
+        // `count` is a ceiling, not a quota: if the image genuinely holds four colors, asking for
         // sixteen should still give four rather than fourteen shades of the same blue.
         const raw = quantize(pixels, Math.min(64, Math.max(count * 3, count)));
         return mergeSimilar(raw, similarity).slice(0, count);

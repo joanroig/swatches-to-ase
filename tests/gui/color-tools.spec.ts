@@ -43,7 +43,7 @@ const openTools = async (page, rowIndex: number) => {
   await expect(page.locator(".color-tools")).toBeVisible();
 };
 
-test("the hex field edits the colour and records an undo step", async ({ page }) => {
+test("the hex field edits the color and records an undo step", async ({ page }) => {
   await openEditor(page);
   await openTools(page, 1);
 
@@ -60,7 +60,7 @@ test("the hex field edits the colour and records an undo step", async ({ page })
   await expect(page.locator(".color-row").nth(1).locator(".color-card-value")).toHaveText("#0C0F05");
 });
 
-test("an invalid hex is rejected without changing the colour", async ({ page }) => {
+test("an invalid hex is rejected without changing the color", async ({ page }) => {
   await openEditor(page);
   await openTools(page, 0);
 
@@ -71,7 +71,7 @@ test("an invalid hex is rejected without changing the colour", async ({ page }) 
   await expect(page.locator(".color-row").nth(0).locator(".color-card-value")).toHaveText("#E6C79C");
 });
 
-test("dragging the saturation area changes the colour", async ({ page }) => {
+test("dragging the saturation area changes the color", async ({ page }) => {
   await openEditor(page);
   await openTools(page, 2);
 
@@ -94,7 +94,7 @@ test("shades are listed and can be applied", async ({ page }) => {
   const shades = page.locator(".color-shade");
   await expect(shades.first()).toBeVisible();
   expect(await shades.count()).toBeGreaterThan(5);
-  // Exactly one entry is marked as the colour the ramp was built from.
+  // Exactly one entry is marked as the color the ramp was built from.
   await expect(page.locator(".color-shade.is-source")).toHaveCount(1);
 
   const hex = await shades.nth(3).innerText();
@@ -139,8 +139,9 @@ test("long notations are not truncated in the column layout", async ({ page }) =
 
   const clipped = await page
     .locator(".color-card-value")
-    .evaluateAll((elements: Element[]) =>
-      elements.filter((element) => (element as HTMLElement).scrollWidth > (element as HTMLElement).clientWidth + 1).length,
+    .evaluateAll(
+      (elements: Element[]) =>
+        elements.filter((element) => (element as HTMLElement).scrollWidth > (element as HTMLElement).clientWidth + 1).length,
     );
   expect(clipped).toBe(0);
 });

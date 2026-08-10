@@ -1,4 +1,4 @@
-/* Palette editor modal: shell, header, bottom toolbar and the colour list in both layouts. */
+/* Palette editor modal: shell, header, bottom toolbar and the color list in both layouts. */
 
 .modal-card.modal-editor {
   width: min(1040px, 96vw);
@@ -34,7 +34,7 @@
 
 /*
  * The close button joins the flow here instead of being absolutely pinned to the top-right, so it
- * lines up with the colour-count badge beside it.
+ * lines up with the color-count badge beside it.
  */
 .modal-header.editor-header {
   display: flex;
@@ -164,7 +164,7 @@
   gap: 6px;
 }
 
-/* Adding a colour is normally done with the inline "+" between swatches, so the toolbar button is
+/* Adding a color is normally done with the inline "+" between swatches, so the toolbar button is
    reserved for touch, where there is no hover to reveal them. */
 @media (hover: hover) {
   .editor-add-color {
@@ -177,7 +177,7 @@
   }
 }
 
-/* ----------------------------------------------------------- colour list --- */
+/* ----------------------------------------------------------- color list --- */
 
 .color-list {
   /* Exposed so the insert affordance can centre itself in the gap. */
@@ -253,7 +253,7 @@ button.color-insert.icon-only {
   color: var(--ink);
   /*
    * A ring drawn from `--ink` rather than `--stroke`, so it is dark on light themes and light on
-   * dark ones. The button floats over arbitrary swatch colours, and a fixed hairline border simply
+   * dark ones. The button floats over arbitrary swatch colors, and a fixed hairline border simply
    * disappeared against mid-tones.
    */
   box-shadow:
@@ -327,8 +327,7 @@ button.color-insert.icon-only {
   transform: translateX(50%);
 }
 
-
-/* One button holding both spans — the whole hex-and-name block is the single "change colour"
+/* One button holding both spans — the whole hex-and-name block is the single "change color"
    target, so hovering either half offers the same thing and there is one focus stop, not two. */
 button.color-card-text {
   display: flex;
@@ -406,8 +405,6 @@ button.color-card-text {
   font-weight: 600;
 }
 
-
-
 .color-actions {
   display: flex;
   align-items: center;
@@ -468,7 +465,7 @@ button.drag-handle {
   }
 }
 
-/* Buttons sit on top of the swatch colour, so they follow its contrast. */
+/* Buttons sit on top of the swatch color, so they follow its contrast. */
 .color-row .ghost {
   border-color: transparent;
   background: transparent;
@@ -515,7 +512,7 @@ button.drag-handle {
 /* ------------------------------------------------- vertical (columns) --- */
 
 /*
- * Modelled on Coolors: each colour is a full-height column with its value pinned to the bottom,
+ * Modelled on Coolors: each color is a full-height column with its value pinned to the bottom,
  * and the actions stay out of the way until the column is hovered or focused.
  */
 #palette-editor[data-layout="vertical"] .color-row {
@@ -645,7 +642,7 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
 
 /*
  * Touch devices have no hover, so the actions must always be reachable there. They get a neutral
- * scrim so the icons stay legible on top of any swatch colour, whereas on desktop they only appear
+ * scrim so the icons stay legible on top of any swatch color, whereas on desktop they only appear
  * on hover or keyboard focus.
  */
 @media (hover: none) {
@@ -654,7 +651,7 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
     pointer-events: auto;
   }
 
-  /* A neutral chip behind each icon keeps it legible and tappable on any swatch colour. */
+  /* A neutral chip behind each icon keeps it legible and tappable on any swatch color. */
   #palette-editor[data-layout="vertical"] .color-row .ghost {
     background: rgba(15, 23, 42, 0.5);
     color: #f8fafc;
@@ -706,10 +703,10 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
   }
 
   .overflow-panel #editor-save {
-  padding: 8px 18px;
-}
+    padding: 8px 18px;
+  }
 
-.editor-notation {
+  .editor-notation {
     max-width: none;
     width: 100%;
   }
@@ -720,7 +717,6 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
     width: min(96vw, 640px);
     gap: 12px;
   }
-
 }
 
 @media (max-width: 480px) {

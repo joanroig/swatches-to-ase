@@ -1,5 +1,5 @@
-import { generatePaletteColors } from "../palette/generation";
 import { resolveActiveNameFormat } from "../palette/format";
+import { generatePaletteColors } from "../palette/generation";
 import { nameColor } from "../palette/naming";
 import type { PaletteColor } from "../types";
 import { getHueFromHex, rgbToHex } from "../utils/color";
@@ -56,7 +56,7 @@ const toSwatch = (color: PaletteColor, locked = false): PlaygroundSwatch => ({ .
  * Undo/redo over the working set.
  *
  * Shuffling is destructive and the whole point is to keep pressing it, so without a way back the
- * one you liked two presses ago is gone. Snapshots are plain colour lists — small enough that
+ * one you liked two presses ago is gone. Snapshots are plain color lists — small enough that
  * keeping forty of them costs nothing.
  */
 
@@ -105,7 +105,7 @@ export const redoPlayground = () => {
   return true;
 };
 
-/** Replace the working set with a library palette's colours and remember where it came from. */
+/** Replace the working set with a library palette's colors and remember where it came from. */
 export const loadPaletteIntoPlayground = (paletteId: string, name: string, colors: PaletteColor[]) => {
   playgroundState.swatches = colors
     .slice(0, MAX_COLORS)
@@ -124,10 +124,10 @@ export const detachPlaygroundSource = () => {
 };
 
 /**
- * Generate `count` colours in `style`, keeping every locked swatch exactly where it is.
+ * Generate `count` colors in `style`, keeping every locked swatch exactly where it is.
  *
  * Locked swatches also seed the harmony: the first one becomes the base hue, so shuffling around a
- * colour you like produces variations of it rather than an unrelated palette every time.
+ * color you like produces variations of it rather than an unrelated palette every time.
  */
 export const shufflePlayground = () => {
   const count = playgroundState.swatches.length || DEFAULT_COUNT;
@@ -171,9 +171,9 @@ export const canStepPlaygroundZoom = (direction: 1 | -1) => {
 };
 
 /**
- * Insert a colour at `index`, blending its neighbours where it has two.
+ * Insert a color at `index`, blending its neighbours where it has two.
  *
- * A random colour dropped between two neighbours reads as a mistake; the midpoint of the pair
+ * A random color dropped between two neighbours reads as a mistake; the midpoint of the pair
  * either side is what someone reaching for the "+" between two swatches actually means.
  */
 export const insertPlaygroundSwatch = (index: number) => {

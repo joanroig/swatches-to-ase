@@ -2,6 +2,12 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "npm: build:desktop",
+      "type": "shell",
+      "command": "npm run build:desktop",
+      "group": "build"
+    },
+    {
       "label": "npm: dist:desktop (win)",
       "type": "shell",
       "command": "npm run dist:desktop -- --win"
@@ -22,6 +28,29 @@
       "command": "npm run dist:desktop -- --win --mac --linux"
     },
     {
+      "label": "npm: build:web",
+      "type": "shell",
+      "command": "npm run build:web",
+      "group": "build"
+    },
+    {
+      "label": "npm: typecheck",
+      "type": "shell",
+      "command": "npm run typecheck",
+      "group": "test"
+    },
+    {
+      "label": "npm: lint",
+      "type": "shell",
+      "command": "npm run lint"
+    },
+    {
+      "label": "npm: test",
+      "type": "shell",
+      "command": "npm run test",
+      "group": "test"
+    },
+    {
       "label": "npm: build:android",
       "type": "shell",
       "command": "npm run build:android"
@@ -40,11 +69,6 @@
       "label": "npm: open:ios",
       "type": "shell",
       "command": "npm run open:ios"
-    },
-    {
-      "label": "npm: build:web",
-      "type": "shell",
-      "command": "npm run build:web"
     }
   ]
 }

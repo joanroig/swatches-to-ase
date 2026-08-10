@@ -50,13 +50,13 @@ test("loading cards reserve the same control rows as Discover results", async ({
 });
 
 /* The rows are built from the constants in `palette-traits.ts`, so a mismatch shows up as a count. */
-test("the panel offers sort, style and colour", async ({ page }) => {
+test("the panel offers sort, style and color", async ({ page }) => {
   await openDiscoverFilters(page);
 
   await expect(page.locator(".discover-filter-group")).toHaveCount(3);
   // The caps are `text-transform`, so the text itself is title case.
   await expect(page.locator(".discover-filter-label")).toHaveText(["Sort", "Style", "Color"]);
-  // 5 sorts, 8 styles + Any, 12 colours + Any.
+  // 5 sorts, 8 styles + Any, 12 colors + Any.
   await expect(page.locator(".discover-filter-option")).toHaveCount(27);
   await expect(page.locator(".discover-filter-swatch")).toHaveCount(12);
 });
@@ -71,7 +71,7 @@ test("a chosen filter is counted on the button and clicking it again clears it",
   await expect(page.locator(".discover-filter-count")).toHaveText("1");
   await expect(toggle).toHaveClass(/has-filters/);
 
-  // Style and colour narrow independently, and the panel stays open for the second choice.
+  // Style and color narrow independently, and the panel stays open for the second choice.
   await page.locator(".discover-filter-option", { hasText: "Green" }).first().click();
   await expect(page.locator(".discover-filter-count")).toHaveText("2");
   await expect(page.locator(".discover-filter-panel")).toBeVisible();
