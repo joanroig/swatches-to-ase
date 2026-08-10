@@ -4,6 +4,7 @@ import { readStoredJson, writeStoredJson } from "../utils/storage";
 import { libraryState, state } from "../state";
 import type { Folder, Palette } from "../types";
 import { createId } from "../utils/id";
+import { folderLibraryKey, mergeVisibleLibraryOrder, paletteLibraryKey, reconcileLibraryOrder } from "./library-order";
 
 /** Sentinel used by the DOM for the section that holds palettes with no folder. */
 export const UNFILED_FOLDER_ID = "__unfiled__";
@@ -34,11 +35,13 @@ const uniqueFolderName = (base: string) => {
 };
 
 export const createFolder = (name?: string): Folder => {
+  state.libraryOrder = reconcileLibraryOrder(state.libraryOrder, state.palettes, state.folders);
   const folder: Folder = {
     id: createId(),
     name: uniqueFolderName(name?.trim() || t("folder.defaultName")),
   };
   state.folders.push(folder);
+  state.libraryOrder.push(folderLibraryKey(folder.id));
   persistPalettes();
   return folder;
 };
@@ -58,29 +61,55 @@ export const deleteFolder = (folderId: string) => {
   if (!getFolderById(folderId)) {
     return;
   }
+  state.libraryOrder = reconcileLibraryOrder(state.libraryOrder, state.palettes, state.folders);
+  const folderKey = folderLibraryKey(folderId);
+  const folderIndex = state.libraryOrder.indexOf(folderKey);
+  const released = state.palettes.filter((palette) => palette.folderId === folderId);
   state.folders = state.folders.filter((folder) => folder.id !== folderId);
-  state.palettes.forEach((palette) => {
-    if (palette.folderId === folderId) {
-      palette.folderId = null;
-    }
+  released.forEach((palette) => {
+    palette.folderId = null;
   });
+  const releasedKeys = released.map((palette) => paletteLibraryKey(palette.id));
+  state.libraryOrder = state.libraryOrder.filter((key) => key !== folderKey && !releasedKeys.includes(key));
+  state.libraryOrder.splice(folderIndex < 0 ? state.libraryOrder.length : folderIndex, 0, ...releasedKeys);
   libraryState.collapsedFolderIds.delete(folderId);
   persistCollapsedFolders();
   persistPalettes();
 };
 
-export const moveFolderToIndex = (fromIndex: number, toIndex: number) => {
-  if (fromIndex < 0 || fromIndex >= state.folders.length) {
-    return;
-  }
-  const bounded = Math.min(Math.max(toIndex, 0), state.folders.length - 1);
-  if (bounded === fromIndex) {
-    return;
-  }
-  const next = [...state.folders];
-  const [moved] = next.splice(fromIndex, 1);
-  next.splice(bounded, 0, moved);
-  state.folders = next;
+const syncArrayOrderFromLibrary = () => {
+  const orderIndex = new Map(state.libraryOrder.map((key, index) => [key, index]));
+  state.folders = [...state.folders].sort(
+    (left, right) =>
+      (orderIndex.get(folderLibraryKey(left.id)) ?? Number.MAX_SAFE_INTEGER) -
+      (orderIndex.get(folderLibraryKey(right.id)) ?? Number.MAX_SAFE_INTEGER),
+  );
+
+  const rootById = new Map(state.palettes.filter((palette) => !palette.folderId).map((palette) => [palette.id, palette]));
+  const orderedRoot = state.libraryOrder
+    .filter((key) => key.startsWith("palette:"))
+    .map((key) => rootById.get(key.slice("palette:".length)))
+    .filter((palette): palette is Palette => Boolean(palette));
+  state.palettes = state.palettes.map((palette) => (palette.folderId ? palette : (orderedRoot.shift() ?? palette)));
+};
+
+/** Commit the mixed DOM order; filtered-out items retain their existing slots. */
+export const commitRootLibraryOrder = (visibleOrder: string[]) => {
+  const visiblePaletteIds = visibleOrder
+    .filter((key) => key.startsWith("palette:"))
+    .map((key) => key.slice("palette:".length));
+  state.palettes.forEach((palette) => {
+    if (visiblePaletteIds.includes(palette.id)) {
+      palette.folderId = null;
+    }
+  });
+  const reconciled = reconcileLibraryOrder(state.libraryOrder, state.palettes, state.folders);
+  state.libraryOrder = reconcileLibraryOrder(
+    mergeVisibleLibraryOrder(reconciled, visibleOrder),
+    state.palettes,
+    state.folders,
+  );
+  syncArrayOrderFromLibrary();
   persistPalettes();
 };
 
@@ -158,6 +187,9 @@ export const movePaletteToFolderIndex = (paletteId: string, targetFolderId: stri
   if (!palette) {
     return;
   }
+  state.libraryOrder = reconcileLibraryOrder(state.libraryOrder, state.palettes, state.folders).filter(
+    (key) => key !== paletteLibraryKey(paletteId),
+  );
   const folderId = resolveFolderId(targetFolderId);
   const remaining = state.palettes.filter((item) => item.id !== paletteId);
   const target = remaining.filter((item) => (item.folderId ?? null) === folderId);
@@ -193,6 +225,10 @@ export const movePaletteToFolderIndex = (paletteId: string, targetFolderId: stri
   }
 
   state.palettes = next;
+  if (!folderId) {
+    state.libraryOrder.push(paletteLibraryKey(paletteId));
+  }
+  state.libraryOrder = reconcileLibraryOrder(state.libraryOrder, state.palettes, state.folders);
   persistPalettes();
 };
 

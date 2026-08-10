@@ -1,6 +1,7 @@
 import { PALETTES_KEY } from "../config";
 import { state } from "../state";
 import type { Folder, Palette } from "../types";
+import { reconcileLibraryOrder } from "./library-order";
 
 export const hydratePalettes = () => {
   const raw = localStorage.getItem(PALETTES_KEY);
@@ -11,6 +12,7 @@ export const hydratePalettes = () => {
     const parsed = JSON.parse(raw) as {
       palettes?: Palette[];
       folders?: Folder[];
+      libraryOrder?: unknown[];
       activePaletteId?: string | null;
     };
     if (Array.isArray(parsed.folders)) {
@@ -27,6 +29,11 @@ export const hydratePalettes = () => {
         folderId: palette.folderId && folderIds.has(palette.folderId) ? palette.folderId : null,
       }));
     }
+    state.libraryOrder = reconcileLibraryOrder(
+      Array.isArray(parsed.libraryOrder) ? parsed.libraryOrder.filter((key): key is string => typeof key === "string") : [],
+      state.palettes,
+      state.folders,
+    );
     state.activePaletteId = parsed.activePaletteId ?? state.activePaletteId;
   } catch {
     // Ignore invalid saved palettes

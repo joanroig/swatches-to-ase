@@ -14,20 +14,28 @@ import { setModalOpen } from "../ui/modals";
 import { showToast } from "../ui/notifications";
 import { createOverflowRow } from "../ui/overflow-row";
 import { setupPopover } from "../ui/popover";
-import { createSortable, isSortableClickSuppressed, isSortableDragActive, runAfterSortableDrag } from "../ui/sortable";
+import {
+  animateSortableLayout,
+  captureSortableLayout,
+  createSortable,
+  isSortableClickSuppressed,
+  isSortableDragActive,
+  runAfterSortableDrag,
+} from "../ui/sortable";
 import { rgbToHex } from "../utils/color";
 import { duplicatePalette } from "./duplicate";
 import { openEditorForPalette } from "./editor";
 import {
   UNFILED_FOLDER_ID,
+  commitRootLibraryOrder,
   deleteFolder,
   getOpenFolderId,
   matchesLibrarySearch,
-  moveFolderToIndex,
   movePaletteToFolderIndex,
   openFolder,
   renameFolder,
 } from "./folders";
+import { folderLibraryKey, paletteLibraryKey, reconcileLibraryOrder } from "./library-order";
 import { syncActivePalette } from "./mutations";
 import { openViewForPalette, renderViewModal } from "./view";
 
@@ -35,8 +43,160 @@ const PREVIEW_CHIP_LIMIT = 10;
 
 let paletteSortable: ReturnType<typeof createSortable> | null = null;
 
+type CollectionHover = {
+  box: HTMLElement;
+  intent: "inside" | "before" | "after";
+  edge: "top" | "right" | "bottom" | "left" | null;
+};
+
+const getGridColumnCount = (grid: HTMLElement) => {
+  const columns = window.getComputedStyle(grid).gridTemplateColumns.trim();
+  return columns ? columns.split(/\s+/).length : 1;
+};
+
+/** Treat the space shared by two neighbouring folders as one canonical insertion seam. */
+const getCollectionGapHover = (grid: HTMLElement, x: number, y: number): CollectionHover | null => {
+  const items = Array.from(grid.children)
+    .filter(
+      (child): child is HTMLElement =>
+        child instanceof HTMLElement &&
+        child.matches(".collection-box[data-folder-id], .palette-card[data-palette-id]"),
+    )
+    .map((element) => ({ element, rect: element.getBoundingClientRect() }));
+  const candidates: { hover: CollectionHover; span: number; distance: number }[] = [];
+
+  for (let firstIndex = 0; firstIndex < items.length; firstIndex += 1) {
+    for (let secondIndex = firstIndex + 1; secondIndex < items.length; secondIndex += 1) {
+      const first = items[firstIndex];
+      const second = items[secondIndex];
+      if (!first || !second || !first.element.dataset.folderId || !second.element.dataset.folderId) {
+        continue;
+      }
+
+      const left = first.rect.left <= second.rect.left ? first : second;
+      const right = left === first ? second : first;
+      const overlapTop = Math.max(left.rect.top, right.rect.top);
+      const overlapBottom = Math.min(left.rect.bottom, right.rect.bottom);
+      if (
+        overlapBottom > overlapTop &&
+        left.rect.right <= x &&
+        x <= right.rect.left &&
+        overlapTop <= y &&
+        y <= overlapBottom
+      ) {
+        const span = right.rect.left - left.rect.right;
+        candidates.push({
+          hover: { box: right.element, intent: "before", edge: "left" },
+          span,
+          distance: Math.abs(x - (left.rect.right + span / 2)),
+        });
+      }
+
+      const top = first.rect.top <= second.rect.top ? first : second;
+      const bottom = top === first ? second : first;
+      const overlapLeft = Math.max(top.rect.left, bottom.rect.left);
+      const overlapRight = Math.min(top.rect.right, bottom.rect.right);
+      if (
+        overlapRight > overlapLeft &&
+        top.rect.bottom <= y &&
+        y <= bottom.rect.top &&
+        overlapLeft <= x &&
+        x <= overlapRight
+      ) {
+        const span = bottom.rect.top - top.rect.bottom;
+        candidates.push({
+          hover: { box: bottom.element, intent: "before", edge: "top" },
+          span,
+          distance: Math.abs(y - (top.rect.bottom + span / 2)),
+        });
+      }
+    }
+  }
+
+  candidates.sort((a, b) => a.span - b.span || a.distance - b.distance);
+  return candidates[0]?.hover ?? null;
+};
+
+const getCollectionHover = (x: number, y: number): CollectionHover | null => {
+  const under = document.elementFromPoint(x, y);
+  const box = under?.closest<HTMLElement>(".collection-box[data-folder-id]") ?? null;
+  if (!box) {
+    const grid = under?.closest<HTMLElement>(".library-root") ?? null;
+    return grid ? getCollectionGapHover(grid, x, y) : null;
+  }
+  const rect = box.getBoundingClientRect();
+  const singleColumn = box.parentElement instanceof HTMLElement && getGridColumnCount(box.parentElement) === 1;
+  const edgeX = Math.min(56, rect.width * 0.2);
+  const edgeY = Math.min(48, rect.height * 0.2);
+  const verticalDistances = [
+    { edge: "top" as const, distance: y - rect.top, intent: "before" as const },
+    { edge: "bottom" as const, distance: rect.bottom - y, intent: "after" as const },
+  ];
+  const distances = singleColumn
+    ? verticalDistances
+    : [
+        { edge: "left" as const, distance: x - rect.left, intent: "before" as const },
+        { edge: "right" as const, distance: rect.right - x, intent: "after" as const },
+        ...verticalDistances,
+      ];
+  const inCentre =
+    (singleColumn || (x >= rect.left + edgeX && x <= rect.right - edgeX)) &&
+    y >= rect.top + edgeY &&
+    y <= rect.bottom - edgeY;
+  if (inCentre) {
+    return { box, intent: "inside", edge: null };
+  }
+  const nearest = distances.reduce((closest, candidate) => (candidate.distance < closest.distance ? candidate : closest));
+  return { box, intent: nearest.intent, edge: nearest.edge };
+};
+
+let collectionHoverAnchor: { box: HTMLElement; index: number } | null = null;
+let collectionInsertArmed = false;
+
+const resolveRootLibraryTarget = ({
+  item,
+  container,
+  items,
+  pointerX,
+  pointerY,
+  currentIndex,
+  proposedIndex,
+}: Parameters<NonNullable<Parameters<typeof createSortable>[0]["resolveTarget"]>>[0]) => {
+  if (!item.dataset.paletteId || !container.classList.contains("library-root")) {
+    collectionHoverAnchor = null;
+    return proposedIndex;
+  }
+  const hover = getCollectionHover(pointerX, pointerY);
+  if (!hover || !items.includes(hover.box)) {
+    collectionHoverAnchor = null;
+    const first = Math.min(currentIndex, proposedIndex);
+    const last = Math.max(currentIndex, proposedIndex);
+    if (items.slice(first, last + 1).some((candidate) => candidate.dataset.folderId)) {
+      return currentIndex;
+    }
+    return proposedIndex;
+  }
+  if (collectionHoverAnchor?.box !== hover.box) {
+    collectionHoverAnchor = { box: hover.box, index: currentIndex };
+  }
+  if (hover.intent === "inside") {
+    return collectionHoverAnchor.index;
+  }
+  if (!collectionInsertArmed) {
+    return collectionHoverAnchor.index;
+  }
+  const others = items.filter((candidate) => candidate !== item);
+  const folderIndex = others.indexOf(hover.box);
+  return folderIndex < 0 ? proposedIndex : folderIndex + (hover.intent === "after" ? 1 : 0);
+};
+
+const getContainerLibraryOrder = (container: HTMLElement) =>
+  Array.from(container.children)
+    .filter((child): child is HTMLElement => child instanceof HTMLElement && child.matches(LIBRARY_BOX_ITEM_SELECTOR))
+    .map(getLibraryBoxKey);
+
 /**
- * Bind the sortables once. Both survive every re-render through event delegation on the stable
+ * Bind the sortable once. It survives every re-render through event delegation on the stable
  * `#palette-list` root.
  */
 const ensureSortables = () => {
@@ -46,40 +206,40 @@ const ensureSortables = () => {
   setupCollectionDrops();
   paletteSortable = createSortable({
     root: paletteList,
-    itemSelector: ".palette-card[data-palette-id]",
+    itemSelector: ".palette-card[data-palette-id], .collection-box[data-folder-id]",
     // Grip only: the card body is a click target that opens the palette, so dragging from anywhere
     // on it made the two intents easy to confuse.
     handleSelector: ".palette-card-grip",
     // Cards may cross between folder grids, which is how a palette is filed.
     containerSelector: ".palette-grid[data-folder-id]",
-    onDrop: ({ item, toContainer, toIndex }) => {
+    resolveTarget: resolveRootLibraryTarget,
+    onDrop: ({ item, fromContainer, toContainer, toIndex }) => {
       const paletteId = item.dataset.paletteId;
       if (!paletteId) {
+        if (toContainer.classList.contains("library-root")) {
+          commitRootLibraryOrder(getContainerLibraryOrder(toContainer));
+        }
         return;
       }
       // Already filed into a collection by the drop handler above; re-filing it here would put it
       // straight back where it came from.
-      if (paletteDroppedOnCollection === paletteId) {
-        paletteDroppedOnCollection = null;
+      if (paletteDropHandledExternally === paletteId) {
+        paletteDropHandledExternally = null;
         return;
       }
-      movePaletteToFolderIndex(paletteId, toContainer.dataset.folderId ?? null, toIndex);
+      if (toContainer.classList.contains("library-root")) {
+        commitRootLibraryOrder(getContainerLibraryOrder(toContainer));
+      } else {
+        movePaletteToFolderIndex(paletteId, toContainer.dataset.folderId ?? null, toIndex);
+      }
       // The cards are already where they belong, so only the folder chrome needs updating. A full
       // rebuild here would replace the dropped card and cut its settle animation short.
       refreshLibraryChrome();
       updateExportAvailability();
       renderViewModal();
-    },
-  });
-  // Not stored: `paletteSortable` alone is the "already bound" flag, and nothing ever needs a
-  // handle back to the folder sortable.
-  createSortable({
-    root: paletteList,
-    itemSelector: ".collection-box[data-folder-id]",
-    handleSelector: ".library-group-grip",
-    onDrop: ({ fromIndex, toIndex }) => {
-      moveFolderToIndex(fromIndex, toIndex);
-      renderPaletteList();
+      if (fromContainer !== toContainer) {
+        window.setTimeout(renderPaletteList, 240);
+      }
     },
   });
 };
@@ -96,26 +256,130 @@ const ensureSortables = () => {
  * flags that on `body`, which is also what opens a collapsed target.
  */
 let collectionDropTarget: HTMLElement | null = null;
+let collectionInsertTarget: HTMLElement | null = null;
+let springOpenTimer: number | null = null;
+let edgeInsertTimer: number | null = null;
+const SPRING_OPEN_DELAY_MS = 650;
+const EDGE_INSERT_DELAY_MS = 500;
 /*
- * Set when a drop lands on a collection, and read by the sortable's own drop handler.
+ * Set when a collection centre or edge handles a drop, and read by the sortable's own drop handler.
  *
  * Both fire for the same release. The sortable sees the release inside the top-level grid and files
  * the palette back out again, so without this the two handlers fought and the move was undone.
  * This listener is registered first, so the flag is always set before the sortable reads it.
  */
-let paletteDroppedOnCollection: string | null = null;
+let paletteDropHandledExternally: string | null = null;
+
+const LIBRARY_BOX_ITEM_SELECTOR = ".collection-box[data-folder-id], .palette-card[data-palette-id]";
+const LIBRARY_BOX_SELECTOR = ":scope > .collection-box[data-folder-id], :scope > .palette-card[data-palette-id]";
+
+const getLibraryBoxKey = (element: HTMLElement) => {
+  const paletteId = element.dataset.paletteId;
+  return paletteId ? paletteLibraryKey(paletteId) : folderLibraryKey(element.dataset.folderId ?? "");
+};
+
+/** Preserve box identity across the full render needed to update a collection's preview. */
+const captureLibraryBoxLayout = () => {
+  const grid = paletteList?.querySelector<HTMLElement>(".library-root");
+  return captureSortableLayout(grid?.querySelectorAll<HTMLElement>(LIBRARY_BOX_SELECTOR) ?? [], getLibraryBoxKey);
+};
+
+const renderWithLibraryBoxAnimation = (before: ReadonlyMap<string, DOMRect>) => {
+  renderPaletteList();
+  const grid = paletteList?.querySelector<HTMLElement>(".library-root");
+  animateSortableLayout(before, grid?.querySelectorAll<HTMLElement>(LIBRARY_BOX_SELECTOR) ?? [], getLibraryBoxKey);
+};
+
+const clearSpringOpenTimer = () => {
+  if (springOpenTimer !== null) {
+    window.clearTimeout(springOpenTimer);
+    springOpenTimer = null;
+  }
+};
+
+const clearEdgeInsertTimer = () => {
+  if (edgeInsertTimer !== null) {
+    window.clearTimeout(edgeInsertTimer);
+    edgeInsertTimer = null;
+  }
+  collectionInsertArmed = false;
+};
+
+const clearCollectionTargets = () => {
+  clearSpringOpenTimer();
+  clearEdgeInsertTimer();
+  collectionDropTarget?.classList.remove("is-drop-target");
+  collectionInsertTarget?.classList.remove("is-insert-target");
+  collectionInsertTarget?.removeAttribute("data-insert-edge");
+  collectionDropTarget = null;
+  collectionInsertTarget = null;
+};
+
+const scheduleSpringOpen = (target: HTMLElement) => {
+  clearSpringOpenTimer();
+  springOpenTimer = window.setTimeout(() => {
+    springOpenTimer = null;
+    if (collectionDropTarget !== target || !document.body.classList.contains("is-dragging")) {
+      return;
+    }
+    const folderId = target.classList.contains("library-crumb") ? null : (target.dataset.folderId ?? null);
+    clearCollectionTargets();
+    springOpenFolderDuringDrag(folderId);
+  }, SPRING_OPEN_DELAY_MS);
+};
+
+const scheduleEdgeInsert = (target: HTMLElement, edge: CollectionHover["edge"]) => {
+  clearEdgeInsertTimer();
+  edgeInsertTimer = window.setTimeout(() => {
+    edgeInsertTimer = null;
+    if (collectionInsertTarget !== target || target.dataset.insertEdge !== edge) {
+      return;
+    }
+    collectionInsertArmed = true;
+    paletteSortable?.refreshTarget();
+  }, EDGE_INSERT_DELAY_MS);
+};
 
 const markCollectionUnderPointer = (x: number, y: number) => {
+  const draggedPalette = document.querySelector(".palette-card.is-sort-dragging[data-palette-id]");
+  if (!draggedPalette) {
+    clearCollectionTargets();
+    return;
+  }
   const under = document.elementFromPoint(x, y);
   // The crumb is a target too: inside a collection it is the only way out, since there is no
   // top-level grid on screen to drag back to.
-  const box = under?.closest<HTMLElement>(".collection-box[data-folder-id], .library-crumb") ?? null;
-  if (box === collectionDropTarget) {
+  const crumb = under?.closest<HTMLElement>(".library-crumb") ?? null;
+  const hover = crumb ? null : getCollectionHover(x, y);
+  const dropTarget = crumb ?? (hover?.intent === "inside" ? hover.box : null);
+  const insertTarget = hover && hover.intent !== "inside" ? hover.box : null;
+  if (
+    dropTarget === collectionDropTarget &&
+    insertTarget === collectionInsertTarget &&
+    (insertTarget?.dataset.insertEdge ?? null) === (hover?.edge ?? null)
+  ) {
+    // Spring-loading is a dwell gesture, not simply time spent crossing a target. Restart the
+    // countdown while the pointer is still moving, then let the final position arm it.
+    if (dropTarget) {
+      scheduleSpringOpen(dropTarget);
+    }
+    if (insertTarget && hover?.edge) {
+      scheduleEdgeInsert(insertTarget, hover.edge);
+    }
     return;
   }
-  collectionDropTarget?.classList.remove("is-drop-target");
-  collectionDropTarget = box;
+  clearCollectionTargets();
+  collectionDropTarget = dropTarget;
+  collectionInsertTarget = insertTarget;
   collectionDropTarget?.classList.add("is-drop-target");
+  if (collectionDropTarget) {
+    scheduleSpringOpen(collectionDropTarget);
+  }
+  if (collectionInsertTarget && hover?.edge) {
+    collectionInsertTarget.classList.add("is-insert-target");
+    collectionInsertTarget.dataset.insertEdge = hover.edge;
+    scheduleEdgeInsert(collectionInsertTarget, hover.edge);
+  }
 };
 
 const setupCollectionDrops = () => {
@@ -132,26 +396,53 @@ const setupCollectionDrops = () => {
 
   document.addEventListener("pointerup", (event) => {
     const target = collectionDropTarget;
-    collectionDropTarget?.classList.remove("is-drop-target");
-    collectionDropTarget = null;
-    if (!target || !document.body.classList.contains("is-dragging")) {
+    const insertTarget = collectionInsertTarget;
+    const insertEdge = insertTarget?.dataset.insertEdge ?? null;
+    clearCollectionTargets();
+    collectionHoverAnchor = null;
+    if ((!target && !insertTarget) || !document.body.classList.contains("is-dragging")) {
       return;
     }
     const dragged = document.querySelector<HTMLElement>(".palette-card.is-sort-dragging[data-palette-id]");
     const paletteId = dragged?.dataset.paletteId;
-    // No folder id on the crumb: dropping there means the top level.
-    const folderId = target.dataset.folderId ?? null;
     if (!paletteId) {
       return;
     }
-    // Appended, not inserted: there is no slot under the pointer to take a position from — the
-    // whole collection is the target.
-    const destination = state.palettes.filter((item) => (item.folderId ?? null) === folderId).length;
-    paletteDroppedOnCollection = paletteId;
-    movePaletteToFolderIndex(paletteId, folderId, destination);
-    // After the sortable has finished its own drop handling, or this render is undone by it.
-    runAfterSortableDrag(renderPaletteList);
+    const previousLayout = captureLibraryBoxLayout();
+    paletteDropHandledExternally = paletteId;
+
+    if (target) {
+      // No folder id on the crumb: dropping there means the top level. A collection's center is
+      // a filing target, so append inside it instead of treating the box as a sortable slot.
+      const folderId = target.dataset.folderId ?? null;
+      const destination = state.palettes.filter((item) => (item.folderId ?? null) === folderId).length;
+      movePaletteToFolderIndex(paletteId, folderId, destination);
+    } else if (insertTarget?.parentElement) {
+      // Edge releases are explicit insertions even when the pointer is released before the
+      // spring-reorder timer has had time to move the live preview.
+      const order = getContainerLibraryOrder(insertTarget.parentElement).filter(
+        (key) => key !== paletteLibraryKey(paletteId),
+      );
+      const folderIndex = order.indexOf(getLibraryBoxKey(insertTarget));
+      const after = insertEdge === "right" || insertEdge === "bottom";
+      order.splice(Math.max(0, folderIndex + (after ? 1 : 0)), 0, paletteLibraryKey(paletteId));
+      commitRootLibraryOrder(order);
+    }
+    // After the sortable has finished its own drop handling, or this render is undone by it. The
+    // render refreshes the folder preview; stable data ids let the surviving boxes animate from
+    // their old slots even though their DOM nodes were replaced.
+    runAfterSortableDrag(() => {
+      renderWithLibraryBoxAnimation(previousLayout);
+      if (paletteDropHandledExternally === paletteId) {
+        paletteDropHandledExternally = null;
+      }
+    });
     void event;
+  });
+
+  document.addEventListener("pointercancel", () => {
+    clearCollectionTargets();
+    collectionHoverAnchor = null;
   });
 };
 
@@ -679,10 +970,13 @@ const createFolderCrumb = (group: LibraryGroup) => {
   const name = document.createElement("span");
   name.className = "library-crumb-name";
   name.textContent = group.folder ? group.folder.name : t("folder.unfiled");
+  const dragHint = document.createElement("span");
+  dragHint.className = "library-crumb-drag-hint";
+  dragHint.textContent = t("folder.dragHomeHint");
   const count = document.createElement("span");
   count.className = "palette-count";
   count.textContent = t("folder.count", { count: group.palettes.length });
-  title.append(kind, name, count);
+  title.append(kind, name, dragHint, count);
 
   head.append(back, title);
   return head;
@@ -737,17 +1031,13 @@ const buildGroups = (palettes: Palette[]): LibraryGroup[] => {
   return groups;
 };
 
-export const renderPaletteList = () => {
+const renderPaletteListNow = () => {
   if (!paletteList) {
     return;
   }
   // Rebuilding the list replaces the card the pointer is holding, which aborts the drag. Callers
   // are no longer all user-initiated — a cloud sync or the lazily loaded auth state can land at any
   // moment — so the render waits for the drop instead of cancelling it.
-  if (isSortableDragActive()) {
-    runAfterSortableDrag(renderPaletteList);
-    return;
-  }
   ensureSortables();
   paletteList.innerHTML = "";
 
@@ -795,14 +1085,24 @@ export const renderPaletteList = () => {
     // collection it was in.
     grid.dataset.folderId = UNFILED_FOLDER_ID;
 
-    allGroups
-      .filter((group) => group.folder)
-      // While searching, a collection with no match is not worth showing.
-      .filter((group) => !query || group.palettes.length > 0)
-      .forEach((group) => grid.appendChild(createCollectionBox(group)));
-
-    const loose = allGroups.find((group) => !group.folder);
-    loose?.palettes.forEach((palette) => grid.appendChild(createPaletteCard(palette)));
+    state.libraryOrder = reconcileLibraryOrder(state.libraryOrder, state.palettes, state.folders);
+    const groupsById = new Map(allGroups.filter((group) => group.folder).map((group) => [group.id, group]));
+    const looseById = new Map(visible.filter((palette) => !palette.folderId).map((palette) => [palette.id, palette]));
+    state.libraryOrder.forEach((key) => {
+      if (key.startsWith("folder:")) {
+        const group = groupsById.get(key.slice("folder:".length));
+        if (group && (!query || group.palettes.length > 0)) {
+          grid.appendChild(createCollectionBox(group));
+        }
+        return;
+      }
+      if (key.startsWith("palette:")) {
+        const palette = looseById.get(key.slice("palette:".length));
+        if (palette) {
+          grid.appendChild(createPaletteCard(palette));
+        }
+      }
+    });
 
     /*
      * Only when the library is genuinely empty. A search that matches nothing is already reported
@@ -840,3 +1140,43 @@ export const renderPaletteList = () => {
   renderViewModal();
   window.dispatchEvent(new Event("actiondock:sync"));
 };
+
+export const renderPaletteList = () => {
+  // Ordinary renders wait for the drop so they do not replace the node holding pointer state.
+  // Spring-loaded navigation uses the preserving path below instead.
+  if (isSortableDragActive()) {
+    runAfterSortableDrag(renderPaletteList);
+    return;
+  }
+  renderPaletteListNow();
+};
+
+/** Switch levels without losing the element and pointer session currently being dragged. */
+function springOpenFolderDuringDrag(folderId: string | null) {
+  if (!paletteList || !paletteSortable?.isDragging()) {
+    return;
+  }
+  const dragged = paletteList.querySelector<HTMLElement>(".palette-card.is-sort-dragging[data-palette-id]");
+  const paletteId = dragged?.dataset.paletteId;
+  if (!dragged || !paletteId) {
+    return;
+  }
+
+  openFolder(folderId);
+  renderPaletteListNow();
+  const targetId = folderId ?? UNFILED_FOLDER_ID;
+  const targetGrid = Array.from(paletteList.querySelectorAll<HTMLElement>(".palette-grid[data-folder-id]")).find(
+    (grid) => grid.dataset.folderId === targetId,
+  );
+  if (!targetGrid) {
+    return;
+  }
+  const replacement = targetGrid.querySelector<HTMLElement>(`.palette-card[data-palette-id="${CSS.escape(paletteId)}"]`);
+  if (replacement) {
+    replacement.replaceWith(dragged);
+  } else {
+    targetGrid.querySelector(".library-group-empty")?.remove();
+    targetGrid.appendChild(dragged);
+  }
+  paletteSortable.reconnect(targetGrid);
+}

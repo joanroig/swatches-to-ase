@@ -1,5 +1,6 @@
 import type { Folder, Palette } from "../types";
 import { createId } from "../utils/id";
+import { folderLibraryKey, reconcileLibraryOrder } from "../palette/library-order";
 
 /**
  * Reconciling the local library with the one stored in the cloud.
@@ -118,7 +119,7 @@ export const mergeFolders = (localFolders: Folder[], remoteFolders: Folder[]): F
   return { folders, remap };
 };
 
-export type LibrarySnapshot = { palettes: Palette[]; folders: Folder[] };
+export type LibrarySnapshot = { palettes: Palette[]; folders: Folder[]; libraryOrder: string[] };
 
 /**
  * Reconcile a whole local library against the cloud one.
@@ -145,7 +146,16 @@ export const mergeLibraries = (local: LibrarySnapshot, remote: LibrarySnapshot):
     folderId: palette.folderId && known.has(palette.folderId) ? palette.folderId : null,
   }));
 
-  return { palettes, folders };
+  const remappedLocalOrder = local.libraryOrder.map((key) => {
+    if (!key.startsWith("folder:")) {
+      return key;
+    }
+    const localId = key.slice("folder:".length);
+    return folderLibraryKey(remap.get(localId) ?? localId);
+  });
+  const libraryOrder = reconcileLibraryOrder([...remote.libraryOrder, ...remappedLocalOrder], palettes, folders);
+
+  return { palettes, folders, libraryOrder };
 };
 
 export const resolveMergedActivePaletteId = (remoteActiveId: string | null, localActiveId: string | null, palettes: Palette[]) => {

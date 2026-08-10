@@ -36,6 +36,8 @@ export type SortableOptions = {
   animationMs?: number;
   /** Duration of the settle animation that eases the dropped item into its slot. */
   dropAnimationMs?: number;
+  /** Override the geometry-derived slot for app-specific targets such as a folder's centre. */
+  resolveTarget?: (context: SortableTargetContext) => number;
   /** Called once, on drop, and only when the position actually changed. */
   onDrop: (change: SortableChange) => void;
 };
@@ -46,6 +48,16 @@ export type SortableChange = {
   toContainer: HTMLElement;
   fromIndex: number;
   toIndex: number;
+};
+
+export type SortableTargetContext = {
+  item: HTMLElement;
+  container: HTMLElement;
+  items: readonly HTMLElement[];
+  pointerX: number;
+  pointerY: number;
+  currentIndex: number;
+  proposedIndex: number;
 };
 
 /** A container-relative layout box, immune to FLIP transforms. */
@@ -60,6 +72,7 @@ const DEFAULT_HOLD_DELAY_MS = 220;
 const DEFAULT_THRESHOLD_PX = 5;
 const DEFAULT_ANIMATION_MS = 170;
 const DEFAULT_DROP_ANIMATION_MS = 220;
+const REORDER_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 const DROP_EASING = "cubic-bezier(0.2, 0.9, 0.25, 1)";
 const CLICK_SUPPRESSION_MS = 300;
 const AUTOSCROLL_EDGE_PX = 64;
@@ -117,6 +130,48 @@ const prefersReducedMotion = () => {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 };
 
+/** Capture visible positions so a later DOM update can animate the same items into their new slots. */
+export const captureSortableLayout = <Key>(elements: Iterable<HTMLElement>, getKey: (element: HTMLElement) => Key) => {
+  const layout = new Map<Key, DOMRect>();
+  for (const element of elements) {
+    layout.set(getKey(element), element.getBoundingClientRect());
+  }
+  return layout;
+};
+
+/**
+ * Animate items from a captured layout to their current one using the sortable's reorder motion.
+ * Keys let this work across a render that replaced the original DOM nodes.
+ */
+export const animateSortableLayout = <Key>(
+  before: ReadonlyMap<Key, DOMRect>,
+  elements: Iterable<HTMLElement>,
+  getKey: (element: HTMLElement) => Key,
+  durationMs = DEFAULT_ANIMATION_MS,
+) => {
+  const duration = prefersReducedMotion() ? 0 : durationMs;
+  if (duration <= 0) {
+    return;
+  }
+  for (const element of elements) {
+    const previous = before.get(getKey(element));
+    if (!previous) {
+      continue;
+    }
+    const current = element.getBoundingClientRect();
+    const deltaX = previous.left - current.left;
+    const deltaY = previous.top - current.top;
+    if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) {
+      continue;
+    }
+    element.getAnimations().forEach((animation) => animation.cancel());
+    element.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "translate(0, 0)" }], {
+      duration,
+      easing: REORDER_EASING,
+    });
+  }
+};
+
 const getScrollParent = (element: HTMLElement): HTMLElement | null => {
   let node = element.parentElement;
   while (node && node !== document.body && node !== document.documentElement) {
@@ -140,6 +195,7 @@ export const createSortable = (options: SortableOptions) => {
     containerSelector,
     animationMs: reorderAnimationMs = DEFAULT_ANIMATION_MS,
     dropAnimationMs: settleAnimationMs = DEFAULT_DROP_ANIMATION_MS,
+    resolveTarget,
     onDrop,
   } = options;
 
@@ -284,7 +340,7 @@ export const createSortable = (options: SortableOptions) => {
    * list settles instead of ping-ponging between two orders.
    */
   const resolveTargetIndex = (pointerX: number, pointerY: number) => {
-    if (!container || slots.length === 0) {
+    if (!container || !item || slots.length === 0) {
       return currentIndex;
     }
     const { x: localX, y: localY } = toLocalPoint(pointerX, pointerY);
@@ -293,36 +349,35 @@ export const createSortable = (options: SortableOptions) => {
     const contained = slots.findIndex(
       (slot) => localX >= slot.left && localX <= slot.left + slot.width && localY >= slot.top && localY <= slot.top + slot.height,
     );
-    if (contained >= 0) {
-      return contained;
-    }
+    let proposedIndex = contained;
 
     // Otherwise fall back to the closest slot centre, which covers the gaps between slots and any
     // pointer position outside the container.
-    let nearest = currentIndex;
-    let nearestDistance = Number.POSITIVE_INFINITY;
-    slots.forEach((slot, index) => {
-      const deltaX = localX - (slot.left + slot.width / 2);
-      const deltaY = localY - (slot.top + slot.height / 2);
-      const distance = deltaX * deltaX + deltaY * deltaY;
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearest = index;
-      }
-    });
-    return nearest;
+    if (proposedIndex < 0) {
+      let nearest = currentIndex;
+      let nearestDistance = Number.POSITIVE_INFINITY;
+      slots.forEach((slot, index) => {
+        const deltaX = localX - (slot.left + slot.width / 2);
+        const deltaY = localY - (slot.top + slot.height / 2);
+        const distance = deltaX * deltaX + deltaY * deltaY;
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearest = index;
+        }
+      });
+      proposedIndex = nearest;
+    }
+    return resolveTarget?.({ item, container, items, pointerX, pointerY, currentIndex, proposedIndex }) ?? proposedIndex;
   };
 
   const moveItemTo = (nextIndex: number) => {
     if (!container || !item || nextIndex === currentIndex) {
       return;
     }
-    const before = new Map<HTMLElement, DOMRect>();
-    items.forEach((element) => {
-      if (element !== item) {
-        before.set(element, element.getBoundingClientRect());
-      }
-    });
+    const before = captureSortableLayout(
+      items.filter((element) => element !== item),
+      (element) => element,
+    );
 
     const others = items.filter((element) => element !== item);
     const reference = others[nextIndex];
@@ -337,30 +392,12 @@ export const createSortable = (options: SortableOptions) => {
     currentIndex = items.indexOf(item);
     // The slot table is deliberately *not* refreshed here — see `measureSlots`.
 
-    const flipMs = animationMs();
-    if (flipMs <= 0) {
-      return;
-    }
-    items.forEach((element) => {
-      if (element === item) {
-        return;
-      }
-      const previous = before.get(element);
-      if (!previous) {
-        return;
-      }
-      const current = element.getBoundingClientRect();
-      const deltaX = previous.left - current.left;
-      const deltaY = previous.top - current.top;
-      if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) {
-        return;
-      }
-      element.getAnimations().forEach((animation) => animation.cancel());
-      element.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "translate(0, 0)" }], {
-        duration: flipMs,
-        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-      });
-    });
+    animateSortableLayout(
+      before,
+      items.filter((element) => element !== item),
+      (element) => element,
+      animationMs(),
+    );
   };
 
   /**
@@ -677,5 +714,32 @@ export const createSortable = (options: SortableOptions) => {
       root.removeEventListener("pointerdown", handlePointerDown);
     },
     isDragging: () => isDragging,
+    refreshTarget: () => {
+      if (!isDragging || !item || !container) {
+        return;
+      }
+      moveItemTo(resolveTargetIndex(lastPointerX, lastPointerY));
+      applyTranslate(lastPointerX, lastPointerY);
+    },
+    /** Reconnect an in-flight item after a spring-loaded view render preserved it in a new grid. */
+    reconnect: (nextContainer: HTMLElement) => {
+      if (!isDragging || !item || !root.contains(nextContainer) || (containerSelector && !nextContainer.matches(containerSelector))) {
+        return false;
+      }
+      container?.classList.remove(SORTABLE_CONTAINER_CLASS);
+      container = nextContainer;
+      container.classList.add(SORTABLE_CONTAINER_CLASS);
+      items = getItems(container);
+      currentIndex = items.indexOf(item);
+      if (currentIndex < 0) {
+        container.appendChild(item);
+        items = getItems(container);
+        currentIndex = items.indexOf(item);
+      }
+      measureSlots();
+      scrollParent = getScrollParent(container);
+      applyTranslate(lastPointerX, lastPointerY);
+      return true;
+    },
   };
 };

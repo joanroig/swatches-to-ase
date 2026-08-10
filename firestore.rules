@@ -15,10 +15,6 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
-    function hasKey(map, key) {
-      return map.keys().hasAny([key]);
-    }
-
     function isValidAvatar(avatar) {
       return avatar is map
         && avatar.keys().hasOnly(['background', 'foreground'])
@@ -34,6 +30,16 @@ service cloud.firestore {
 
     function isValidPreferences(pref) {
       return pref is map
+        && pref.keys().hasAll([
+          'theme',
+          'colorNameFormat',
+          'addBlackWhite',
+          'exportFormat',
+          'colorNotation',
+          'generateStyle',
+          'motion',
+          'language'
+        ])
         && pref.keys().hasOnly([
           'theme',
           'colorNameFormat',
@@ -49,16 +55,22 @@ service cloud.firestore {
         && pref.addBlackWhite is bool
         && pref.exportFormat is string
         && pref.colorNotation is string
-        && (!hasKey(pref, 'generateStyle') || pref.generateStyle is string)
-        && (!hasKey(pref, 'motion') || (pref.motion is string && pref.motion in ['system', 'on', 'off']))
-        && (!hasKey(pref, 'language') || (pref.language is string && pref.language in ['system', 'en', 'es']));
+        && pref.generateStyle is string
+        && pref.motion is string
+        && pref.motion in ['system', 'on', 'off']
+        && pref.language is string
+        && pref.language in ['system', 'en', 'es'];
     }
 
     function isValidSyncDoc(data) {
-      return data.keys().hasOnly(['palettes', 'folders', 'activePaletteId', 'preferences', 'revision', 'updatedAt'])
+      return data.keys().hasAll(['palettes', 'folders', 'libraryOrder', 'activePaletteId', 'preferences', 'revision', 'updatedAt'])
+        && data.keys().hasOnly(['palettes', 'folders', 'libraryOrder', 'activePaletteId', 'preferences', 'revision', 'updatedAt'])
         && data.palettes is list
         && data.palettes.size() <= 200
-        && (!hasKey(data, 'folders') || (data.folders is list && data.folders.size() <= 100))
+        && data.folders is list
+        && data.folders.size() <= 100
+        && data.libraryOrder is list
+        && data.libraryOrder.size() <= 300
         && (data.activePaletteId == null || data.activePaletteId is string)
         && data.preferences is map
         && isValidPreferences(data.preferences)

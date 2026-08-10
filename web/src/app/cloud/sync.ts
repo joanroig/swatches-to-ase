@@ -29,13 +29,13 @@ import { renderPaletteList, syncPaletteColorNames } from "../palette/ui";
 import { persistPreferences } from "../persistence";
 import { applyRemotePreferences, getPreferencesPayload } from "../preferences";
 import { cloudState, discoveryState, state } from "../state";
-import type { CloudUser, Folder, Palette } from "../types";
+import type { CloudUser, Palette, SyncPayload } from "../types";
 import { showToast } from "../ui/notifications";
 import { ensureAppCheckToken, firebaseClient, firebaseConfigStatus } from "./context";
 import { fetchUserInteractions, renderDiscovery } from "./discovery";
-import { getFirebaseErrorCode, logCloudError } from "./errors";
+import { getFirebaseErrorCode, logCloudError, resolveCloudErrorMessage } from "./errors";
 import { fetchFollowing } from "./follow";
-import { mergeLibraries, palettesEquivalent, resolveMergedActivePaletteId } from "./merge";
+import { mergeLibraries, palettesEquivalent, resolveMergedActivePaletteId, type LibrarySnapshot } from "./merge";
 import { syncCloudProfileForm } from "./profile";
 import { ensureUserAvatar } from "./profile-store";
 import { unpublishPalette, upsertPublicPalette } from "./public";
@@ -118,7 +118,7 @@ const logSyncError = (context: string, error: unknown, meta: Record<string, unkn
   logCloudError(context, error, meta);
   if (getFirebaseErrorCode(error) === "permission-denied") {
     console.warn(
-      "[cloud] permission-denied hints: check Firestore rules for /users/{uid}/state/app and /publicPalettes, App Check enforcement, a verified email, palette limits (sync palettes <= 200, public palette colors <= 16, name <= 80), and legacy fields when using merge writes.",
+      "[cloud] permission-denied hints: confirm the deployed Firestore rules include the v4 folders/libraryOrder sync schema, then check App Check enforcement, email verification, and palette limits (sync palettes <= 200, public colors <= 16, name <= 80).",
     );
   }
 };
@@ -325,33 +325,23 @@ export const refreshCloudUser = async () => {
   renderPaletteList();
 };
 
-/** `folders` defaults to the remote list; the merge path passes the reconciled one instead. */
-const applyRemoteStateWithPalettes = (
-  payload: ReturnType<typeof parseSyncPayload>,
-  palettes: Palette[],
-  activePaletteId: string | null,
-  folders?: Folder[],
-) => {
-  if (!payload) {
-    return;
-  }
+const applyRemoteLibrary = (payload: SyncPayload, library: LibrarySnapshot, activePaletteId: string | null) => {
   cloudState.applyingRemote = true;
-  cloudState.lastRevision = payload.revision;
-  state.palettes = palettes;
-  state.folders = folders ?? payload.folders;
-  state.activePaletteId = activePaletteId;
-  applyRemotePreferences(payload.preferences);
-  persistPreferences();
-  syncPaletteColorNames(payload.preferences.colorNameFormat);
-  cloudState.applyingRemote = false;
+  try {
+    cloudState.lastRevision = payload.revision;
+    state.palettes = library.palettes;
+    state.folders = library.folders;
+    state.libraryOrder = library.libraryOrder;
+    state.activePaletteId = activePaletteId;
+    applyRemotePreferences(payload.preferences);
+    persistPreferences();
+    syncPaletteColorNames(payload.preferences.colorNameFormat);
+  } finally {
+    cloudState.applyingRemote = false;
+  }
 };
 
-const applyRemoteState = (payload: ReturnType<typeof parseSyncPayload>) => {
-  if (!payload) {
-    return;
-  }
-  applyRemoteStateWithPalettes(payload, payload.palettes, payload.activePaletteId ?? null);
-};
+const applyRemoteState = (payload: SyncPayload) => applyRemoteLibrary(payload, payload, payload.activePaletteId);
 
 const listenToCloudState = () => {
   if (!firebaseClient || !cloudState.user) {
@@ -385,11 +375,11 @@ const listenToCloudState = () => {
       );
       if (shouldMerge) {
         const merged = mergeLibraries(
-          { palettes: state.palettes, folders: state.folders },
-          { palettes: payload.palettes, folders: payload.folders },
+          { palettes: state.palettes, folders: state.folders, libraryOrder: state.libraryOrder },
+          { palettes: payload.palettes, folders: payload.folders, libraryOrder: payload.libraryOrder },
         );
-        const activePaletteId = resolveMergedActivePaletteId(payload.activePaletteId ?? null, state.activePaletteId, merged.palettes);
-        applyRemoteStateWithPalettes(payload, merged.palettes, activePaletteId, merged.folders);
+        const activePaletteId = resolveMergedActivePaletteId(payload.activePaletteId, state.activePaletteId, merged.palettes);
+        applyRemoteLibrary(payload, merged, activePaletteId);
         cloudState.lastSyncedAt = new Date().toLocaleTimeString();
         updateCloudControls();
         void syncToCloud();
@@ -450,7 +440,7 @@ export const syncToCloud = async (source: "manual" | "auto" | "init" = "auto"): 
     updateCloudControls();
     return false;
   }
-  const payload = buildSyncPayload(state.palettes, state.folders, state.activePaletteId, getPreferencesPayload());
+  const payload = buildSyncPayload(state.palettes, state.folders, state.activePaletteId, getPreferencesPayload(), state.libraryOrder);
   cloudState.lastRevision = payload.revision;
   const publicPalettes = state.palettes.filter((palette) => palette.isPublic);
   const publicPalettesToSync = publicPalettes.filter((palette) => !wasRecentlyUpserted(palette.id));
@@ -498,7 +488,7 @@ export const syncToCloud = async (source: "manual" | "auto" | "init" = "auto"): 
       publicPaletteCount: publicPalettes.length,
     });
     if (source !== "init") {
-      showToast(t("toast.cloudSyncFailed"), "error");
+      showToast(resolveCloudErrorMessage(error, "toast.cloudSyncFailed"), "error");
     }
   } finally {
     cloudState.isSyncing = false;

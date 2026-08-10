@@ -4,6 +4,8 @@ export const state = {
   processing: false,
   palettes: [] as Palette[],
   folders: [] as Folder[],
+  /** Mixed top-level order, using `folder:<id>` and `palette:<id>` keys. */
+  libraryOrder: [] as string[],
   activePaletteId: "" as string | null,
 };
 

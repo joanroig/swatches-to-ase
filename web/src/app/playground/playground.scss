@@ -2,6 +2,9 @@
 
 .panel-playground {
   gap: 18px;
+  /* The preview stage is full-bleed against the panel's bottom edge, so the panel owns the clip
+     that keeps the scene inside its rounded corners. */
+  overflow: hidden;
   /*
    * Named container. A viewport media query cannot describe this panel's width: the sidebar takes
    * ~250px above 960px and nothing below it, so 1000px of viewport is a *narrower* panel than

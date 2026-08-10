@@ -82,12 +82,12 @@ already configured for Hosting in `firebase.json` (public dir: `dist-web`).
 2. Authenticate: `firebase login`.
 3. Link this repo to a Firebase project.
 4. Build the web assets: `npm run build:web`.
-5. Deploy Hosting: `firebase deploy --only hosting`.
+5. Deploy Firestore rules and Hosting: `firebase deploy --only firestore:rules,hosting`.
 
 Project linking options:
 
 1. Create a local alias file: `firebase use --add` (creates `.firebaserc`).
-2. Or deploy with an explicit project each time: `firebase deploy --project <PROJECT_ID> --only hosting`.
+2. Or deploy with an explicit project each time: `firebase deploy --project <PROJECT_ID> --only firestore:rules,hosting`.
 
 Optional local preview:
 
@@ -130,6 +130,8 @@ deploy with Firebase enabled (for hosting and releases).
 
 **Recommended Firestore rules**
 Use rules that only allow authenticated users to read/write their own sync document, and allow public palettes to be read by anyone while restricting writes to their owners. The repo now includes a hardened baseline in `firestore.rules` with per-user access, size limits, and simple rate limits.
+
+Deploy `firestore.rules` before shipping a client whose sync payload has changed: `firebase deploy --only firestore:rules`. The GitHub deployment workflow does this before publishing Hosting; its service account therefore needs the Firebase Rules Admin role (`roles/firebaserules.admin`) in addition to its Hosting permissions.
 
 ### Android (Capacitor)
 

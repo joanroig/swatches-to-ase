@@ -24,6 +24,24 @@ const hexes = (page) =>
     .then((values: string[]) => values.map((value) => value.trim()));
 
 test.describe("playground", () => {
+  test("the full-bleed preview is clipped to the panel's rounded bottom corners", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await openPlayground(page);
+
+    const panelStyle = await page.locator(".panel-playground").evaluate((panel) => {
+      const style = getComputedStyle(panel);
+      return {
+        overflow: style.overflow,
+        bottomLeftRadius: style.borderBottomLeftRadius,
+        bottomRightRadius: style.borderBottomRightRadius,
+      };
+    });
+
+    expect(panelStyle.overflow).toBe("hidden");
+    expect(parseFloat(panelStyle.bottomLeftRadius)).toBeGreaterThan(0);
+    expect(parseFloat(panelStyle.bottomRightRadius)).toBeGreaterThan(0);
+  });
+
   test("shuffling replaces the working colours", async ({ page }) => {
     await openPlayground(page);
     const before = await hexes(page);

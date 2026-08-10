@@ -414,6 +414,7 @@ const en: TranslationMap = {
   "folder.expand": "Expand folder",
   "folder.collapse": "Collapse folder",
   "folder.backToLibrary": "All folders",
+  "folder.dragHomeHint": "Drop home · hold to go up",
   "folder.savesTo": "Saved to {name}",
   "folder.rename": "Rename folder",
   "folder.renamePrompt": "Folder name",

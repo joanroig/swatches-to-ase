@@ -416,6 +416,7 @@ const es: TranslationMap = {
   "folder.expand": "Expandir carpeta",
   "folder.collapse": "Contraer carpeta",
   "folder.backToLibrary": "Todas las carpetas",
+  "folder.dragHomeHint": "Suelta en Inicio · mantén para subir",
   "folder.savesTo": "Se guardará en {name}",
   "folder.rename": "Renombrar carpeta",
   "folder.renamePrompt": "Nombre de la carpeta",

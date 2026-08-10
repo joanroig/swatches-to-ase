@@ -31,8 +31,13 @@ export type Folder = {
   name: string;
 };
 
-export type StoredPalette = Omit<Palette, "colors"> & {
+/** Canonical palette shape written to Firestore. Local palettes stay looser for v3 migrations. */
+export type StoredPalette = Pick<Palette, "id" | "name"> & {
   colors: StoredPaletteColor[];
+  lastModified: number;
+  isPublic: boolean;
+  publicId: string | null;
+  folderId: string | null;
 };
 
 export type Preferences = {
@@ -45,6 +50,9 @@ export type Preferences = {
   motion?: "system" | "on" | "off";
   language?: "system" | "en" | "es";
 };
+
+/** Cloud sync starts with v4, so its first published schema stores every current preference. */
+export type StoredPreferences = Required<Preferences>;
 
 export type ExportMode = "single" | "batch";
 
@@ -86,16 +94,18 @@ export type PublicPalette = {
 export type StoredSyncPayload = {
   palettes: StoredPalette[];
   folders: Folder[];
+  libraryOrder: string[];
   activePaletteId: string | null;
-  preferences: Preferences;
+  preferences: StoredPreferences;
   revision: string;
 };
 
 export type SyncPayload = {
   palettes: Palette[];
   folders: Folder[];
+  libraryOrder: string[];
   activePaletteId: string | null;
-  preferences: Preferences;
+  preferences: StoredPreferences;
   revision: string;
 };
 

@@ -122,8 +122,12 @@ test("a local-only folder survives the merge", () => {
 
 test("a palette in a same-named local folder follows it to the remote folder", () => {
   const merged = mergeLibraries(
-    { palettes: [palette("p1", "Mine", [0, 0, 1], 1000, "local-1")], folders: [folder("local-1", "Brand")] },
-    { palettes: [], folders: [folder("remote-1", "Brand")] },
+    {
+      palettes: [palette("p1", "Mine", [0, 0, 1], 1000, "local-1")],
+      folders: [folder("local-1", "Brand")],
+      libraryOrder: [],
+    },
+    { palettes: [], folders: [folder("remote-1", "Brand")], libraryOrder: [] },
   );
   assert.equal(merged.palettes[0].folderId, "remote-1");
   assert.deepEqual(
@@ -134,8 +138,12 @@ test("a palette in a same-named local folder follows it to the remote folder", (
 
 test("a palette in a local-only folder stays filed there", () => {
   const merged = mergeLibraries(
-    { palettes: [palette("p1", "Mine", [0, 0, 1], 1000, "local-1")], folders: [folder("local-1", "Scratch")] },
-    { palettes: [], folders: [] },
+    {
+      palettes: [palette("p1", "Mine", [0, 0, 1], 1000, "local-1")],
+      folders: [folder("local-1", "Scratch")],
+      libraryOrder: [],
+    },
+    { palettes: [], folders: [], libraryOrder: [] },
   );
   assert.equal(merged.palettes[0].folderId, "local-1");
   assert.equal(merged.folders.length, 1);
@@ -145,8 +153,8 @@ test("a palette pointing at a folder that did not survive falls back to Drafts, 
   // The regression this guards: `folderId` used to keep an id no longer in `folders`, and such a
   // palette matches neither a folder group nor the unfiled group, so it vanished from the library.
   const merged = mergeLibraries(
-    { palettes: [palette("p1", "Orphan", [0, 0, 1], 1000, "ghost")], folders: [] },
-    { palettes: [], folders: [] },
+    { palettes: [palette("p1", "Orphan", [0, 0, 1], 1000, "ghost")], folders: [], libraryOrder: [] },
+    { palettes: [], folders: [], libraryOrder: [] },
   );
   assert.equal(merged.palettes[0].folderId, null);
 });
@@ -160,8 +168,9 @@ test("every merged palette resolves to a real folder or to none", () => {
         palette("p3", "C", [1, 0, 0], 1000, "ghost"),
       ],
       folders: [folder("local-1", "Brand"), folder("local-2", "Scratch")],
+      libraryOrder: [],
     },
-    { palettes: [palette("r1", "Remote", [1, 1, 0])], folders: [folder("remote-1", "brand")] },
+    { palettes: [palette("r1", "Remote", [1, 1, 0])], folders: [folder("remote-1", "brand")], libraryOrder: [] },
   );
   const known = new Set(merged.folders.map((entry) => entry.id));
   merged.palettes.forEach((entry) => {
@@ -173,8 +182,16 @@ test("every merged palette resolves to a real folder or to none", () => {
 
 test("a backup keeps the folder its original was in", () => {
   const merged = mergeLibraries(
-    { palettes: [palette("same", "Mine", [0, 0, 1], 2000, "local-1")], folders: [folder("local-1", "Brand")] },
-    { palettes: [palette("same", "Theirs", [1, 0, 0], 1000, "remote-1")], folders: [folder("remote-1", "Brand")] },
+    {
+      palettes: [palette("same", "Mine", [0, 0, 1], 2000, "local-1")],
+      folders: [folder("local-1", "Brand")],
+      libraryOrder: [],
+    },
+    {
+      palettes: [palette("same", "Theirs", [1, 0, 0], 1000, "remote-1")],
+      folders: [folder("remote-1", "Brand")],
+      libraryOrder: [],
+    },
   );
   const backup = merged.palettes.find((entry) => entry.name.startsWith("(BACKUP)"));
   assert.equal(backup?.folderId, "remote-1");

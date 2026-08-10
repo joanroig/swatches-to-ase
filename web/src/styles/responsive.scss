@@ -242,6 +242,14 @@
     padding: 10px;
   }
 
+  .library-group--open .palette-grid {
+    margin-inline: calc(var(--panel-pad) * -1);
+    /* The drop surface remains full-bleed, while its cards start on the same gutter and keep the
+       same width as cards in the root grid. Adding the group's 10px inset here made folder cards
+       20px narrower on phones and tablets. */
+    padding-inline: var(--panel-pad);
+  }
+
   .topbar {
     align-items: center;
     flex-direction: row;

@@ -493,16 +493,6 @@ body[data-motion="off"] .library-group-body {
   transform: scale(1);
 }
 
-/*
- * Not at the top level. This outline meant "the folder you are about to drop into" back when each
- * folder had a grid of its own; with one grid holding every box it traces the whole view instead,
- * running along the tiles' edges and saying nothing. Inside a collection the grid *is* the folder,
- * so there it still means what it says.
- */
-.palette-grid.library-root::before {
-  content: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
   body:not([data-motion="on"]) .palette-grid::before {
     transition: none;
@@ -992,6 +982,47 @@ button.collection-preview {
   background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
 }
 
+/* A palette over a folder's centre files into it; only the shared gap becomes an insertion seam. */
+.collection-box.is-insert-target::after {
+  content: "";
+  position: absolute;
+  z-index: 7;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 70%, transparent);
+  pointer-events: none;
+}
+
+.collection-box.is-insert-target[data-insert-edge="left"]::after,
+.collection-box.is-insert-target[data-insert-edge="right"]::after {
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+}
+
+.collection-box.is-insert-target[data-insert-edge="left"]::after {
+  left: -10px;
+}
+
+.collection-box.is-insert-target[data-insert-edge="right"]::after {
+  right: -10px;
+}
+
+.collection-box.is-insert-target[data-insert-edge="top"]::after,
+.collection-box.is-insert-target[data-insert-edge="bottom"]::after {
+  right: 10px;
+  left: 10px;
+  height: 4px;
+}
+
+.collection-box.is-insert-target[data-insert-edge="top"]::after {
+  top: -10px;
+}
+
+.collection-box.is-insert-target[data-insert-edge="bottom"]::after {
+  bottom: -10px;
+}
+
 
 /* ------------------------------------------------- collection navigation --- */
 
@@ -1009,11 +1040,36 @@ button.collection-preview {
  */
 .library-group--open {
   display: grid;
+  grid-template-rows: auto minmax(72px, 1fr);
   min-width: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   overflow: visible;
+}
+
+.panel-palettes .library-groups[data-level="folder"] {
+  flex: 1 1 auto;
+}
+
+.panel-palettes .library-groups[data-level="library"] {
+  flex: 1 1 auto;
+  grid-template-rows: minmax(72px, 1fr);
+  /* The root grid owns the visual gutter, just as the open-folder grid does. This lets its dotted
+     surface reach the panel edges without moving the cards. */
+  padding-top: 0;
+}
+
+.panel-palettes .library-groups[data-level="folder"] + .panel-palettes-spacer,
+.panel-palettes .library-groups[data-level="library"] + .panel-palettes-spacer {
+  flex: 0 0 4px;
+}
+
+.library-root {
+  min-height: 100%;
+  align-content: start;
+  margin-inline: calc(var(--panel-pad) * -1);
+  padding: var(--panel-pad) var(--panel-pad) 0;
 }
 
 .library-group--open > .section-head {
@@ -1027,10 +1083,17 @@ button.collection-preview {
 
 .library-group--open > .library-group-body {
   background: transparent;
+  min-height: 0;
 }
 
 .library-group--open .palette-grid {
-  padding: var(--panel-pad) 0 0;
+  min-height: 100%;
+  /* The grid fills the panel so its empty space remains a drop target, but its rows must keep the
+     same content-sized height as the root grid. The default stretch behavior made a lone palette
+     fill the entire folder and shrink again as more palettes were added. */
+  align-content: start;
+  margin-inline: calc(var(--panel-pad) * -1);
+  padding: var(--panel-pad) var(--panel-pad) 0;
 }
 
 /* Stepping in and out of a collection: a cross-fade with a nudge the way you are going. */
@@ -1063,8 +1126,73 @@ button.collection-preview {
   }
 }
 
-/* The way back is also the way out: a palette dropped on it leaves the collection. */
+/* The way back is also the way out: during a palette drag it advertises Home as a live target. */
+.library-crumb {
+  position: relative;
+  overflow: hidden;
+}
+
+.library-crumb-drag-hint {
+  display: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.is-dragging .library-crumb {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+body.is-dragging .library-crumb-name,
+body.is-dragging .library-crumb-title .palette-count {
+  display: none;
+}
+
+body.is-dragging .library-crumb-drag-hint {
+  display: inline;
+}
+
 .library-crumb.is-drop-target {
   background: color-mix(in srgb, var(--accent) 22%, var(--surface));
   box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+@keyframes spring-open-progress {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.collection-box.is-drop-target::after,
+.library-crumb.is-drop-target::after {
+  content: "";
+  position: absolute;
+  z-index: 8;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 55%, transparent);
+  transform-origin: left;
+  animation: spring-open-progress 0.65s linear both;
+  pointer-events: none;
+}
+
+.collection-box.is-drop-target::after {
+  right: 12px;
+  bottom: 6px;
+  left: 12px;
+}
+
+.library-crumb.is-drop-target::after {
+  right: var(--panel-pad);
+  bottom: 5px;
+  left: var(--panel-pad);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) .collection-box.is-drop-target::after,
+  body:not([data-motion="on"]) .library-crumb.is-drop-target::after {
+    animation-timing-function: steps(1, end);
+  }
 }

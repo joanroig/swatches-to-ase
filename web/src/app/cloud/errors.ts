@@ -47,6 +47,9 @@ const resolveMessage = (error: unknown, table: Record<string, string>, fallbackK
   return t(key ?? fallbackKey);
 };
 
+export const resolveCloudErrorMessage = (error: unknown, fallbackKey: string) =>
+  resolveMessage(error, FIRESTORE_MESSAGE_KEYS, fallbackKey);
+
 /** Report an auth failure with a specific message when the code is one we recognise. */
 export const reportAuthError = (context: string, error: unknown, fallbackKey: string) => {
   console.error(`[cloud] ${context} failed`, getFirebaseErrorCode(error), error);
@@ -56,7 +59,7 @@ export const reportAuthError = (context: string, error: unknown, fallbackKey: st
 /** Report a Firestore failure with a specific message when the code is one we recognise. */
 export const reportCloudError = (context: string, error: unknown, fallbackKey: string) => {
   console.error(`[cloud] ${context} failed`, getFirebaseErrorCode(error), error);
-  showToast(resolveMessage(error, FIRESTORE_MESSAGE_KEYS, fallbackKey), "error");
+  showToast(resolveCloudErrorMessage(error, fallbackKey), "error");
 };
 
 /** Silent variant for background work where a toast would be noise. */

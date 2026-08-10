@@ -14,10 +14,11 @@ import { colorFamiliesOf, isPaletteColorFamily, isPaletteStyle, stylesOf } from 
 
 /** Bounded so a large public collection cannot turn into an unbounded live query. */
 const DISCOVERY_PAGE_SIZE = 120;
-const DISCOVERY_PLACEHOLDER_COUNT = 8;
+const DISCOVERY_PLACEHOLDER_COUNT = 4;
 const DISCOVERY_SORT_OPTIONS: DiscoverySort[] = ["recent", "likes-desc", "likes-asc", "saves-desc", "saves-asc"];
 
 let discoveryUnsubscribe: (() => void) | null = null;
+let discoveryRevealTimer: number | null = null;
 let hasLoadError = false;
 
 const isRgbTuple = (value: unknown): value is [number, number, number] =>
@@ -94,15 +95,33 @@ export const renderDiscovery = () => {
   if (!discoverList || !discoverEmpty) {
     return;
   }
+  const wasShowingSkeletons = discoverList.classList.contains("is-loading");
+  discoverList.classList.remove("is-revealing");
+  if (discoveryRevealTimer !== null) {
+    window.clearTimeout(discoveryRevealTimer);
+    discoveryRevealTimer = null;
+  }
   discoverList.innerHTML = "";
   const hasRemoteItems = discoveryState.palettes.length > 0;
 
   if (discoveryState.loading && !hasRemoteItems) {
+    discoverList.classList.add("is-loading");
+    discoverList.setAttribute("aria-busy", "true");
     discoverEmpty.classList.add("is-hidden");
     for (let index = 0; index < DISCOVERY_PLACEHOLDER_COUNT; index += 1) {
       discoverList.appendChild(createDiscoverySkeleton());
     }
     return;
+  }
+
+  discoverList.classList.remove("is-loading");
+  discoverList.setAttribute("aria-busy", "false");
+  if (wasShowingSkeletons) {
+    discoverList.classList.add("is-revealing");
+    discoveryRevealTimer = window.setTimeout(() => {
+      discoverList.classList.remove("is-revealing");
+      discoveryRevealTimer = null;
+    }, 260);
   }
 
   const searchQuery = discoveryState.search.trim().toLowerCase();

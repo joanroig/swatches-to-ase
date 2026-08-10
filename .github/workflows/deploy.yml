@@ -36,6 +36,13 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run build:web
+      - name: Authenticate Firebase CLI
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+          project_id: "${{ secrets.VITE_FIREBASE_PROJECT_ID }}"
+      - name: Deploy Firestore rules
+        run: npx --yes firebase-tools@latest deploy --only firestore:rules --project "$VITE_FIREBASE_PROJECT_ID"
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"

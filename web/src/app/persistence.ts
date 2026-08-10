@@ -1,6 +1,7 @@
 import { PALETTES_KEY, STORAGE_KEY } from "./config";
 import { cloudState, state } from "./state";
 import type { Preferences } from "./types";
+import { reconcileLibraryOrder } from "./palette/library-order";
 
 let scheduleCloudSync: (() => void) | null = null;
 let getPreferencesPayload: (() => Preferences) | null = null;
@@ -25,9 +26,11 @@ export const persistPreferences = () => {
 };
 
 export const persistPalettes = () => {
+  state.libraryOrder = reconcileLibraryOrder(state.libraryOrder, state.palettes, state.folders);
   const payload = {
     palettes: state.palettes,
     folders: state.folders,
+    libraryOrder: state.libraryOrder,
     activePaletteId: state.activePaletteId,
   };
   localStorage.setItem(PALETTES_KEY, JSON.stringify(payload));

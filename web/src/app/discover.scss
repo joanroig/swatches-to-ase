@@ -149,6 +149,24 @@
   z-index: 1;
 }
 
+/* Match the two control-height rows used by real cards. The old 14px header and 20px footer made
+   every placeholder 42px shorter, so the grid visibly jumped when results replaced it. */
+.discover-card.is-skeleton .discover-header,
+.discover-card.is-skeleton .discover-footer {
+  min-height: var(--control-md);
+}
+
+@keyframes discover-card-reveal {
+  from {
+    opacity: 0.45;
+    transform: translateY(4px);
+  }
+}
+
+.discover-grid.is-revealing .discover-card:not(.is-skeleton) {
+  animation: discover-card-reveal 0.22s ease-out both;
+}
+
 .discover-header {
   display: flex;
   align-items: center;
@@ -262,9 +280,9 @@
 }
 
 .discover-skeleton-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
+  width: var(--control-md);
+  height: var(--control-md);
+  border-radius: var(--radius-pill);
 }
 
 .discover-skeleton-count {
@@ -335,12 +353,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body:not([data-motion="on"]) .discover-card.is-skeleton::after {
+  body:not([data-motion="on"]) .discover-card.is-skeleton::after,
+  body:not([data-motion="on"]) .discover-grid.is-revealing .discover-card:not(.is-skeleton) {
     animation: none;
   }
 }
 
-body[data-motion="off"] .discover-card.is-skeleton::after {
+body[data-motion="off"] .discover-card.is-skeleton::after,
+body[data-motion="off"] .discover-grid.is-revealing .discover-card:not(.is-skeleton) {
   animation: none;
 }
 

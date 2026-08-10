@@ -10,6 +10,45 @@ const openDiscoverFilters = async (page) => {
   await expect(page.locator(".discover-filter-panel")).toBeVisible();
 };
 
+test("loading cards reserve the same control rows as Discover results", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 850 });
+  await page.goto("/");
+  await expect(page.locator("body")).toHaveClass(/is-ready/);
+  const geometry = await page.locator("#discover-list").evaluate(async (list) => {
+    const discoveryUrl = new URL("/src/app/cloud/discovery.ts", window.location.origin).href;
+    const stateUrl = new URL("/src/app/state.ts", window.location.origin).href;
+    const [{ renderDiscovery }, { discoveryState }] = await Promise.all([
+      import(/* @vite-ignore */ discoveryUrl),
+      import(/* @vite-ignore */ stateUrl),
+    ]);
+    discoveryState.palettes = [];
+    discoveryState.loading = true;
+    renderDiscovery();
+    document.querySelector<HTMLElement>('[data-view-section="library"]')?.classList.remove("is-active");
+    document.querySelector<HTMLElement>('[data-view-section="discover"]')?.classList.add("is-active");
+    const skeletons = Array.from(list.querySelectorAll<HTMLElement>(".discover-card.is-skeleton"));
+    const card = skeletons[0]!;
+    const cardRect = card.getBoundingClientRect();
+    const headerRect = card.querySelector(".discover-header")!.getBoundingClientRect();
+    const footerRect = card.querySelector(".discover-footer")!.getBoundingClientRect();
+    const controlHeight = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--control-md"));
+    return {
+      skeletonCount: skeletons.length,
+      busy: list.getAttribute("aria-busy"),
+      cardHeight: Math.round(cardRect.height),
+      headerHeight: Math.round(headerRect.height),
+      footerHeight: Math.round(footerRect.height),
+      controlHeight: Math.round(controlHeight),
+    };
+  });
+
+  expect(geometry.skeletonCount).toBe(4);
+  expect(geometry.busy).toBe("true");
+  expect(geometry.headerHeight).toBe(geometry.controlHeight);
+  expect(geometry.footerHeight).toBe(geometry.controlHeight);
+  expect(geometry.cardHeight).toBe(162);
+});
+
 /* The rows are built from the constants in `palette-traits.ts`, so a mismatch shows up as a count. */
 test("the panel offers sort, style and colour", async ({ page }) => {
   await openDiscoverFilters(page);
