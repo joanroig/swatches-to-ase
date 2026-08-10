@@ -15,30 +15,31 @@ import {
   playgroundSourceText,
   playgroundStage,
   playgroundStyleSelect,
+  playgroundUndoButton,
   playgroundZoomInButton,
   playgroundZoomOutButton,
   playgroundZoomValue,
-  playgroundUndoButton,
 } from "../dom";
 import { t } from "../i18n";
 import { syncActivePalette } from "../palette/mutations";
 import { state } from "../state";
 import type { Palette } from "../types";
 import { createIconButton } from "../ui/buttons";
-import { createOverflowRow } from "../ui/overflow-row";
-import { setupPopover } from "../ui/popover";
 import { createIcon, setButtonContent, type IconName } from "../ui/icons";
 import { appendLog, showToast } from "../ui/notifications";
+import { createOverflowRow } from "../ui/overflow-row";
+import { setupPopover } from "../ui/popover";
 import { createSelectChip } from "../ui/select-chip";
 import { createSortable, isSortableClickSuppressed } from "../ui/sortable";
 import { getContrastColor, rgbToHex } from "../utils/color";
 import { createId } from "../utils/id";
 import { SCENE_IDS, buildScene, isSceneId, type SceneId } from "./scenes";
 import {
-  insertPlaygroundSwatch,
   canRedoPlayground,
+  canStepPlaygroundZoom,
   canUndoPlayground,
   detachPlaygroundSource,
+  insertPlaygroundSwatch,
   loadPaletteIntoPlayground,
   movePlaygroundSwatch,
   persistPlayground,
@@ -52,7 +53,6 @@ import {
   setPlaygroundStyle,
   shufflePlayground,
   stepPlaygroundZoom,
-  canStepPlaygroundZoom,
   togglePlaygroundLock,
   undoPlayground,
 } from "./state";
@@ -90,10 +90,10 @@ const createSwatchButton = (icon: IconName, label: string, onClick: () => void) 
   });
 
 /**
- * A "+" that inserts a colour at a position, revealed by hovering the seam between two swatches.
+ * A "+" that inserts a color at a position, revealed by hovering the seam between two swatches.
  *
  * Same affordance as the palette editor, and the reason the toolbar no longer carries a count
- * stepper: adding a colour *somewhere specific* is what people actually want, and a bare "+1"
+ * stepper: adding a color *somewhere specific* is what people actually want, and a bare "+1"
  * could only ever append.
  */
 const createInsertZone = (index: number, atEnd = false) => {
@@ -139,7 +139,7 @@ const renderRamp = () => {
     actions.className = "playground-swatch-actions";
 
     // Grip only, matching the library and the editor: the swatch face is a click target for the
-    // colour tools, so dragging from anywhere on it would make the two intents ambiguous.
+    // color tools, so dragging from anywhere on it would make the two intents ambiguous.
     const grip = document.createElement("span");
     grip.className = "playground-swatch-grip";
     grip.setAttribute("role", "button");

@@ -1,4 +1,5 @@
 import type { Analytics } from "firebase/analytics";
+import { getFirebaseApp } from "./client";
 
 /**
  * Firebase Analytics, loaded lazily and only when it can actually run.
@@ -55,7 +56,7 @@ const loadAnalytics = async (): Promise<Analytics | null> => {
     return null;
   }
   try {
-    const [{ getAnalytics, isSupported }, { getFirebaseApp }] = await Promise.all([import("firebase/analytics"), import("./client")]);
+    const [{ getAnalytics, isSupported }] = await Promise.all([import("firebase/analytics")]);
     const app = getFirebaseApp();
     if (!app || !(await isSupported())) {
       return null;

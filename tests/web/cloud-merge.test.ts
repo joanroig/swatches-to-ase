@@ -28,14 +28,14 @@ const palette = (
 
 const folder = (id: string, name: string): Folder => ({ id, name });
 
-test("clonePalette copies the colour tuples rather than sharing them", () => {
+test("clonePalette copies the color tuples rather than sharing them", () => {
   const original = palette("a", "One", [0.1, 0.2, 0.3]);
   const copy = clonePalette(original);
   copy.colors[0].rgb[0] = 0.9;
   assert.equal(original.colors[0].rgb[0], 0.1);
 });
 
-test("the fingerprint ignores ids and tracks name plus colours", () => {
+test("the fingerprint ignores ids and tracks name plus colors", () => {
   assert.equal(
     buildPaletteFingerprint(palette("a", "One", [0.1, 0.2, 0.3])),
     buildPaletteFingerprint(palette("b", "One", [0.1, 0.2, 0.3])),
@@ -55,7 +55,7 @@ test("a local-only palette is carried into the merge", () => {
 });
 
 test("a local duplicate of a remote palette is dropped", () => {
-  // Same name and colours, different id: this is the same palette that synced under another id.
+  // Same name and colors, different id: this is the same palette that synced under another id.
   const merged = mergePalettes([palette("local", "Shared", [0, 0, 1])], [palette("remote", "Shared", [0, 0, 1])]);
   assert.deepEqual(
     merged.map((entry) => entry.id),

@@ -2,7 +2,7 @@ import type { AvatarColors } from "../types";
 import { hslToRgb, rgbToHex } from "../utils/color";
 import { randomBetween } from "../utils/math";
 
-export const CLOUD_AVATAR_PLACEHOLDER = "/avatar-placeholder.svg";
+export const CLOUD_AVATAR_PLACEHOLDER = "avatar-placeholder.svg";
 
 export const DEFAULT_AVATAR_COLORS: AvatarColors = {
   background: "#e2e8f0",

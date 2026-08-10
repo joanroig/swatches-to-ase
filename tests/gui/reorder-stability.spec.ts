@@ -186,13 +186,11 @@ test("a slow vertical drag in a single-column list reorders monotonically", asyn
   // The dragged card must have walked strictly downwards, never bouncing back up.
   const positions = record.map((order) => order.split(",").indexOf("p0"));
   for (let index = 1; index < positions.length; index += 1) {
-    expect(positions[index], `bounced backwards at step ${index}:\n${record.join("\n")}`).toBeGreaterThanOrEqual(
-      positions[index - 1],
-    );
+    expect(positions[index], `bounced backwards at step ${index}:\n${record.join("\n")}`).toBeGreaterThanOrEqual(positions[index - 1]);
   }
 });
 
-test("a slow drag of a colour row reorders once per slot", async ({ page }) => {
+test("a slow drag of a color row reorders once per slot", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/");
   await page.evaluate(() => {
@@ -242,8 +240,6 @@ test("a slow drag of a colour row reorders once per slot", async ({ page }) => {
 
   const positions = record.map((order) => order.split(",").indexOf("c0"));
   for (let index = 1; index < positions.length; index += 1) {
-    expect(positions[index], `bounced backwards at step ${index}:\n${record.join("\n")}`).toBeGreaterThanOrEqual(
-      positions[index - 1],
-    );
+    expect(positions[index], `bounced backwards at step ${index}:\n${record.join("\n")}`).toBeGreaterThanOrEqual(positions[index - 1]);
   }
 });

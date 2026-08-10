@@ -105,7 +105,7 @@
 }
 
 /*
- * Each format and destination carries its own colour so the grid is scannable by shape and hue
+ * Each format and destination carries its own color so the grid is scannable by shape and hue
  * rather than being one wall of identical purple chips.
  */
 .export-tile:has([value="ase"]) {

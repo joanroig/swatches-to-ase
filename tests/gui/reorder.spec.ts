@@ -15,27 +15,30 @@ const hexToRgb = (hex: string) => {
 
 const seedPalettes = async (page, palettes: Array<{ name: string; colors?: SeedColor[] }>) => {
   await page.goto("/");
-  await page.evaluate((entries) => {
-    localStorage.clear();
-    // Keep colour names literal so assertions do not depend on the colour-namer output.
-    localStorage.setItem("palette-studio.preferences", JSON.stringify({ colorNameFormat: "html", colorNotation: "hex" }));
-    localStorage.setItem(
-      "palette-studio.palettes",
-      JSON.stringify({
-        palettes: entries,
-        activePaletteId: entries[0]?.id ?? null,
-      }),
-    );
-  }, palettes.map((palette, index) => ({
-    id: `palette-${index}`,
-    name: palette.name,
-    lastModified: 1_700_000_000_000 - index,
-    colors: (palette.colors ?? []).map((color, colorIndex) => ({
-      id: `palette-${index}-color-${colorIndex}`,
-      name: color.name,
-      rgb: hexToRgb(color.hex),
+  await page.evaluate(
+    (entries) => {
+      localStorage.clear();
+      // Keep color names literal so assertions do not depend on the color-namer output.
+      localStorage.setItem("palette-studio.preferences", JSON.stringify({ colorNameFormat: "html", colorNotation: "hex" }));
+      localStorage.setItem(
+        "palette-studio.palettes",
+        JSON.stringify({
+          palettes: entries,
+          activePaletteId: entries[0]?.id ?? null,
+        }),
+      );
+    },
+    palettes.map((palette, index) => ({
+      id: `palette-${index}`,
+      name: palette.name,
+      lastModified: 1_700_000_000_000 - index,
+      colors: (palette.colors ?? []).map((color, colorIndex) => ({
+        id: `palette-${index}-color-${colorIndex}`,
+        name: color.name,
+        rgb: hexToRgb(color.hex),
+      })),
     })),
-  })));
+  );
   await page.reload();
   // `body:not(.is-ready) .page` is `visibility: hidden`, so cards can exist with no bounding box.
   await expect(page.locator("body")).toHaveClass(/is-ready/);
@@ -48,9 +51,7 @@ const getPaletteTitles = async (page) => {
 };
 
 const getColorRowIds = async (page) =>
-  page.locator(".color-row").evaluateAll((rows: Element[]) =>
-    rows.map((row) => (row as HTMLElement).dataset.colorId ?? ""),
-  );
+  page.locator(".color-row").evaluateAll((rows: Element[]) => rows.map((row) => (row as HTMLElement).dataset.colorId ?? ""));
 
 const getColorRowSizes = async (page) =>
   page.locator(".color-row").evaluateAll((rows: Element[]) =>
@@ -161,11 +162,7 @@ test.describe("palette card reordering", () => {
     const third = await boxOf(page.locator(".palette-card").nth(2));
 
     // Release just below the third card's centre: "One" must land at index 2, not overshoot.
-    await dragTo(
-      page,
-      await gripOf(page, 0),
-      { x: third.x + third.width / 2, y: third.y + third.height * 0.6 },
-    );
+    await dragTo(page, await gripOf(page, 0), { x: third.x + third.width / 2, y: third.y + third.height * 0.6 });
 
     await expect.poll(() => getPaletteTitles(page)).toEqual(["Two", "Three", "One", "Four"]);
   });
@@ -177,11 +174,7 @@ test.describe("palette card reordering", () => {
     await boxOf(page.locator(".palette-card").nth(0));
     const last = await boxOf(page.locator(".palette-card").nth(2));
 
-    await dragTo(
-      page,
-      await gripOf(page, 0),
-      { x: last.x + last.width / 2, y: last.y + last.height * 0.6 },
-    );
+    await dragTo(page, await gripOf(page, 0), { x: last.x + last.width / 2, y: last.y + last.height * 0.6 });
 
     await expect.poll(() => getPaletteTitles(page)).toEqual(["Two", "Three", "One"]);
     await expect(page.locator("#view-modal")).toHaveAttribute("aria-hidden", "true");
@@ -206,12 +199,7 @@ test.describe("palette card reordering", () => {
 
     // Row 0, column 0 → down into the second row.
     const target = layout[5];
-    const preview = await dragTo(
-      page,
-      await gripOf(page, 0),
-      { x: target.x + target.width * 0.75, y: target.y + target.height / 2 },
-      24,
-    );
+    const preview = await dragTo(page, await gripOf(page, 0), { x: target.x + target.width * 0.75, y: target.y + target.height / 2 }, 24);
 
     // The order shown mid-drag is exactly the order that survives the drop.
     await expect.poll(() => getPaletteTitles(page)).toEqual(preview);
@@ -237,12 +225,7 @@ test.describe("palette card reordering", () => {
 
     // Last card → the left half of the very first slot, which must put it at the front.
     const target = layout[0];
-    const preview = await dragTo(
-      page,
-      await gripOf(page, 8),
-      { x: target.x + target.width * 0.25, y: target.y + target.height / 2 },
-      24,
-    );
+    const preview = await dragTo(page, await gripOf(page, 8), { x: target.x + target.width * 0.25, y: target.y + target.height / 2 }, 24);
 
     expect(preview).toEqual(["P9", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8"]);
     await expect.poll(() => getPaletteTitles(page)).toEqual(preview);
@@ -255,7 +238,7 @@ test.describe("palette card reordering", () => {
   });
 });
 
-test.describe("colour swatch reordering", () => {
+test.describe("color swatch reordering", () => {
   const COLORS: SeedColor[] = [
     { name: "One", hex: "#ff0000" },
     { name: "Two", hex: "#00ff00" },
@@ -367,13 +350,11 @@ test.describe("colour swatch reordering", () => {
       14,
     );
 
-    await expect
-      .poll(() => getColorRowIds(page))
-      .toEqual([idsBefore[1], idsBefore[2], idsBefore[0], idsBefore[3], idsBefore[4]]);
+    await expect.poll(() => getColorRowIds(page)).toEqual([idsBefore[1], idsBefore[2], idsBefore[0], idsBefore[3], idsBefore[4]]);
   });
 });
 
-test.describe("inline colour insertion", () => {
+test.describe("inline color insertion", () => {
   const COLORS: SeedColor[] = [
     { name: "One", hex: "#ff0000" },
     { name: "Two", hex: "#00ff00" },
@@ -399,7 +380,7 @@ test.describe("inline colour insertion", () => {
     expect(idsAfter[0]).toBe(idsBefore[0]);
     expect(idsAfter[2]).toBe(idsBefore[1]);
     expect(idsAfter[3]).toBe(idsBefore[2]);
-    // The new colour is the one that was not there before.
+    // The new color is the one that was not there before.
     expect(idsBefore).not.toContain(idsAfter[1]);
   });
 

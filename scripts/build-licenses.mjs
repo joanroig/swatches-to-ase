@@ -7,7 +7,7 @@ const rootDir = path.resolve(__dirname, "..");
 const lockPath = path.join(rootDir, "package-lock.json");
 const outputPath = path.join(rootDir, "web", "public", "licenses.json");
 const licenseOutputPath = path.join(rootDir, "web", "public", "license.txt");
-const projectLicensePath = path.join(rootDir, "LICENSE");
+const projectLicensePath = path.join(rootDir, "LICENSE.md");
 
 const preferredLicenseFiles = [
   "LICENSE",

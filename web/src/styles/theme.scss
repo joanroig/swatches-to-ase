@@ -21,10 +21,10 @@
   /*
    * Shape and size scale.
    *
-   * Themes only ever changed colour, so every component picked its own radius and height and the
+   * Themes only ever changed color, so every component picked its own radius and height and the
    * app ended up with a dozen of each — 8, 9, 10, 12, 14, 16, 18, 20, 22px radii, and controls at
    * 30, 32, 36, 38, 40, 42 and 44px tall. These are the only values a control or a container
-   * should use. They live with the colour tokens because they are the same kind of decision.
+   * should use. They live with the color tokens because they are the same kind of decision.
    */
   --radius-pill: 999px;
   --radius-sm: 9px;

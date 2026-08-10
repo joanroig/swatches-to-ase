@@ -21,36 +21,39 @@ const openImageImport = async (page) => {
 };
 
 const stripHexes = (page) =>
-  page.locator(".image-chip").allInnerTexts().then((values: string[]) => values.map((value) => value.trim()));
+  page
+    .locator(".image-chip")
+    .allInnerTexts()
+    .then((values: string[]) => values.map((value) => value.trim()));
 
-test("automatic extraction finds the image's colours", async ({ page }) => {
+test("automatic extraction finds the image's colors", async ({ page }) => {
   await openImageImport(page);
   await page.locator("#image-count").fill("4");
   await expect.poll(() => stripHexes(page)).toHaveLength(4);
 
   const found = await stripHexes(page);
-  // Every quadrant colour should be represented, in some order.
+  // Every quadrant color should be represented, in some order.
   QUADRANTS.forEach((hex) => expect(found).toContain(hex));
 });
 
-test("the colour count acts as a ceiling", async ({ page }) => {
+test("the color count acts as a ceiling", async ({ page }) => {
   await openImageImport(page);
   await page.locator("#image-count").fill("2");
   await expect.poll(() => stripHexes(page).then((hexes) => hexes.length)).toBe(2);
 
-  // The fixture only holds four colours, so raising the ceiling cannot invent more.
+  // The fixture only holds four colors, so raising the ceiling cannot invent more.
   await page.locator("#image-count").fill("12");
   await expect.poll(() => stripHexes(page).then((hexes) => hexes.length)).toBe(4);
 });
 
-test("merging similar colours reduces near-duplicates", async ({ page }) => {
+test("merging similar colors reduces near-duplicates", async ({ page }) => {
   await openImageImport(page);
   await page.locator("#image-count").fill("16");
   await page.locator("#image-similarity").fill("0");
   const loose = await stripHexes(page);
   await page.locator("#image-similarity").fill("40");
   const merged = await stripHexes(page);
-  // The fixture only holds four distinct colours, so aggressive merging must collapse to them.
+  // The fixture only holds four distinct colors, so aggressive merging must collapse to them.
   expect(merged.length).toBeLessThanOrEqual(loose.length);
   expect(merged.length).toBeLessThanOrEqual(4);
 });

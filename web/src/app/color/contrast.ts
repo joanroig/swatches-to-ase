@@ -1,13 +1,12 @@
 /** WCAG 2.1 contrast maths. Inputs are 0..1 RGB triples, matching the rest of the app. */
 
-const channelLuminance = (channel: number) =>
-  channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+const channelLuminance = (channel: number) => (channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
 
 /** Relative luminance as defined by WCAG 2.1. */
 export const relativeLuminance = ([r, g, b]: [number, number, number]) =>
   0.2126 * channelLuminance(r) + 0.7152 * channelLuminance(g) + 0.0722 * channelLuminance(b);
 
-/** Contrast ratio between two colours, from 1 (identical) to 21 (black on white). */
+/** Contrast ratio between two colors, from 1 (identical) to 21 (black on white). */
 export const contrastRatio = (a: [number, number, number], b: [number, number, number]) => {
   const luminanceA = relativeLuminance(a);
   const luminanceB = relativeLuminance(b);

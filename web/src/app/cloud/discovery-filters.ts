@@ -1,5 +1,5 @@
 /**
- * The Discover filter panel: sort, style and colour, in one disclosure.
+ * The Discover filter panel: sort, style and color, in one disclosure.
  *
  * Built from script rather than written into the markup because the options *are* the constants in
  * `palette-traits.ts` — twenty-odd rows that must stay in step with the rules that classify a
@@ -15,7 +15,7 @@ import { setupPopover } from "../ui/popover";
 import { clearDiscoveryFilters, countDiscoveryFilters, setDiscoveryColor, setDiscoverySort, setDiscoveryStyle } from "./discovery";
 import { PALETTE_COLORS, PALETTE_STYLES } from "./palette-traits";
 
-/** The swatch beside each colour row, so the list can be read at a glance rather than word by word. */
+/** The swatch beside each color row, so the list can be read at a glance rather than word by word. */
 const COLOR_SWATCHES: Record<string, string> = {
   red: "#ef4444",
   orange: "#f97316",
@@ -172,7 +172,7 @@ export const setupDiscoveryFilters = () => {
   }
   const root = discoverFilterToggle.closest<HTMLElement>(".discover-filter") ?? discoverFilterPanel.parentElement;
   if (root) {
-    // Not `closeOnPanelClick`: choosing a style and then a colour is one trip to this panel, and
+    // Not `closeOnPanelClick`: choosing a style and then a color is one trip to this panel, and
     // closing on the first pick would make the second a second trip.
     setupPopover({ root, trigger: discoverFilterToggle, panel: discoverFilterPanel, closeOnPanelClick: false });
   }

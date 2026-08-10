@@ -7,7 +7,7 @@ import { getContrastColor, hexToRgb } from "../utils/color";
  *
  * Every scene is plain DOM styled from the palette — no canvas, no library. That keeps them
  * resolution-independent, themeable and cheap to re-render on every shuffle, and it means a scene
- * is just a function from a colour list to an element.
+ * is just a function from a color list to an element.
  */
 
 export type SceneId = "blend" | "ui" | "poster" | "chart";
@@ -22,10 +22,10 @@ const pick = (colors: string[], index: number) => colors[((index % colors.length
 const ink = (hex: string) => getContrastColor(hexToRgb(hex));
 
 /**
- * The palette colour at `index` if it is readable on `background`, otherwise the next one that is.
+ * The palette color at `index` if it is readable on `background`, otherwise the next one that is.
  *
- * Analogous and monochrome palettes are the common case where a naive "colour N on colour 0"
- * mapping produces text that is technically coloured and practically invisible; falling through to
+ * Analogous and monochrome palettes are the common case where a naive "color N on color 0"
+ * mapping produces text that is technically colored and practically invisible; falling through to
  * plain contrast ink is better than shipping an unreadable demo.
  */
 const READABLE_RATIO = 2.6;
@@ -41,7 +41,7 @@ const readableOn = (colors: string[], background: string, index: number) => {
   return ink(background);
 };
 
-/** A colour at partial opacity, for hairlines and tints that must work on any background. */
+/** A color at partial opacity, for hairlines and tints that must work on any background. */
 const withAlpha = (hex: string, alpha: number) => {
   const [r, g, b] = hexToRgb(hex);
   return `rgb(${Math.round(r * 255)} ${Math.round(g * 255)} ${Math.round(b * 255)} / ${alpha})`;
@@ -60,7 +60,7 @@ const buildBlend = (colors: string[]) => {
   const scene = element("div", "scene scene-blend");
 
   const mesh = element("div", "blend-mesh");
-  // One soft radial per colour, laid out on a ring so no colour is ever hidden behind another.
+  // One soft radial per color, laid out on a ring so no color is ever hidden behind another.
   const layers = colors.map((hex, index) => {
     const angle = (index / colors.length) * Math.PI * 2 - Math.PI / 2;
     const x = Math.round(50 + Math.cos(angle) * 32);
@@ -93,7 +93,7 @@ const buildBlend = (colors: string[]) => {
  *
  * The palette is mapped to interface *roles* rather than to slots in order — a surface, a primary,
  * a pair of supporting accents — because that is how a palette actually gets used, and it is what
- * makes an unusable combination obvious at a glance. Text colours are picked by contrast against
+ * makes an unusable combination obvious at a glance. Text colors are picked by contrast against
  * whatever they sit on, never by index.
  */
 const buildUi = (colors: string[]) => {
@@ -277,7 +277,7 @@ const buildPoster = (colors: string[]) => {
 
   const copy = element("div", "poster-copy");
   const heading = element("h3", "poster-heading");
-  // The heading is the palette itself: each word takes the colour it names.
+  // The heading is the palette itself: each word takes the color it names.
   t("playground.scene.poster.heading")
     .split(" ")
     .forEach((word, index) => {
@@ -304,7 +304,7 @@ const buildPoster = (colors: string[]) => {
 /**
  * A small chart set: a donut with a centre readout, a gridded column chart and a stacked bar.
  *
- * Equal slices and a fixed height ramp on purpose — this is a colour test, not a data viz, and the
+ * Equal slices and a fixed height ramp on purpose — this is a color test, not a data viz, and the
  * same palette must always draw the same chart so two shuffles can be compared.
  */
 const buildChart = (colors: string[]) => {

@@ -5,8 +5,7 @@ import { defineConfig } from "vite";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const packageJson = JSON.parse(fs.readFileSync(path.resolve(rootDir, "package.json"), "utf-8")) as { version?: string };
-const deployTime =
-  process.env.FIREBASE_DEPLOY_TIME ?? process.env.DEPLOY_TIME ?? new Date().toISOString();
+const deployTime = process.env.FIREBASE_DEPLOY_TIME ?? process.env.DEPLOY_TIME ?? new Date().toISOString();
 
 export default defineConfig({
   root: "web",
@@ -18,6 +17,7 @@ export default defineConfig({
   build: {
     outDir: "../dist-web",
     emptyOutDir: true,
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks: (id) => {

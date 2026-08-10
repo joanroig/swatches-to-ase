@@ -13,9 +13,9 @@ import { setupImageImport } from "./app/image/importer";
 import { importSharedPaletteFromUrl, setupDropzone } from "./app/import";
 import { restoreCollapsedFolders } from "./app/palette/folders";
 import { hydratePalettes } from "./app/palette/storage";
-import { refreshPlayground, setupPlayground } from "./app/playground/ui";
 import { renderEditor, renderPaletteList, renderViewModal, syncPaletteColorNames } from "./app/palette/ui";
 import { setPreferencesPayloadGetter, setScheduleCloudSync } from "./app/persistence";
+import { refreshPlayground, setupPlayground } from "./app/playground/ui";
 import {
   getPreferencesPayload,
   hydratePreferences,
@@ -52,7 +52,7 @@ onLanguageChange(() => {
   refreshPlayground();
 });
 hydratePreferences();
-// After preferences: the working set is named with the active colour-naming format.
+// After preferences: the working set is named with the active color-naming format.
 setupPlayground();
 setupActions();
 restoreCollapsedFolders();

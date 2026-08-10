@@ -31,13 +31,24 @@
       }
     },
     {
-      "name": "Run: Desktop (Electron)",
+      "name": "Run: Desktop (Electron Dev)",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev:desktop"],
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Dist: Desktop (Package App)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dist:desktop"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "npm: build:desktop",
       "skipFiles": ["<node_internals>/**"]
     },
     {

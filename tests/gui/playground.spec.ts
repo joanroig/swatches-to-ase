@@ -42,7 +42,7 @@ test.describe("playground", () => {
     expect(parseFloat(panelStyle.bottomRightRadius)).toBeGreaterThan(0);
   });
 
-  test("shuffling replaces the working colours", async ({ page }) => {
+  test("shuffling replaces the working colors", async ({ page }) => {
     await openPlayground(page);
     const before = await hexes(page);
 
@@ -53,7 +53,7 @@ test.describe("playground", () => {
     expect(after).not.toEqual(before);
   });
 
-  test("a locked colour survives a shuffle", async ({ page }) => {
+  test("a locked color survives a shuffle", async ({ page }) => {
     await openPlayground(page);
     const first = page.locator(SWATCH).first();
     await first.hover();
@@ -67,11 +67,11 @@ test.describe("playground", () => {
     }
   });
 
-  test("the + between swatches inserts a colour at that seam", async ({ page }) => {
+  test("the + between swatches inserts a color at that seam", async ({ page }) => {
     await openPlayground(page);
     const before = await hexes(page);
 
-    // The zone on a swatch's leading edge inserts before it, so the new colour lands at index 2.
+    // The zone on a swatch's leading edge inserts before it, so the new color lands at index 2.
     await page.locator(`${SWATCH}`).nth(2).locator(".playground-insert").first().click({ force: true });
 
     const after = await hexes(page);
@@ -108,9 +108,7 @@ test.describe("playground", () => {
 
     await expect(page.locator(".playground-preview")).toHaveClass(/is-fullscreen/);
     // The Fullscreen API, not an in-page overlay.
-    expect(await page.evaluate(() => document.fullscreenElement?.classList.contains("playground-preview") ?? false)).toBe(
-      true,
-    );
+    expect(await page.evaluate(() => document.fullscreenElement?.classList.contains("playground-preview") ?? false)).toBe(true);
 
     // Not Escape: exiting full screen with it is browser chrome, which a page key event cannot drive.
     await page.locator("#playground-fullscreen").click();
@@ -184,7 +182,7 @@ test.describe("playground", () => {
 
     await page.locator('.palette-card [data-action-key="playground"]').click();
     await expect(page.locator(".panel-playground")).toBeVisible();
-    // The palette's own colours, not a fresh random set.
+    // The palette's own colors, not a fresh random set.
     expect(await hexes(page)).toEqual(["FF0000", "00FF00", "0000FF"]);
     await expect(page.locator("#playground-source")).toContainText("Sunset Ridge");
 

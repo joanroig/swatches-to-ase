@@ -1,14 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  BLACK,
-  WHITE,
-  contrastRatio,
-  gradeContrast,
-  preferredTextColor,
-  relativeLuminance,
-} from "../../web/src/app/color/contrast.js";
+import { BLACK, WHITE, contrastRatio, gradeContrast, preferredTextColor, relativeLuminance } from "../../web/src/app/color/contrast.js";
 import { buildShades } from "../../web/src/app/color/shades.js";
 import { hexToRgb, rgbToHex } from "../../web/src/app/utils/color.js";
 
@@ -34,7 +27,7 @@ test("contrast grades follow the WCAG thresholds", () => {
   assert.equal(gradeContrast(2.99), "Fail");
 });
 
-test("preferred text colour picks the more readable option", () => {
+test("preferred text color picks the more readable option", () => {
   assert.deepEqual(preferredTextColor(hexToRgb("#0c0f05")), WHITE);
   assert.deepEqual(preferredTextColor(hexToRgb("#e6c79c")), BLACK);
 });

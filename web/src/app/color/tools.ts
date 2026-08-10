@@ -161,7 +161,13 @@ export const openColorTools = (options: ColorToolsOptions) => {
 
   const applyHexInput = () => {
     const raw = hexInput.value.trim().replace(/^#/, "");
-    const expanded = raw.length === 3 ? raw.split("").map((c) => c + c).join("") : raw;
+    const expanded =
+      raw.length === 3
+        ? raw
+            .split("")
+            .map((c) => c + c)
+            .join("")
+        : raw;
     if (!/^[0-9a-f]{6}$/i.test(expanded)) {
       hexInput.value = rgbToHex(currentRgb).toUpperCase();
       return;
@@ -274,18 +280,9 @@ export const openColorTools = (options: ColorToolsOptions) => {
     conversions.append(
       createReadout(t("notation.hex"), hex),
       createReadout(t("notation.rgb"), `${r}, ${g}, ${b}`),
-      createReadout(
-        t("notation.hsl"),
-        `${Math.round(hsl[0])}, ${Math.round(hsl[1])}%, ${Math.round(hsl[2])}%`,
-      ),
-      createReadout(
-        t("notation.hsb"),
-        `${Math.round(hsb[0])}, ${Math.round(hsb[1])}%, ${Math.round(hsb[2])}%`,
-      ),
-      createReadout(
-        t("notation.cmyk"),
-        cmyk.map((channel) => Math.round(channel)).join(", "),
-      ),
+      createReadout(t("notation.hsl"), `${Math.round(hsl[0])}, ${Math.round(hsl[1])}%, ${Math.round(hsl[2])}%`),
+      createReadout(t("notation.hsb"), `${Math.round(hsb[0])}, ${Math.round(hsb[1])}%, ${Math.round(hsb[2])}%`),
+      createReadout(t("notation.cmyk"), cmyk.map((channel) => Math.round(channel)).join(", ")),
       createReadout(t("notation.lab"), lab.map((channel) => Math.round(channel)).join(", ")),
     );
 
@@ -303,7 +300,7 @@ export const openColorTools = (options: ColorToolsOptions) => {
     infoBody.append(header, conversions, contrastTitle, contrast);
   };
 
-  /** Everything that has to follow the current colour, wherever it was changed from. */
+  /** Everything that has to follow the current color, wherever it was changed from. */
   const renderDerived = () => {
     const hex = rgbToHex(currentRgb).toUpperCase();
     hexPreview.style.background = hex;

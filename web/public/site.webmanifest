@@ -1,7 +1,7 @@
 {
   "name": "Palette Studio",
   "short_name": "Palette Studio",
-  "description": "Create, organise and export colour palettes.",
+  "description": "Create, organize and export color palettes.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -9,7 +9,7 @@
   "theme_color": "#0f111a",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
