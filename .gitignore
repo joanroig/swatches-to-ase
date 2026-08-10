@@ -116,3 +116,11 @@ build
 dist-web
 dist-electron
 release
+
+# firebase
+.firebase/
+gha-creds-*.json
+
+# generated web license artifacts
+web/public/license.txt
+web/public/licenses.json

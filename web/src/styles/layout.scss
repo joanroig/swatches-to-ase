@@ -1,0 +1,900 @@
+.page {
+  /* Room for four generous palette columns on a large display. */
+  max-width: 1800px;
+  margin: 0 auto;
+  --page-pad: 16px;
+
+  /* The top padding belongs to the frame, which has to measure exactly one viewport. */
+  padding: 0 var(--page-pad) 36px;
+  --topbar-offset: 0px;
+  --bottom-nav-height: 0px;
+  --frame-padding-top: 22px;
+  --frame-padding-bottom: 22px;
+  /* The channel between the rail and the content. One variable because the footer has to line up
+     with the panel, and a gap declared twice drifts. */
+  --rail-gap: 12px;
+}
+
+/*
+ * The topbar and the app itself, sized to exactly one viewport so that the footer following it
+ * starts at the fold: the legal links are there for anyone who scrolls, and cost nothing on the
+ * first screen. This used to be a `100vh - 160px` guess on `.shell`, and 160px was never the real
+ * height of what sits above it, so the footer crept into view.
+ */
+.app-frame {
+  display: flex;
+  flex-direction: column;
+  /* Inside the viewport the frame measures, so the app ends a little short of the fold rather than
+   * running off the bottom edge. */
+  padding-block: var(--frame-padding-top) var(--frame-padding-bottom);
+  /* The phone's bottom nav floats over the page, so the frame has to stop above it. */
+  min-height: calc(100dvh - var(--bottom-nav-height));
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 8px 12px;
+  border-radius: 0;
+  background: transparent;
+  isolation: isolate;
+}
+
+/*
+ * The sticky bar's backdrop, bled out to the window edges.
+ *
+ * `width: 100vw` did it before, and `100vw` counts the scrollbar: on every phone width the backdrop
+ * was ~17px wider than the page could hold and the whole document scrolled sideways. The page's own
+ * gutter is the exact amount to give back, and it is a variable so the two cannot drift.
+ */
+.topbar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--page-pad) * -1);
+  right: calc(var(--page-pad) * -1);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: none;
+  transition: box-shadow 0.2s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.topbar.is-scrolled::before {
+  box-shadow: 0 12px 20px -16px rgba(15, 23, 42, 0.6);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Takes whatever height the frame has left, which gives the sidebar a full column to push its
+ * bottom controls into. */
+.shell {
+  display: grid;
+  gap: var(--rail-gap);
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "main"
+    "sidebar";
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.main-content {
+  grid-area: main;
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.sidebar-stack {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.view-section {
+  display: block;
+}
+
+.view-section:not(.is-active) {
+  display: none;
+}
+
+.panel.view-section.is-active {
+  display: grid;
+}
+
+.panel-palettes.view-section.is-active {
+  display: flex;
+}
+
+/*
+ * Flex, not grid: the source note is only present when the playground is linked to a library
+ * palette, and a fixed `grid-template-rows` left an empty 320px track behind whenever it was
+ * hidden. A flex column grows whichever children are actually there.
+ *
+ * The min-height gives the scene something to expand into — without it the stage sat at its content
+ * height and the short scenes left a large dead area under the panel.
+ */
+.panel-playground.view-section.is-active {
+  display: flex;
+  flex-direction: column;
+  /*
+   * `100dvh`, and the frame's own padding rather than a guessed 160px. `100vh` on a phone is the
+   * window with the browser's bars *retracted*, so the panel was taller than the space it had and
+   * left a band of empty page under the preview. The 160px was a guess at the chrome above it,
+   * which is now two variables that say what they are.
+   */
+  min-height: min(820px, calc(100dvh - var(--frame-padding-top) - var(--frame-padding-bottom) - var(--bottom-nav-height)));
+}
+
+/*
+ * The wordmark is one lockup driven by `--brand-size`, the logo's edge length. Everything else is
+ * a ratio of it, so the two-line text block always matches the mark's height. Before this the
+ * topbar title carried a `clamp(2.2rem, 3vw, 3rem)` sized for the old single-line lockup, and once
+ * the text stacked it towered over a 38px logo at mid widths.
+ */
+.brand {
+  --brand-size: 38px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: gap 0.25s ease;
+  font-family: "Fraunces", serif;
+  letter-spacing: -0.02em;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  /* Stretch, so the subtitle's box is as wide as the title's and can justify across it. */
+  align-items: stretch;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.brand-logo {
+  width: var(--brand-size);
+  height: var(--brand-size);
+  /* Resizes with the rail rather than popping to its smaller size at the end of the collapse. */
+  transition:
+    width 0.25s ease,
+    height 0.25s ease;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  box-shadow: 0 12px 24px rgba(28, 26, 22, 0.12);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.brand-title {
+  font-size: calc(var(--brand-size) * 0.55);
+  /* Just over 1: at exactly 1 the line box is the font size and descenders get clipped. */
+  line-height: 1.05;
+}
+
+/*
+ * "STUDIO" is tracked out to sit exactly under "Palette" rather than to a fixed letter-spacing
+ * that only happens to look right in English. The `letter-spacing` is the fallback for engines
+ * without inter-character justification; where it works, justification overrides it and the two
+ * words line up whatever the translation.
+ *
+ * Letter-spacing is added after every glyph, the last one included, so the justified box ends a
+ * full space past the final letter and "STUDIO" reads as inset from "Palette" above it. The
+ * negative margin hands that trailing space back to the layout: the box overhangs by exactly the
+ * space it wastes, which puts the last letter's ink — not its advance — on the title's right edge.
+ */
+.brand-subtitle {
+  --brand-tracking: 0.26em;
+
+  font-size: calc(var(--brand-size) * 0.33);
+  text-transform: uppercase;
+  letter-spacing: var(--brand-tracking);
+  margin-right: calc(var(--brand-tracking) * -1);
+  color: var(--accent);
+  line-height: 1.2;
+  text-align: justify;
+  text-align-last: justify;
+  text-justify: inter-character;
+}
+
+.brand--sidebar {
+  --brand-size: 44px;
+}
+
+.avatar-button.ghost {
+  border-radius: 999px;
+  padding: 6px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-soft);
+  /* The control size, so it matches the icon button it sits beside rather than being 2px larger. */
+  width: var(--control-md);
+  height: var(--control-md);
+  min-width: var(--control-md);
+  display: grid;
+  place-items: center;
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.sidebar {
+  display: none;
+  gap: 16px;
+  align-content: start;
+  padding: 12px;
+  flex: 1 1 auto;
+  transition:
+    padding 0.25s ease,
+    gap 0.25s ease;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 10px;
+}
+
+.nav-item {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  /* `--ink`, not `--muted`: navigation is a primary destination, and muted grey on the light
+     themes left the whole rail looking disabled. `--muted` is for the icon only. */
+  color: var(--ink);
+  font-weight: 600;
+  /* `gap` and `padding` are here so the rail closes as one movement rather than as a width
+     animation with the contents jumping into place at the end. */
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    gap 0.25s ease,
+    padding 0.25s ease;
+
+  &:hover {
+    background: var(--surface-2);
+  }
+}
+
+.nav-item .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+
+.nav-item.is-active .icon {
+  color: var(--accent);
+}
+
+/*
+ * The current destination, in the accent.
+ *
+ * It used to be `--surface-2` with a hairline — the same fill as `:hover`, so the page you were on
+ * looked exactly like the one the pointer happened to be over, and on the dark themes `--surface-2`
+ * against the rail is a couple of percent of difference. Mixed against `--accent` rather than a
+ * fixed rgba so every theme's own accent comes through.
+ *
+ * `:hover` is repeated because it matches at the same specificity (0,2,0) and would otherwise win
+ * on source order alone, dropping the active item back to the hover fill under the pointer.
+ */
+.nav-item.is-active,
+.nav-item.is-active:hover {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.sidebar-actions {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 12px;
+  transition:
+    padding 0.25s ease,
+    gap 0.25s ease;
+}
+
+.sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: auto;
+}
+
+.sidebar-toggle .icon {
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+.app-shell:not([data-sidebar-ready]) .sidebar,
+.app-shell:not([data-sidebar-ready]) .sidebar-actions,
+.app-shell:not([data-sidebar-ready]) .sidebar-toggle .icon {
+  transition: none;
+}
+
+.nav-user .user-avatar {
+  width: 20px;
+  height: 20px;
+}
+
+.nav-user .nav-label {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transform: none;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+  width: 100%;
+  padding: 4px calc(12px + env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+  min-height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+  border-radius: 10px 10px 0 0;
+  background: var(--card);
+  border-top: 1px solid var(--stroke);
+  box-shadow: 0 -6px 12px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 6;
+  pointer-events: none;
+}
+
+.bottom-nav .nav-item {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px 6px;
+  font-size: 0.68rem;
+  pointer-events: auto;
+}
+
+.bottom-nav .nav-item.is-active {
+  background: rgba(79, 70, 229, 0.12);
+  border-color: rgba(79, 70, 229, 0.3);
+  color: var(--accent);
+}
+
+.fab-hub {
+  position: fixed;
+  right: calc(18px + env(safe-area-inset-right));
+  bottom: calc(env(safe-area-inset-bottom) + var(--bottom-nav-height) + 12px);
+  left: auto;
+  transform: none;
+  z-index: 7;
+  display: grid;
+  gap: 10px;
+  align-items: center;
+  justify-items: end;
+  isolation: isolate;
+  /* The menu hangs off this box, so it needs to be the thing that box is measured against. */
+  position: fixed;
+}
+
+/* The glow behind the open menu. It used to reach 50px past the hub, and the hub is 12px from the
+   panel's edge, so those last 38px hung off the window and the whole page scrolled sideways — on
+   every library width, for a decoration nobody can point at. It stops at the edge now and spreads
+   inwards, which is where the menu is. */
+.fab-hub::before {
+  content: "";
+  position: absolute;
+  right: -12px;
+  bottom: -12px;
+  width: 240px;
+  height: 280px;
+  background: radial-gradient(closest-side, rgba(8, 11, 20, 0.78), transparent 72%);
+  filter: blur(14px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/*
+ * Closed, it is faded out but still laid out — which is what lets it animate — and its buttons are
+ * wider than the toggle they sit above. As a grid item that made the hub's overflow, and the hub is
+ * pinned to the right edge, so the page scrolled sideways by the difference on every phone width.
+ * Taking it out of flow leaves the hub the size of its toggle and the menu stacked above it.
+ */
+.fab-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  display: grid;
+  gap: 5px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  justify-items: end;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.fab-hub.is-open .fab-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.fab-hub.is-open::before {
+  opacity: 1;
+}
+
+.fab-toggle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  padding: 0;
+}
+
+.fab-toggle.icon-only {
+  padding: 0;
+  border-radius: 50%;
+}
+
+.fab-toggle .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.fab-action {
+  padding: 10px 14px;
+  border-radius: 999px;
+  width: max-content;
+  max-width: 100%;
+  justify-content: center;
+  white-space: nowrap;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.18);
+}
+
+.fab-action.ghost {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  color: var(--ink);
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.18);
+}
+
+.app-shell[data-sidebar="collapsed"] {
+  --sidebar-width: 60px;
+}
+
+/*
+ * Collapsing the rail, without the snap.
+ *
+ * The labels were `display: none`, which takes effect on the first frame: the text vanished
+ * instantly while the column spent a quarter second sliding shut, so the whole thing read as a jump
+ * followed by an animation. They collapse along with it now — `max-width` to nothing, opacity
+ * fading a little faster so the text is gone before its box is — and the row's `gap` closes with
+ * them, which is why the icon does not step sideways at the end.
+ *
+ * The clipping was the same cause seen from the other side: a nowrap label in a rail narrower than
+ * the text has to go somewhere, and with nothing clipping it, it went over the panel. Each item
+ * clips its own overflow, and the brand row clips the wordmark, so nothing escapes the rail
+ * mid-transition. The clip sits on the row rather than on `.brand-text`, whose subtitle overhangs
+ * its box by design to line "STUDIO" up with "Palette".
+ */
+.sidebar .nav-item span,
+.sidebar-actions .nav-item span,
+.brand--sidebar .brand-text {
+  max-width: 160px;
+  opacity: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width 0.25s ease,
+    opacity 0.16s ease;
+}
+
+.sidebar .nav-item,
+.sidebar-actions .nav-item,
+.brand--sidebar {
+  overflow: hidden;
+}
+
+.app-shell[data-sidebar="collapsed"] .brand--sidebar .brand-text,
+.app-shell[data-sidebar="collapsed"] .sidebar .nav-item span,
+.app-shell[data-sidebar="collapsed"] .sidebar-actions .nav-item span {
+  max-width: 0;
+  opacity: 0;
+}
+
+/*
+ * No `justify-content: center` — that is not animatable, so it landed the icon in its final spot a
+ * frame before the column finished closing. An inline padding that centres the icon in the narrow
+ * rail does the same job and can be transitioned: 11px each side of an 18px icon fills the 40px the
+ * collapsed rail leaves exactly.
+ */
+.app-shell[data-sidebar="collapsed"] .sidebar .nav-item,
+.app-shell[data-sidebar="collapsed"] .sidebar-actions .nav-item {
+  gap: 0;
+  padding-inline: 11px;
+}
+
+.app-shell[data-sidebar="collapsed"] .sidebar {
+  padding: 12px 10px;
+}
+
+/* Small enough to sit inside the collapsed rail. At 44px the mark was wider than the column and
+   spilled over both edges of it. */
+.app-shell[data-sidebar="collapsed"] .brand--sidebar {
+  --brand-size: 34px;
+
+  gap: 0;
+}
+
+.app-shell[data-sidebar="collapsed"] .sidebar-actions {
+  padding: 0 6px;
+}
+
+.app-shell[data-sidebar="collapsed"] .sidebar-toggle .icon {
+  transform: rotate(-90deg);
+}
+
+.app-shell[data-sidebar="collapsed"] .nav-user .user-avatar {
+  width: 24px;
+  height: 24px;
+}
+
+/* The footer and the FAB both belong to the library: the FAB's actions are import/export/generate,
+   and none of them apply anywhere else. */
+
+
+.page[data-view="discover"] .fab-hub,
+.page[data-view="playground"] .fab-hub {
+  display: none;
+}
+
+.tagline {
+  font-size: 1rem;
+  max-width: 520px;
+  color: var(--muted);
+}
+
+/* Below the whole app — both columns — rather than inside the library's own column. */
+/* The frame above already ends short of the fold, so the footer only needs enough of its own gap to
+   read as a separate band rather than as more page padding. */
+.footer {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.footer-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+/*
+ * Centred, like everything else in the footer. These were `flex-end` from when the footer was a
+ * two-column strip inside the library panel; once it moved below the whole app the meta row sat
+ * off-centre at every width above the phone breakpoint.
+ */
+.footer-links--meta {
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  /* Top-aligned: the version column carries the build stamp under its badge, so centring the row
+     balanced GitHub against badge-plus-stamp and pushed it below the badge beside it. */
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.footer-version {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* In flow beneath the version badge it stamps. Absolutely positioned it detached whenever the meta
+   row wrapped and floated over whatever followed. */
+.footer-deploy {
+  display: flex;
+  justify-content: center;
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+.workspace {
+  display: grid;
+  gap: 18px;
+}
+
+/*
+ * The one box on the right.
+ *
+ * Everything a view shows lives inside this frame, and nothing draws a second one around a group of
+ * things: the wrappers that used to — a folder's card, Discover's shell, the playground's preview —
+ * are bands within it now. What is left boxed is the leaf content, a palette and its colours, which
+ * is the only place a border says something.
+ */
+.panel {
+  --panel-pad: 16px;
+
+  background: var(--card);
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--radius-xl);
+  padding: var(--panel-pad);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  /* Short, and no stagger. `--delay` exists to cascade the panels on first paint, but a view
+     section replays the whole animation every time you switch tab, and 600ms plus a 200ms delay
+     made changing tab feel like waiting for something to load. */
+  animation: rise 0.28s ease forwards;
+  opacity: 0;
+  transform: translateY(8px);
+  animation-delay: var(--delay);
+  align-content: start;
+}
+
+/*
+ * A tab change slides in from the side you came from, which turns three unrelated fades into one
+ * strip you are moving along. The axis follows the tab bar: the rail stacks its destinations, so
+ * the panel travels vertically beside it; the phone's nav lays them out in a row, so it travels
+ * horizontally. `--view-from` is the offset the panel starts at, and only its sign changes with
+ * direction.
+ */
+.view-section.panel {
+  --view-from: 10px;
+
+  animation: view-enter 0.28s ease both;
+  animation-delay: 0s;
+}
+
+.app-shell[data-view-direction="back"] .view-section.panel {
+  --view-from: -10px;
+}
+
+@keyframes view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--view-from));
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The phone's nav is a row, so the panels are a row too — and it travels further, because a
+   horizontal step across a narrow screen needs the distance to register. */
+@media (max-width: 959.98px) {
+  .view-section.panel {
+    --view-from: 22px;
+
+    animation-name: view-enter-x;
+  }
+
+  .app-shell[data-view-direction="back"] .view-section.panel {
+    --view-from: -22px;
+  }
+
+  @keyframes view-enter-x {
+    from {
+      opacity: 0;
+      transform: translateX(var(--view-from));
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-section.panel {
+    --view-from: 0px;
+  }
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.panel-header--library {
+  margin-bottom: 8px;
+}
+
+.panel-heading h2 {
+  margin: 0 0 8px;
+}
+
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.panel-palettes {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.panel-palettes .library-groups {
+  flex: 0 1 auto;
+}
+
+.panel-palettes .panel-palettes-spacer {
+  flex: 1 1 auto;
+  min-height: 4px;
+}
+
+/*
+ * Below the rail breakpoint the action dock is replaced by the FAB, which is anchored to the
+ * palette panel rather than to the viewport — pinned to the viewport it floated over whatever
+ * happened to be under it and sat outside the box whose actions it carries.
+ */
+@media (max-width: 959.98px) {
+  .panel-palettes {
+    position: relative;
+  }
+
+  .fab-hub {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 4;
+  }
+}
+
+.action-dock {
+  position: sticky;
+  bottom: 24px;
+  align-self: flex-end;
+  margin-left: auto;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid transparent;
+  background: var(--card);
+  box-shadow: none;
+  z-index: 3;
+  width: max-content;
+  justify-content: flex-end;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.action-dock.is-floating {
+  border: 1px solid var(--stroke);
+  background: var(--card);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.25);
+  backdrop-filter: blur(16px);
+  transform: translateY(-4px);
+}
+
+.action-dock button {
+  white-space: nowrap;
+}
+
+.panel-actions button {
+  white-space: nowrap;
+}
+
+.panel h2 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+
+.panel p {
+  margin: 12px 0 0;
+  color: var(--muted);
+}
+
+.panel-options,
+.panel-drop,
+.panel-export,
+.panel-log,
+.panel-list,
+.panel-editor {
+  grid-column: auto;
+}
+
+.divider {
+  height: 1px;
+  background: var(--stroke);
+  margin: 18px 0;
+}
+
+.section {
+  display: grid;
+  gap: 12px;
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+@keyframes rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -5,8 +5,7 @@ export const toTitleCase = (value: string) =>
     .map((chunk) => chunk[0]?.toUpperCase() + chunk.slice(1))
     .join(" ");
 
-export const sanitizeFileName = (name: string) =>
-  name.replace(/[^a-z0-9-_]+/gi, "-").replace(/^-+|-+$/g, "") || "palette";
+export const sanitizeFileName = (name: string) => name.replace(/[^a-z0-9-_]+/gi, "-").replace(/^-+|-+$/g, "") || "palette";
 
 export const toCssVarName = (name: string, index: number) => {
   const base = sanitizeFileName(name).toLowerCase() || `color-${index + 1}`;

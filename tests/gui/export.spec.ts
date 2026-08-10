@@ -8,15 +8,14 @@ test("export modal shows quick actions and download button", async ({ page }) =>
   });
   await page.goto("/");
   await page.locator("#open-generate").click();
-  await page.locator("#generate-empty-button").click();
+  await page.locator("#generate-style").selectOption("empty");
+  await page.locator("#save-generated-palette").click();
 
   const card = page.locator(".palette-card");
   await expect(card).toHaveCount(1);
   await card.getByRole("button", { name: "Export" }).click();
 
-  await expect(
-    page.getByRole("heading", { name: "Export palettes" })
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Export palettes" })).toBeVisible();
   await expect(page.locator("#export-all")).toBeEnabled();
   await expect(page.locator("[data-export-action='coolors']")).toBeEnabled();
   await expect(page.locator("[data-export-action='css'] svg")).toBeVisible();

@@ -1,0 +1,118 @@
+/*
+ * The app's section container.
+ *
+ * One shape for every block that groups content under a heading — the playground preview, each
+ * library folder, the Discover feed. Before this each of them invented its own treatment, so a
+ * folder was a tinted box with an underlined title while the preview was a bordered card with a
+ * bar, and nothing said they were the same kind of thing.
+ *
+ * The recipe: a bordered card a shade off the panel, and a header bar a shade lighter again with a
+ * hairline under it. The header holds a small uppercase title on the left and its controls on the
+ * right.
+ */
+
+.section-card {
+  display: grid;
+  min-width: 0;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--stroke-strong);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+/*
+ * For cards whose content has to escape them — the library folders, where a dragged card is lifted
+ * out of one folder and over another. They round their own header instead of relying on the card
+ * to clip it.
+ */
+.section-card--open {
+  overflow: visible;
+}
+
+.section-card--open > .section-head:first-child {
+  border-radius: calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px) 0 0;
+}
+
+/*
+ * The strip of controls at the top of a view.
+ *
+ * One shape for all three, because switching tabs used to change what the top of the app looked
+ * like: the playground had a bordered strip floating inside the panel, Discover and the library had
+ * bare rows on the panel's surface. It is flush with the panel's top edge — full-bleed on three
+ * sides, so no sliver of panel shows above it — and a rule underneath separates it from the view.
+ *
+ * `--panel-pad` is the panel's own gutter, so the strip's contents stay on the same left edge as
+ * everything below it however that gutter changes.
+ */
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 56px;
+  /*
+   * No gap under it. The head's own rule is the boundary; a margin below it left a strip of bare
+   * panel between that rule and the first thing in the view, which read as a second, floating
+   * divider. Views that need air under the bar — the playground's ramp, Discover's cards — ask for
+   * it themselves.
+   */
+  margin: calc(var(--panel-pad) * -1) calc(var(--panel-pad) * -1) 0;
+  padding: 8px var(--panel-pad);
+  border-bottom: 1px solid var(--stroke-strong);
+  border-radius: calc(var(--radius-xl) - 1px) calc(var(--radius-xl) - 1px) 0 0;
+  background: var(--surface);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--stroke-strong);
+  /*
+   * The same surface the playground's tool strip uses, so a `.chip-group` reads identically in
+   * both. On `--bg-elevated` it did not: the bubble's `--surface-2` is a shade *darker* on the
+   * light themes and all but identical on the dark ones (#1a2030 against #1b1e2b), so the tab and
+   * zoom groups in this bar lost their edges entirely.
+   */
+  background: var(--surface);
+}
+
+/*
+ * Scoped to the head, which every title is in, purely to win a specificity fight: `.panel h2` in
+ * the shared layout is (0,1,1) and a bare `.section-title` is (0,1,0), so the generic panel heading
+ * was setting this at 1.1rem with a 6px bottom margin — which is what pushed the title 3px above
+ * the bar's centre line while the controls beside it sat centred. Third time this pattern has bitten
+ * (see `.panel p` and the playground hint).
+ */
+.section-head .section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* Controls sit at the end of the bar and never shrink the title away entirely. */
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  min-width: 0;
+}
+
+.section-body {
+  min-width: 0;
+  padding: 14px;
+}

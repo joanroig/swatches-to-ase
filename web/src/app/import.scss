@@ -1,0 +1,202 @@
+.dropzone {
+  border: 2px dashed var(--stroke);
+  border-radius: 18px;
+  padding: 32px 20px;
+  text-align: center;
+  background: var(--bg-elevated);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.dropzone.is-dragover {
+  border-color: var(--accent);
+  background: rgba(212, 99, 63, 0.12);
+}
+
+.dropzone.is-busy {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.dropzone input {
+  display: none;
+}
+
+.drop-content p {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.drop-content span {
+  color: var(--muted);
+}
+
+.dropzone {
+  background: var(--surface);
+  border-color: var(--stroke-strong);
+}
+
+/* ----------------------------------------------------- import from image --- */
+
+.import-tabs {
+  width: 100%;
+  justify-content: stretch;
+
+  .segmented-option {
+    flex: 1 1 0;
+  }
+
+  .segmented-option span {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.import-panel {
+  display: none;
+}
+
+.import-panel.is-active {
+  display: grid;
+  gap: 14px;
+}
+
+.image-stage {
+  display: grid;
+  gap: 12px;
+}
+
+.image-stage.is-hidden {
+  display: none;
+}
+
+/* The image is the sampling surface, so it must map 1:1 to the pointer. */
+.image-canvas {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+  background: var(--surface-2);
+  line-height: 0;
+
+  img {
+    display: block;
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+  }
+
+  &.is-picking {
+    cursor: crosshair;
+  }
+}
+
+.image-points {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.image-points.is-hidden {
+  display: none;
+}
+
+.image-point {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.6),
+    0 3px 8px rgba(15, 23, 42, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+.image-mode {
+  width: 100%;
+
+  .segmented-option {
+    flex: 1 1 0;
+  }
+
+  .segmented-option span {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.image-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.image-controls.is-hidden {
+  display: none;
+}
+
+.image-controls .field span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.image-controls output {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.image-result {
+  display: grid;
+  gap: 12px;
+}
+
+.image-strip {
+  display: flex;
+  min-height: 54px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+  background: var(--surface-2);
+
+  .empty {
+    margin: auto;
+    padding: 12px;
+  }
+}
+
+.image-chip {
+  flex: 1 1 0;
+  min-width: 0;
+  display: grid;
+  place-items: end center;
+  padding-bottom: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.image-result button {
+  justify-self: end;
+}
+
+@media (max-width: 560px) {
+  .image-result button {
+    justify-self: stretch;
+    width: 100%;
+  }
+}

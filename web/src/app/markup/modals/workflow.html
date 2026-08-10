@@ -1,0 +1,385 @@
+<div class="modal" id="import-modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3 data-i18n="import.title">Import palettes</h3>
+      <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="segmented import-tabs" role="tablist" aria-label="Import source" data-i18n-aria-label="import.source">
+        <label class="segmented-option">
+          <input type="radio" name="import-source" value="files" checked />
+          <span data-i18n="import.tab.files">Palette files</span>
+        </label>
+        <label class="segmented-option">
+          <input type="radio" name="import-source" value="image" />
+          <span data-i18n="import.tab.image">From image</span>
+        </label>
+      </div>
+
+      <div class="import-panel is-active" data-import-panel="files">
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="file-input" multiple accept=".swatches,.ase,.gpl" />
+          <div class="drop-content">
+            <p data-i18n="import.drop">Drop palette files here</p>
+            <span data-i18n="import.formats">.swatches, .ase, or .gpl</span>
+          </div>
+        </div>
+        <p class="hint" data-i18n="import.hint">Import defaults live in Settings for color names and import options.</p>
+      </div>
+
+      <div class="import-panel" data-import-panel="image">
+        <div class="dropzone image-dropzone" id="image-dropzone">
+          <input type="file" id="image-input" accept="image/*" />
+          <div class="drop-content">
+            <p data-i18n="import.image.drop">Drop an image here</p>
+            <span data-i18n="import.image.formats">PNG, JPG, WebP or GIF</span>
+          </div>
+        </div>
+
+        <div class="image-stage is-hidden" id="image-stage">
+          <div class="image-canvas" id="image-canvas">
+            <img id="image-preview" alt="" data-i18n-alt="import.image.previewAlt" />
+            <div class="image-points" id="image-points"></div>
+          </div>
+
+          <div class="segmented image-mode" role="radiogroup" aria-label="Extraction mode" data-i18n-aria-label="import.image.mode">
+            <label class="segmented-option">
+              <input type="radio" name="image-mode" value="auto" checked />
+              <span data-i18n="import.image.mode.auto">Automatic</span>
+            </label>
+            <label class="segmented-option">
+              <input type="radio" name="image-mode" value="points" />
+              <span data-i18n="import.image.mode.points">Pick points</span>
+            </label>
+          </div>
+
+          <div class="image-controls" id="image-auto-controls">
+            <label class="field compact">
+              <span><span data-i18n="import.image.count">Max colors</span> <output id="image-count-value">6</output></span>
+              <input type="range" id="image-count" min="2" max="16" step="1" value="6" />
+            </label>
+            <label class="field compact">
+              <span><span data-i18n="import.image.similarity">Merge similar</span> <output id="image-similarity-value">12</output></span>
+              <input type="range" id="image-similarity" min="0" max="40" step="1" value="12" />
+            </label>
+          </div>
+
+          <p class="hint is-hidden" id="image-points-hint" data-i18n="import.image.pointsHint">
+            Click the image to sample a color. Drag a marker to move it, or click it to remove it.
+          </p>
+
+          <div class="image-result">
+            <div class="image-strip" id="image-strip"></div>
+            <button class="primary" id="image-create" type="button" data-i18n="import.image.create">Create palette</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="generate-modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="modal-header generate-modal-header">
+      <h3 data-i18n="generate.title">New Palette</h3>
+      <div class="modal-header-actions generate-modal-header-actions">
+        <button class="ghost" id="generate-history-back" type="button" data-i18n="action.back" disabled>Back</button>
+        <button class="ghost" id="generate-history-forward" type="button" data-i18n="action.forward" disabled>
+          Forward
+        </button>
+        <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="generate-layout">
+        <div class="field generate-name-field">
+          <label for="generate-name" data-i18n="generate.name.label">Palette name</label>
+          <input type="text" id="generate-name" placeholder="New palette" data-i18n-placeholder="generate.name.placeholder" />
+        </div>
+        <div class="generate-controls">
+          <div class="form-grid generate-form-grid">
+            <div class="field">
+              <label for="generate-style" data-i18n="generate.style.label">Palette style</label>
+              <select id="generate-style">
+                <option value="empty" data-i18n="style.empty">Empty</option>
+                <option value="analogous" data-i18n="style.analogous">Analogous</option>
+                <option value="cold-pair" data-i18n="style.coldPair">Cold pair</option>
+                <option value="complementary" data-i18n="style.complementary">Complementary</option>
+                <option value="contrasting" data-i18n="style.contrasting">Contrasting</option>
+                <option value="neutral" data-i18n="style.neutral">Neutral</option>
+                <option value="pastel-pair" data-i18n="style.pastelPair">Pastel pair</option>
+                <option value="same-family" data-i18n="style.sameFamily">Same family</option>
+                <option value="shade" data-i18n="style.shade">Shade</option>
+                <option value="triadic" data-i18n="style.triadic">Triadic</option>
+                <option value="vivid-pair" data-i18n="style.vividPair">Vivid pair</option>
+                <option value="warm-cold" data-i18n="style.warmCold">Warm / Cold</option>
+                <option value="warm-pair" data-i18n="style.warmPair">Warm pair</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="generate-format" data-i18n="generate.format.label">Color naming</label>
+              <select id="generate-format"></select>
+            </div>
+            <div class="field">
+              <label for="generate-count" data-i18n="generate.count.label">Number of colors</label>
+              <select id="generate-count">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5" selected>5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+              </select>
+            </div>
+            <div class="field generate-base-field">
+              <label data-i18n="generate.base.label">Base color</label>
+              <div class="inline-field generate-base-inline">
+                <label class="toggle is-compact">
+                  <input type="checkbox" id="generate-use-base" />
+                  <span class="toggle-track"></span>
+                  <span class="toggle-label" data-i18n="generate.base.use">Use base</span>
+                </label>
+                <div class="generate-base-color-field" id="generate-base-color-field">
+                  <input type="color" id="generate-base-color" value="#38bdf8" data-i18n-aria-label="generate.base.label" />
+                  <span class="generate-base-color-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <use href="/icons/edit.svg#icon"></use>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="generate-preview" id="generate-preview" aria-live="polite">
+          <div class="generate-preview-meta">
+            <p class="generate-preview-name" id="generate-preview-name"></p>
+            <p class="hint generate-preview-subtitle" id="generate-preview-subtitle"></p>
+          </div>
+          <div class="generate-preview-strip" id="generate-preview-strip"></div>
+        </div>
+      </div>
+      <div class="modal-actions generate-modal-actions">
+        <p class="hint generate-destination" id="generate-destination"></p>
+        <button class="ghost" id="confirm-generate" type="button" data-i18n="action.generatePalette">Generate</button>
+        <button class="primary" id="save-generated-palette" type="button" data-i18n="action.save">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="export-modal" aria-hidden="true" data-export-mode="single">
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-card modal-wide" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3 data-i18n="export.title">Export palettes</h3>
+      <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="export-section">
+        <div class="export-section-header">
+          <h4 data-i18n="export.formats.title">File formats</h4>
+          <p class="hint" data-i18n="export.formats.hint">Choose a format and the palettes to export.</p>
+        </div>
+        <div
+          class="export-grid export-grid--formats"
+          role="radiogroup"
+          aria-label="Export format"
+          data-i18n-aria-label="export.formats.title"
+        >
+          <label class="export-tile">
+            <input type="radio" name="export-format" value="ase" />
+            <span class="tile-content">
+              <span class="tile-icon">ASE</span>
+              <span class="tile-title">ASE</span>
+              <span class="tile-subtitle" data-i18n="export.format.ase.subtitle">Adobe Swatch Exchange</span>
+            </span>
+          </label>
+          <label class="export-tile">
+            <input type="radio" name="export-format" value="swatches" />
+            <span class="tile-content">
+              <span class="tile-icon">SWA</span>
+              <span class="tile-title" data-i18n="export.format.swatches.title">Swatches</span>
+              <span class="tile-subtitle" data-i18n="export.format.swatches.subtitle">Procreate .swatches</span>
+            </span>
+          </label>
+          <label class="export-tile">
+            <input type="radio" name="export-format" value="gpl" />
+            <span class="tile-content">
+              <span class="tile-icon">GPL</span>
+              <span class="tile-title" data-i18n="export.format.gimp.title">GIMP</span>
+              <span class="tile-subtitle" data-i18n="export.format.gimp.subtitle">GIMP palette</span>
+            </span>
+          </label>
+          <label class="export-tile">
+            <input type="radio" name="export-format" value="all" checked />
+            <span class="tile-content">
+              <span class="tile-icon">ALL</span>
+              <span class="tile-title" data-i18n="export.format.all.title">All formats</span>
+              <span class="tile-subtitle" data-i18n="export.format.all.subtitle">ASE + Swatches + GPL</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="export-section export-section--actions">
+        <div class="export-section-header">
+          <h4 data-i18n="export.actions.title">Quick exports</h4>
+          <p class="hint" data-i18n="export.actions.hint">Share or open this palette in other tools.</p>
+        </div>
+        <div class="export-grid export-grid--actions" aria-label="Quick export" data-i18n-aria-label="export.actions.title">
+          <button class="export-action" type="button" data-export-action="url">
+            <span class="action-icon" data-icon="link"></span>
+            <span data-i18n="export.action.url">URL</span>
+          </button>
+          <button class="export-action" type="button" data-export-action="pdf">
+            <span class="action-icon" data-icon="pdf"></span>
+            <span data-i18n="export.action.pdf">PDF</span>
+          </button>
+          <button class="export-action" type="button" data-export-action="image">
+            <span class="action-icon" data-icon="image"></span>
+            <span data-i18n="export.action.image">Image</span>
+          </button>
+          <button class="export-action" type="button" data-export-action="css">
+            <span class="action-icon" data-icon="css"></span>
+            <span data-i18n="export.action.css">CSS</span>
+          </button>
+          <button class="export-action" type="button" data-export-action="svg">
+            <span class="action-icon" data-icon="svg"></span>
+            <span data-i18n="export.action.svg">SVG</span>
+          </button>
+          <button class="export-action" type="button" data-export-action="code">
+            <span class="action-icon" data-icon="code"></span>
+            <span data-i18n="export.action.code">Code</span>
+          </button>
+          <button class="export-action" type="button" data-export-action="tailwind">
+            <span class="action-icon" data-icon="tailwind"></span>
+            <span data-i18n="export.action.tailwind">Tailwind</span>
+          </button>
+          <button class="export-action" type="button" data-export-action="embed">
+            <span class="action-icon" data-icon="embed"></span>
+            <span data-i18n="export.action.embed">Embed</span>
+          </button>
+          <button class="export-action" type="button" data-export-action="coolors">
+            <span class="action-icon" data-icon="coolors"></span>
+            <span data-i18n="export.action.coolors">Coolors</span>
+          </button>
+          <button class="export-action" type="button" data-export-action="x">
+            <span class="action-icon" data-icon="x"></span>
+            <span data-i18n="export.action.x">X</span>
+          </button>
+          <button class="export-action" type="button" data-export-action="pinterest">
+            <span class="action-icon" data-icon="pinterest"></span>
+            <span data-i18n="export.action.pinterest">Pinterest</span>
+          </button>
+        </div>
+      </div>
+      <div class="export-controls">
+        <div class="export-actions">
+          <button class="primary" id="export-all" data-i18n="action.download">Download</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editor-modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-card modal-editor" role="dialog" aria-modal="true">
+    <div class="modal-header editor-header">
+      <div class="editor-title">
+        <div class="editor-name" id="editor-name">
+          <label class="sr-only" for="palette-name" data-i18n="editor.paletteName.label">Palette name</label>
+          <input type="text" id="palette-name" placeholder="Palette name" data-i18n-placeholder="editor.paletteName.placeholder" />
+        </div>
+      </div>
+      <span class="palette-count editor-count" id="editor-subtitle"></span>
+      <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="editor" id="palette-editor">
+        <p class="empty" data-i18n="editor.empty">Select a palette to preview and edit.</p>
+      </div>
+    </div>
+    <div class="editor-toolbar">
+      <div class="editor-toolbar-group">
+        <button class="ghost" id="editor-undo" type="button" data-i18n="action.undo">Undo</button>
+        <button class="ghost" id="editor-redo" type="button" data-i18n="action.redo">Redo</button>
+      </div>
+      <span class="editor-toolbar-spacer" aria-hidden="true"></span>
+      <div class="editor-toolbar-group editor-tools" id="editor-tools">
+        <button class="ghost" id="editor-layout-toggle" type="button" aria-pressed="false"></button>
+        <button class="ghost editor-add-color" id="add-color" type="button" data-i18n="action.addColor">Add color</button>
+        <div class="overflow-group" id="editor-overflow">
+          <button
+            class="ghost icon-only overflow-trigger"
+            id="editor-tools-trigger"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="editor-tools-panel"
+            data-i18n-aria-label="action.moreActions"
+          ></button>
+          <div class="overflow-panel" id="editor-tools-panel">
+            <select
+              id="color-notation-editor"
+              class="editor-notation"
+              aria-label="Color representation"
+              data-i18n-aria-label="settings.colorNotation.label"
+            ></select>
+            <button class="ghost" id="open-view" type="button" data-i18n="action.view">View</button>
+            <button class="ghost" id="editor-export" type="button" data-i18n="action.export">Export</button>
+          </div>
+        </div>
+        <button class="primary" id="editor-save" type="button" data-i18n="action.save">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="view-modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="true"></div>
+  <div class="modal-card modal-view" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <h3 data-i18n="view.title">Quick view</h3>
+        <p class="hint" id="view-subtitle"></p>
+      </div>
+      <div class="modal-header-actions">
+        <button class="ghost" data-close="true" type="button" data-i18n="common.close">Close</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="view-display" id="view-display">
+        <div class="view-values" id="view-values"></div>
+      </div>
+      <div class="view-strip" id="view-strip"></div>
+      <div class="view-public-meta is-hidden" id="view-public-meta">
+        <div class="view-public-actions">
+          <div class="view-public-left">
+            <div class="view-public-like">
+              <button class="ghost icon-only" id="view-like" type="button"></button>
+              <span class="view-public-like-count" id="view-like-count"></span>
+            </div>
+          </div>
+          <div class="view-public-right">
+            <button class="ghost icon-only" id="view-save-edit" type="button"></button>
+            <button class="ghost icon-only" id="view-save" type="button"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

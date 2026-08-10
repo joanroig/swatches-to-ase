@@ -1,0 +1,51 @@
+.license-list {
+  display: grid;
+  gap: 16px;
+}
+
+.license-item {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  background: var(--bg);
+  box-shadow: var(--shadow-soft);
+}
+
+.license-item-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+  font-weight: 600;
+}
+
+.license-name {
+  font-size: 1rem;
+}
+
+.license-version {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.license-meta {
+  display: grid;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.license-text {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  max-height: 260px;
+  overflow: auto;
+}

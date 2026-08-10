@@ -1,0 +1,350 @@
+/* Colour tools popover: picker, shades and info/contrast. Rendered into <body> so it is never
+   clipped by, or mis-positioned inside, the transformed modal card. */
+
+.color-tools {
+  position: fixed;
+  z-index: 60;
+  width: min(300px, calc(100vw - 20px));
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.4);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+}
+
+.color-tools.is-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) .color-tools {
+    transition: none;
+  }
+}
+
+body[data-motion="off"] .color-tools {
+  transition: none;
+}
+
+.color-tools-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.color-tools-tab {
+  padding: 6px 8px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  &:hover {
+    color: var(--ink);
+  }
+
+  &.is-active {
+    background: var(--bg-elevated);
+    color: var(--ink);
+    box-shadow: var(--shadow-soft);
+  }
+}
+
+.color-tools-panel {
+  display: none;
+}
+
+.color-tools-panel.is-active {
+  display: grid;
+  gap: 12px;
+}
+
+/* ------------------------------------------------------------------ picker --- */
+
+.picker {
+  display: grid;
+  gap: 12px;
+}
+
+.picker-area {
+  position: relative;
+  height: 150px;
+  border-radius: 12px;
+  cursor: crosshair;
+  touch-action: none;
+  /* White → hue horizontally, transparent → black vertically: the standard SV square. */
+  background:
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, var(--picker-hue, #f00));
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.picker-hue {
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  touch-action: none;
+  background: linear-gradient(
+    to right,
+    #f00 0%,
+    #ff0 17%,
+    #0f0 33%,
+    #0ff 50%,
+    #00f 67%,
+    #f0f 83%,
+    #f00 100%
+  );
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+}
+
+.picker-handle {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.5);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.picker-handle--hue {
+  width: 18px;
+  height: 18px;
+}
+
+.color-hex-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-hex-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.86rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.color-hex-preview {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 9px;
+  border: 1px solid var(--stroke);
+}
+
+.color-hex-row .icon-only {
+  padding: 7px;
+}
+
+/* ------------------------------------------------------------------ shades --- */
+
+.color-shades {
+  display: grid;
+  gap: 2px;
+  max-height: 260px;
+  overflow-y: auto;
+  border-radius: 12px;
+  overflow-x: hidden;
+}
+
+.color-shade {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 10px;
+  height: 22px;
+  border: none;
+  border-radius: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+
+  &:hover {
+  }
+
+  /* Only the hex label fades — the swatch itself is always visible. */
+  span {
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+
+  &:hover span,
+  &:focus-visible span {
+    opacity: 1;
+  }
+
+  /* The entry matching the current colour is always labelled, as the ramp's anchor. */
+  &.is-source {
+    box-shadow: inset 0 0 0 2px var(--swatch-ring);
+
+    span {
+      opacity: 1;
+    }
+  }
+}
+
+/* -------------------------------------------------------------------- info --- */
+
+.color-info {
+  display: grid;
+  gap: 12px;
+}
+
+.color-info-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-info-swatch {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  border: 1px solid var(--stroke);
+}
+
+.color-info-header strong {
+  display: block;
+  font-size: 0.95rem;
+  text-transform: capitalize;
+}
+
+.color-info-hex {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.color-info-title {
+  margin: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.color-readouts {
+  display: grid;
+  gap: 2px;
+}
+
+.color-readout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+
+  &:hover {
+    background: var(--surface-2);
+  }
+}
+
+.color-readout-label {
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+.color-readout-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-weight: 600;
+}
+
+.color-contrast {
+  display: grid;
+  gap: 8px;
+}
+
+.color-contrast-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-contrast-sample {
+  width: 38px;
+  height: 30px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  border: 1px solid var(--stroke);
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.color-contrast-meta {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.8rem;
+}
+
+.color-contrast-ratio {
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.74rem;
+}
+
+.color-contrast-grade {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  &.is-pass {
+    background: color-mix(in srgb, #16a34a 22%, transparent);
+    color: #16a34a;
+  }
+
+  &.is-fail {
+    background: color-mix(in srgb, #e0342c 22%, transparent);
+    color: #e0342c;
+  }
+}

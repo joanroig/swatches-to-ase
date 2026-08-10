@@ -1,0 +1,744 @@
+/* Palette editor modal: shell, header, bottom toolbar and the colour list in both layouts. */
+
+.modal-card.modal-editor {
+  width: min(1040px, 96vw);
+  /* Claim the vertical space up front: the column layout needs real height for the hover actions,
+     and a content-sized modal collapses to a strip. */
+  height: min(820px, 88vh);
+  /* header · list · toolbar */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+    padding-right: 0;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .editor {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+/* ------------------------------------------------------- header (top row) --- */
+
+/*
+ * The close button joins the flow here instead of being absolutely pinned to the top-right, so it
+ * lines up with the colour-count badge beside it.
+ */
+.modal-header.editor-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  padding-right: 0;
+
+  > .close-button {
+    position: static;
+    flex: 0 0 auto;
+  }
+}
+
+.editor-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* The count sits at the end of the title row, just inside the space reserved for the close button. */
+.editor-count {
+  flex: 0 0 auto;
+}
+
+.editor-count:empty {
+  display: none;
+}
+
+.editor-name {
+  display: grid;
+  min-width: 0;
+  flex: 0 1 auto;
+
+  input[type="text"] {
+    font-size: 1.15rem;
+    font-weight: 600;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    min-width: 0;
+    width: 100%;
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 2px 0 0 rgba(148, 163, 184, 0.35);
+    }
+  }
+}
+
+#editor-subtitle {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+/* ---------------------------------------------------- toolbar (bottom row) --- */
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--stroke);
+}
+
+.editor-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.editor-toolbar-spacer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.editor-toolbar button:not(.icon-only) {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.editor-toolbar button.icon-only {
+  padding: 8px;
+}
+
+#editor-save {
+  padding: 8px 18px;
+}
+
+.editor-notation {
+  padding: 7px 10px;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  max-width: 104px;
+}
+
+/* The whole tools group disappears when there is no palette to act on. */
+.editor-tools.is-hidden {
+  display: none;
+}
+
+/*
+ * Overflow group. Wide enough, and the panel is simply an inline row of buttons. Once the toolbar
+ * runs out of room the same panel becomes a popover behind a "..." trigger — no duplicated markup,
+ * so there is only ever one instance of each control.
+ */
+.overflow-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.overflow-trigger {
+  display: none;
+}
+
+.overflow-panel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Adding a colour is normally done with the inline "+" between swatches, so the toolbar button is
+   reserved for touch, where there is no hover to reveal them. */
+@media (hover: hover) {
+  .editor-add-color {
+    display: none;
+  }
+
+  /* An empty palette has no swatches to hover, so the toolbar button is the only way in. */
+  .editor-tools.is-empty-palette .editor-add-color {
+    display: inline-flex;
+  }
+}
+
+/* ----------------------------------------------------------- colour list --- */
+
+.color-list {
+  /* Exposed so the insert affordance can centre itself in the gap. */
+  --color-gap: 8px;
+  display: grid;
+  gap: var(--color-gap);
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: stretch;
+}
+
+#palette-editor[data-layout="horizontal"] .color-list {
+  grid-auto-flow: row;
+  /* Room for the insert buttons that straddle the outer edges of the first and last swatch. */
+  padding: 16px 0;
+  /* A floor rather than an unbounded 1fr: a long palette scrolls instead of collapsing into
+     unreadable slivers. */
+  grid-auto-rows: minmax(52px, 1fr);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#palette-editor[data-layout="vertical"] .color-list {
+  grid-auto-flow: column;
+  padding: 0 16px;
+  grid-auto-columns: minmax(54px, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.color-row {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  text-align: left;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  /* Visible, not hidden: the insert "+" straddles the gap between swatches. The labels clip
+     themselves, so nothing else spills. */
+  overflow: visible;
+  container-type: inline-size;
+  container-name: color-row;
+  transition: box-shadow 0.2s ease;
+}
+
+/*
+ * Insert affordance. A hot zone straddles the boundary between two swatches (plus a trailing one
+ * after the last), and reveals a "+" only while the pointer is near that edge. Hovering the middle
+ * of a swatch leaves it hidden. Touch devices use the toolbar button instead.
+ */
+.color-insert-zone {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+}
+
+button.color-insert.icon-only {
+  width: 26px;
+  min-width: 0;
+  height: 26px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border-radius: 999px;
+  border: none;
+  background: var(--bg-elevated);
+  color: var(--ink);
+  /*
+   * A ring drawn from `--ink` rather than `--stroke`, so it is dark on light themes and light on
+   * dark ones. The button floats over arbitrary swatch colours, and a fixed hairline border simply
+   * disappeared against mid-tones.
+   */
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--ink) 55%, transparent),
+    0 4px 12px rgba(15, 23, 42, 0.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.4;
+  }
+}
+
+.color-insert-zone:hover .color-insert,
+.color-insert:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.color-insert-zone:hover .color-insert:hover {
+  transform: scale(1.12);
+}
+
+@media (hover: none) {
+  .color-insert-zone {
+    display: none;
+  }
+}
+
+/*
+ * Rows: a shallow band spanning the full width of the gap, so hovering anywhere along the seam
+ * between two swatches reveals the button. Shallow enough that it never covers the grip, the
+ * label or the actions, which all sit on the swatch's vertical centre line.
+ */
+#palette-editor[data-layout="horizontal"] .color-insert-zone {
+  left: 0;
+  right: 0;
+  width: auto;
+  top: calc(var(--color-gap, 8px) / -2);
+  height: 24px;
+  transform: translateY(-50%);
+}
+
+#palette-editor[data-layout="horizontal"] .color-insert-zone--end {
+  top: auto;
+  bottom: calc(var(--color-gap, 8px) / -2);
+  transform: translateY(50%);
+}
+
+/* Columns: the same band, rotated — full height of the gap between two columns. */
+#palette-editor[data-layout="vertical"] .color-insert-zone {
+  top: 0;
+  bottom: 0;
+  height: auto;
+  left: calc(var(--color-gap, 8px) / -2);
+  width: 24px;
+  transform: translateX(-50%);
+}
+
+#palette-editor[data-layout="vertical"] .color-insert-zone--end {
+  left: auto;
+  right: calc(var(--color-gap, 8px) / -2);
+  transform: translateX(50%);
+}
+
+
+/* One button holding both spans — the whole hex-and-name block is the single "change colour"
+   target, so hovering either half offers the same thing and there is one focus stop, not two. */
+button.color-card-text {
+  display: flex;
+  /*
+   * Left, explicitly. The shared `button` rule centres its content, and this is a button, so each
+   * row centred its own hex-and-name pair inside whatever width that pair happened to need — every
+   * row started its text at a different place. Starting them all at the group's leading edge is
+   * what puts the codes in a column.
+   */
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+
+  /* The hover plate is drawn with a spread shadow rather than padding. Padding changed the row's
+     height the moment the pointer arrived, and a control that moves as you reach for it is both
+     unpleasant and, for the test runner, never "stable" enough to click. */
+  &:hover {
+    box-shadow: 0 0 0 5px rgb(255 255 255 / 16%);
+    background: rgb(255 255 255 / 16%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+  }
+}
+
+/*
+ * The hex is the identifier and the name is a convenience, so the name is what gives way.
+ *
+ * Both used to shrink together, which truncated the codes — "#115…" — and left every row starting
+ * its text at a different place, since the ellipsis lands wherever that particular value ran out.
+ * The hex keeps its full width now, so the column of codes lines up and the name ellipsises.
+ */
+.color-card-value,
+.color-card-name {
+  display: block;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+}
+
+.color-card-value {
+  flex: none;
+}
+
+.color-card-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.color-card-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.color-card-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+
+
+.color-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.color-actions .icon-only {
+  padding: 5px;
+  border-radius: 8px;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/*
+ * Deliberately unstyled as a button: the same quiet affordance as `.palette-card-grip`.
+ * Qualified with `button` so it outranks `button.icon-only`, which `setButtonContent` adds.
+ */
+button.drag-handle {
+  cursor: grab;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  min-width: 0;
+  min-height: 0;
+  border: none;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  touch-action: none;
+  transition: opacity 0.15s ease;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+/* Pointer devices keep the swatch clean and reveal the grip on hover or keyboard focus. */
+@media (hover: hover) {
+  button.drag-handle {
+    opacity: 0;
+  }
+
+  .color-row:hover .drag-handle,
+  .color-row:focus-within .drag-handle,
+  .color-row.is-sort-dragging .drag-handle {
+    opacity: 1;
+  }
+}
+
+/* Buttons sit on top of the swatch colour, so they follow its contrast. */
+.color-row .ghost {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.color-row[data-contrast="light"] .ghost {
+  background: rgba(248, 250, 252, 0.18);
+  color: #f8fafc;
+}
+
+.color-row[data-contrast="light"] .ghost:hover {
+  background: rgba(248, 250, 252, 0.32);
+}
+
+.color-row[data-contrast="dark"] .ghost {
+  background: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+.color-row[data-contrast="dark"] .ghost:hover {
+  background: rgba(15, 23, 42, 0.22);
+}
+
+/* ---------------------------------------------------- horizontal (rows) --- */
+
+#palette-editor[data-layout="horizontal"] .color-row {
+  flex-direction: row;
+  align-items: center;
+  padding: 8px 12px;
+
+  .color-card-text {
+    flex: 1 1 auto;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .color-actions {
+    margin-left: auto;
+  }
+}
+
+/* ------------------------------------------------- vertical (columns) --- */
+
+/*
+ * Modelled on Coolors: each colour is a full-height column with its value pinned to the bottom,
+ * and the actions stay out of the way until the column is hovered or focused.
+ */
+#palette-editor[data-layout="vertical"] .color-row {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 6px 14px;
+  gap: 8px;
+
+  /* Grip at the very top, then the actions and the label pinned together at the bottom. */
+  .drag-handle {
+    order: 1;
+    align-self: center;
+  }
+
+  .color-actions {
+    order: 2;
+    margin-top: auto;
+  }
+
+  .color-card-text {
+    order: 3;
+  }
+
+  /* Coolors-style emphasis: the value is the headline, the name is the caption underneath. */
+  .color-card-text {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-end;
+    gap: 3px;
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .color-card-value {
+    font-size: 0.86rem;
+    letter-spacing: 0.04em;
+    /* HSL and CMYK readouts are far longer than a hex; let them wrap rather than truncate. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+
+  .color-card-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    opacity: 0.82;
+  }
+
+  /* In flow rather than absolutely positioned, so the space stays reserved and the label does not
+     jump when the actions fade in. */
+  .color-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease;
+  }
+
+  &:hover .color-actions,
+  &:focus-within .color-actions,
+  &.is-sort-dragging .color-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/*
+ * Narrow columns turn the label on its side instead of clipping it to a single glyph.
+ * Container queries measure the *content* box, so these thresholds exclude the 12px of horizontal
+ * column padding.
+ */
+@container color-row (max-width: 88px) {
+  #palette-editor[data-layout="vertical"] .color-card-text {
+    /* `column-reverse` packs from the bottom, so the value sits at the base of the column and the
+       name stacks just above it. `flex: 1 1 auto` rather than `height: 100%`: the latter overflows
+       past the drag handle and the clipped edge silently ate the name. */
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+    gap: 6px;
+    /* Must not grow: otherwise it eats the free space that `margin-top: auto` on the actions needs
+       in order to push the action stack down to the bottom of the column. */
+    flex: 0 1 auto;
+    min-height: 0;
+    padding-bottom: 2px;
+  }
+
+  #palette-editor[data-layout="vertical"] .color-card-value,
+  #palette-editor[data-layout="vertical"] .color-card-name {
+    writing-mode: sideways-lr;
+    text-orientation: mixed;
+    white-space: nowrap;
+    line-height: 1;
+    flex: 0 1 auto;
+    min-height: 0;
+  }
+
+  #palette-editor[data-layout="vertical"] .color-card-name {
+    font-size: 0.78rem;
+    opacity: 0.92;
+  }
+}
+
+/* Only when the column is genuinely too thin for two stacked labels. */
+@container color-row (max-width: 30px) {
+  #palette-editor[data-layout="vertical"] .color-card-name {
+    display: none;
+  }
+
+  #palette-editor[data-layout="vertical"] .color-actions {
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) #palette-editor[data-layout="vertical"] .color-actions {
+    transition: none;
+  }
+}
+
+body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
+  transition: none;
+}
+
+/*
+ * Touch devices have no hover, so the actions must always be reachable there. They get a neutral
+ * scrim so the icons stay legible on top of any swatch colour, whereas on desktop they only appear
+ * on hover or keyboard focus.
+ */
+@media (hover: none) {
+  #palette-editor[data-layout="vertical"] .color-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* A neutral chip behind each icon keeps it legible and tappable on any swatch colour. */
+  #palette-editor[data-layout="vertical"] .color-row .ghost {
+    background: rgba(15, 23, 42, 0.5);
+    color: #f8fafc;
+    padding: 7px;
+  }
+
+  #palette-editor[data-layout="vertical"] .color-row .drag-handle {
+    opacity: 0.9;
+  }
+}
+
+/* ------------------------------------------------------------ responsive --- */
+
+@media (max-width: 820px) {
+  .overflow-trigger {
+    display: inline-flex;
+  }
+
+  .overflow-panel {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 10px);
+    z-index: 6;
+    display: grid;
+    gap: 6px;
+    min-width: 190px;
+    padding: 10px;
+    border-radius: 14px;
+    border: 1px solid var(--stroke);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow);
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition:
+      opacity 0.16s ease,
+      transform 0.16s ease;
+  }
+
+  .overflow-group.is-open .overflow-panel {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .overflow-panel button {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .overflow-panel #editor-save {
+  padding: 8px 18px;
+}
+
+.editor-notation {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .modal-card.modal-editor {
+    width: min(96vw, 640px);
+    gap: 12px;
+  }
+
+}
+
+@media (max-width: 480px) {
+  .editor-toolbar button:not(.icon-only) {
+    padding: 8px 10px;
+  }
+
+  #editor-save {
+    padding: 8px 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) .overflow-panel {
+    transition: none;
+  }
+}
+
+body[data-motion="off"] .overflow-panel {
+  transition: none;
+}

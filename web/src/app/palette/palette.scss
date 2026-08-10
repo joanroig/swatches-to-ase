@@ -1,0 +1,1198 @@
+/* Library: search toolbar, folder groups and the palette cards themselves. */
+
+/* One line at every width. It used to wrap, which on a phone put "New folder" on a row of its own
+   and cost the list a whole button's height of chrome before the first folder. */
+/* Shape comes from `.panel-head`; only the no-wrap rule is local, and it is what keeps the search
+   and the folder button on one line at every width. */
+.library-toolbar {
+  flex-wrap: nowrap;
+}
+
+/*
+ * Below this the label goes and the button is a circle. The folder-and-plus icon carries the
+ * meaning on its own, which a bare "+" would not have.
+ */
+@media (max-width: 560px) {
+  #create-folder {
+    width: var(--control-md);
+    min-width: var(--control-md);
+    height: var(--control-md);
+    padding: 0;
+    border-radius: var(--radius-pill);
+    flex: 0 0 auto;
+  }
+
+  #create-folder span {
+    display: none;
+  }
+}
+
+.library-search {
+  flex: 1 1 240px;
+  min-width: 0;
+
+  input {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--stroke);
+    background: var(--bg-elevated);
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+/*
+ * No gap between folders. Each one opens with a full-bleed header band, and that band is what
+ * separates it from the folder above — an 18px trench as well left the list looking like a stack of
+ * loose slabs rather than one library.
+ */
+.library-groups {
+  display: grid;
+  gap: 0;
+}
+
+
+/*
+ * A band in the panel, not a card in it.
+ *
+ * The folder used to draw its own border and surface inside the panel's, which put two frames
+ * around every palette. Its header is what separates one folder from the next — that is the job a
+ * heading does — so the box around it is redundant and the palettes get the panel's full width.
+ */
+.library-group {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  /* Visible, so a card dragged out of one folder and over another is not clipped at the boundary. */
+  overflow: visible;
+}
+
+/*
+ * Full-bleed, and square.
+ *
+ * One rule per folder, on its top edge: it opens the folder, and the next folder's rule closes it.
+ * A rule on both edges doubled up between two adjacent headers, and rounding the corners — which is
+ * what a card would do — made a list of folders read as a heap of separate objects rather than as
+ * one library divided into sections.
+ */
+.library-group > .section-head {
+  margin-inline: calc(var(--panel-pad) * -1);
+  padding-inline: var(--panel-pad);
+  border-radius: 0;
+  border-top: 1px solid var(--stroke-strong);
+  border-bottom: 0;
+}
+
+/* Except the first, which meets the panel head's own rule. */
+.library-group:first-child > .section-head {
+  border-top: 0;
+}
+
+/* The palettes sit on the panel's own surface while the header sits on `--surface`, so the lighter
+   band is the folder's name and everything under it until the next band is its contents. */
+.library-group-body {
+  background: var(--card);
+}
+
+/*
+ * The header carries two targets. The chevron alone furls the folder; the name beside it opens the
+ * folder on its own. One button over the whole row could only ever mean one of the two.
+ */
+.library-group-toggle,
+.library-group-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  /* The base `button` rule centres its content; a folder header reads as a heading, so start it. */
+  justify-content: flex-start;
+  text-align: left;
+
+  &:hover {
+    background: var(--surface-2);
+  }
+}
+
+.library-group-toggle {
+  flex: 0 0 auto;
+  padding: 6px;
+}
+
+.library-group-open {
+  flex: 1 1 auto;
+  padding: 6px 10px;
+}
+
+.library-group-chevron {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+/* The palette card's grip, on the folder header: a bare glyph at the start of the row rather than
+   a circular icon button among the actions, which read as a third thing to press. */
+.library-group-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 7px;
+  color: var(--muted);
+  opacity: 0.55;
+  cursor: grab;
+  touch-action: none;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    opacity: 1;
+    background: var(--surface-2);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.library-group:hover .library-group-grip,
+.library-group:focus-within .library-group-grip {
+  opacity: 0.9;
+}
+
+.library-group-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+
+/*
+ * Sized to its text by `startRename`, which sets an explicit width from the hidden twin below —
+ * `flex: 1 1 auto` made the field swallow the whole header the moment it opened. It still shrinks
+ * if the name outgrows the row, so a long one never pushes the actions off the end.
+ */
+/* `input.`, not `.`: `input[type="text"]` in the shared controls is (0,1,1) and was winning, so the
+   field stood 38px tall whatever this said and pushed the header from 56px to 67px on every edit. */
+input.library-group-rename {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  /* Inside the toggle's own 38px, so opening the field cannot change the row's height. */
+  height: 26px;
+  min-height: 0;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid var(--accent);
+  background: var(--bg-elevated);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* The measuring twin. Out of flow and unpainted, but laid out — a `display: none` box has no width
+   to read. Its typography has to track the field's exactly. */
+.library-group-rename-sizer {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: pre;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.library-group-name {
+  /* Grow into the free space so the badge stays at the end and the name is what truncates. */
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Held at the end of the row by its own margin rather than by the name growing into the space
+   beside it: the rename field takes only the width of its text, so with nothing to push the badge
+   it jumped from the end of the header to right beside the name the moment an edit started. */
+.library-group-open .palette-count,
+.library-crumb-title .palette-count {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* Always visible. Hiding them until hover meant folders looked unmanageable at a glance, and on
+   the way to the rename button the pointer crossed cards that reacted to it. */
+.library-group-actions {
+  gap: 4px;
+
+  button {
+    padding: 6px;
+  }
+}
+
+/*
+ * Collapse animates through `grid-template-rows`, which is the one way to transition to and from a
+ * content-sized height without measuring it in JavaScript and without the jump `display: none`
+ * gives. The body still needs `min-height: 0` and `overflow: hidden` so the row can actually reach
+ * zero.
+ */
+.library-group-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.24s ease;
+}
+
+.library-group-body > * {
+  min-height: 0;
+  overflow: hidden;
+  /* Visible immediately on expand, hidden only once the collapse has finished — clipped content is
+     still focusable and still announced, which a collapsed folder should not be. */
+  visibility: visible;
+  transition: visibility 0s linear 0s;
+}
+
+.library-group.is-collapsed .library-group-body > * {
+  visibility: hidden;
+  transition: visibility 0s linear 0.24s;
+  /* The grid keeps a `min-height` so an empty folder is a comfortable drop target, and its own
+     padding — both of which stopped the `0fr` row reaching zero and left an empty tray hanging
+     under the header of every closed folder. */
+  min-height: 0;
+  padding-block: 0;
+}
+
+/* A card being dragged is lifted out of its folder, so the wrapper must stop clipping for the
+   duration. No collapse animation can be running at the same time, so nothing is lost. */
+.library-group-body:has(> .palette-grid.is-sorting),
+.library-group-body:has(> .palette-grid.is-sorting) > * {
+  overflow: visible;
+}
+
+.library-group.is-collapsed .library-group-body {
+  grid-template-rows: 0fr;
+}
+
+/*
+ * A collapsed folder opens far enough to be dropped into while a drag is in the air.
+ *
+ * Collapse animates the row to `0fr`, so a closed folder is literally zero pixels tall — there was
+ * nothing on screen to aim at, and filing a palette into one was impossible without opening it
+ * first. It closes again by itself when the drag ends.
+ */
+body.is-dragging .library-group.is-collapsed .library-group-body {
+  grid-template-rows: 1fr;
+}
+
+body.is-dragging .library-group.is-collapsed .library-group-body > * {
+  visibility: visible;
+  transition: none;
+}
+
+body.is-dragging .library-group.is-collapsed .palette-grid {
+  min-height: 72px;
+  padding-block: 10px 14px;
+}
+
+/*
+ * The cards line up with the panel's gutter, not with a gutter of their own. The grid used to add
+ * 14px of its own padding on top of the panel's, so a palette sat further in than the folder header
+ * naming it and the two columns never agreed on a left edge.
+ */
+/* Snug against the panel's own gutter. The grid used to add 14px of its own on top of it, which put
+   a palette further in than the folder header naming it. */
+.library-group .palette-grid {
+  padding: 10px 0 14px;
+}
+
+/* ------------------------------------------------------ folder navigation --- */
+
+/*
+ * The folder view's own header, matched to the folder headers it replaces: full-bleed, square, and
+ * a rule underneath. It was inheriting the section card's inset and radius, so the bar it stood in
+ * did not line up with the one the list shows for the same folder.
+ */
+.library-group--open > .section-head {
+  margin-inline: calc(var(--panel-pad) * -1);
+  padding-inline: var(--panel-pad);
+  border-radius: 0;
+}
+
+/* A plain glyph, like the folder chevrons: the ringed circle read as a control of a different kind
+   from everything else on the bar. */
+.library-crumb .icon-only {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  border: 0;
+  background: transparent;
+}
+
+.library-crumb-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Its own size, not the section title's micro-caps: this is the name of the place you are in. */
+.library-crumb-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/*
+ * The step between the two levels. `#palette-list` gets the class for one run, and the direction
+ * says which way you went: into a folder from the right, back out from the left.
+ */
+@keyframes library-level-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}
+
+@keyframes library-level-out {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+}
+
+.library-groups.is-entering-in {
+  animation: library-level-in 0.22s ease both;
+}
+
+.library-groups.is-entering-out {
+  animation: library-level-out 0.22s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-groups.is-entering-in,
+  .library-groups.is-entering-out {
+    animation: none;
+  }
+}
+
+/*
+ * This used to round a collapsed folder's corners and drop the rule under it, from when a folder
+ * was a card and a closed one had to stop looking like a lid over nothing. As a band it did the
+ * opposite of what it says: several closed folders in a row lost every divider between them and
+ * merged into one slab of near-identical bars, with two rounded corners where the list met the
+ * panel. Which folder you were looking at, and where it ended, stopped being visible at all.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) .library-group-body {
+    transition: none;
+  }
+}
+
+body[data-motion="off"] .library-group-body {
+  transition: none;
+}
+
+/*
+ * One row, by dropping the count rather than by wrapping.
+ *
+ * This used to wrap the header and give the toggle the full width, which cost a folder three rows
+ * of chrome on a phone — and once the toggle became the chevron alone, the full-width rule put the
+ * chevron on a row of its own and pushed the name and the actions onto two more. The badge is the
+ * thing worth losing: the number of palettes is visible in the folder itself, and dropping it buys
+ * the name enough width to share a row with the actions.
+ */
+@media (max-width: 640px) {
+  .library-group-header {
+    gap: 4px;
+    padding-inline: 8px;
+  }
+
+  .library-group-open .palette-count {
+    display: none;
+  }
+
+  .library-group-open {
+    padding-inline: 6px;
+  }
+
+  .library-group-actions button {
+    padding: 5px;
+  }
+}
+
+/* Modest: three empty folders in a row were three tall dashed slabs, and the whole library read as
+   emptiness with a few headings in it. Enough to be an obvious drop target, no more. */
+.library-group-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 14px 16px;
+  text-align: center;
+  border: 1px dashed var(--stroke);
+  border-radius: 16px;
+}
+
+/* Each folder body is its own sortable container, which is what lets a card be dragged from one
+   folder into another. */
+.palette-grid {
+  position: relative;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+  /* Keep an empty folder tall enough to be a comfortable drop target. */
+  min-height: 72px;
+  border-radius: 16px;
+}
+
+/*
+ * The drop zone is drawn on a pseudo-element inside the folder's own body. It used to be inset
+ * *outwards* so its edge would not coincide with the card edges — but folders are cards in their
+ * own right now, so an outward inset spilled over the header and was clipped by the card. Inside
+ * the body it reads clearly and stays where it belongs.
+ *
+ * It is always present but transparent, so it fades in and out as the drag moves between folders
+ * rather than snapping.
+ */
+.palette-grid::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  z-index: 0;
+  border-radius: 14px;
+  border: 2px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.985);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.palette-grid.is-sorting::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) .palette-grid::before {
+    transition: none;
+  }
+}
+
+body[data-motion="off"] .palette-grid::before {
+  transition: none;
+}
+
+@media (min-width: 960px) {
+  .palette-grid {
+    /* `auto-fill`, not `auto-fit`: `auto-fit` collapses the empty tracks, so a folder holding two
+       palettes would stretch them across the full width while a fuller folder showed four normal
+       cards. Keeping the empty tracks gives every folder the same column width. */
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+.palette-card {
+  position: relative;
+  /* A grid item's automatic minimum is its min-content, so without this the card grew to whatever
+     its widest row wanted and overflowed its own column. */
+  min-width: 0;
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  /* Snugger than it was. At 18px of padding and a 14px gap the card was mostly margin: the colours
+     are the content, and they were the smallest thing on it. */
+  padding: 12px;
+  background: var(--surface);
+  display: grid;
+  gap: 10px;
+  text-align: left;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease;
+  cursor: pointer;
+  container-type: inline-size;
+  container-name: palette-card;
+
+  &.is-active {
+    border-color: color-mix(in srgb, var(--accent-3) 55%, var(--stroke));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--swatch-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Shared sortable feedback. The dragged element keeps its own grid slot and is only translated,
+   so siblings never resize and the container never gains or loses a track. */
+.is-sorting {
+  user-select: none;
+}
+
+.is-sort-dragging {
+  position: relative;
+  z-index: 5;
+  cursor: grabbing;
+  pointer-events: none;
+  transition: none;
+  will-change: transform;
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.28);
+}
+
+/* Fully opaque while lifted: a translucent card reads as a rendering glitch when it floats over
+   the cards it is passing. The shadow carries the lift instead. */
+.palette-card.is-sort-dragging {
+  opacity: 1;
+  background: var(--bg-elevated);
+  box-shadow: 0 22px 44px rgba(15, 23, 42, 0.45);
+}
+
+.color-row.is-sort-dragging {
+  opacity: 0.95;
+}
+
+.palette-title {
+  font-weight: 600;
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.palette-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--stroke);
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.palette-card-header {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.palette-chips {
+  display: flex;
+  gap: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+  background: var(--surface-2);
+  min-height: 54px;
+
+  &.is-empty {
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+
+    .empty {
+      text-align: center;
+    }
+  }
+}
+
+.palette-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  flex-wrap: nowrap;
+  width: 100%;
+  /* `min-width: 0` so the row never sets the card's min-content width. It used to: six unwrappable
+     buttons are wider than a phone-sized card, so the card outgrew its grid column and its contents
+     spilled past the folder's edge. */
+  min-width: 0;
+  /* The overflow menu hangs off this box. */
+  position: relative;
+
+  button:not(.icon-only) {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+/*
+ * Two groups and a trigger. `ui/overflow-row.ts` moves buttons between them as the card resizes;
+ * everything here just has to lay them out and get out of the way.
+ *
+ * `display: contents` on the group that fits, so its buttons are laid out by `.palette-actions`
+ * itself and the wrapper adds no box to measure around.
+ */
+/* The left group: takes the free space, and is the only side that gives any up. */
+.palette-actions-lead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: inherit;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The right pair, held apart from the tools and never collapsed. */
+.palette-actions-trailing {
+  display: flex;
+  align-items: center;
+  gap: inherit;
+  flex: none;
+  margin-left: auto;
+}
+
+.palette-actions-primary {
+  display: contents;
+}
+
+.palette-actions-more.is-hidden {
+  display: none;
+}
+
+.palette-actions-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 8;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+}
+
+.palette-actions.is-open .palette-actions-menu {
+  display: flex;
+}
+
+@container palette-card (max-width: 640px) {
+  .palette-actions {
+    gap: 8px;
+  }
+
+  .palette-actions button:not(.icon-only) {
+    padding: 7px 9px;
+    font-size: 0.8rem;
+  }
+
+  .palette-actions button span {
+    display: none;
+  }
+}
+
+/*
+ * Behind one button.
+ *
+ * Seven controls that will not wrap are wider than a phone-sized card, and because the row refuses
+ * to wrap it set the card's min-content width — the card outgrew its grid column and its contents
+ * spilled past the folder's edge. Collapsing them fixes the overflow at its source rather than
+ * clipping the symptom.
+ */
+@container palette-card (max-width: 420px) {
+  .palette-actions-more {
+    display: inline-flex;
+  }
+
+  .palette-actions-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    z-index: 8;
+    gap: 6px;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--stroke-strong);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow);
+  }
+
+  .palette-actions.is-open .palette-actions-menu {
+    display: flex;
+  }
+
+  /* The spacer separates publish and delete from the rest along a row; inside the panel it would
+     only stretch it. */
+  .palette-actions-spacer {
+    display: none;
+  }
+
+  /* The colour count goes with them. The swatches below it are the count, drawn — and on a card this
+     narrow the badge was taking width from the name beside it.
+
+     `.palette-card` qualifies the selector only to outrank the (0,1,0) `.palette-meta-badges` rule
+     further down the file, which a media or container query does nothing to change. */
+  .palette-card .palette-meta-badges {
+    display: none;
+  }
+}
+
+.palette-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  /* Lets the actions row report the width it has rather than the width its buttons want. Without
+     it the row's min-content travelled up through the footer and the card, so the card ignored its
+     grid column, the row never measured as short, and the overflow menu never engaged. */
+  min-width: 0;
+  /* No rule above the actions: the card already reads as a unit, and the line only cut it in two. */
+  padding-top: 10px;
+}
+
+/* Published state lives on the globe action rather than a separate badge, which keeps the title
+   row short enough for the palette name. */
+.palette-actions button.is-published {
+  color: var(--published);
+  background: color-mix(in srgb, var(--published) 16%, transparent);
+  border-color: color-mix(in srgb, var(--published) 40%, transparent);
+}
+
+.palette-actions button.is-published:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--published) 26%, transparent);
+}
+
+.palette-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.palette-meta-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+/* The only drag affordance on a card, so it is a real target rather than a hint. */
+.palette-card-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: -4px;
+  flex: 0 0 auto;
+  border-radius: 7px;
+  color: var(--muted);
+  opacity: 0.55;
+  cursor: grab;
+  touch-action: none;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    opacity: 1;
+    background: var(--surface-2);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.palette-card:hover .palette-card-grip,
+.palette-card:focus-within .palette-card-grip {
+  opacity: 0.9;
+}
+
+.palette-card.is-sort-dragging .palette-card-grip {
+  opacity: 1;
+  cursor: grabbing;
+}
+
+.palette-meta-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  justify-self: end;
+}
+
+/* Namespaced: `.chip` now belongs to the shared control in `styles/chips.scss`, and the collision
+   made every toolbar chip 54px tall with square corners — this swatch's own styling. */
+.palette-chip {
+  /* `min-width: 0` so the swatches, not the "+N" counter, absorb a narrow card. */
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 0;
+  border: none;
+  min-height: 54px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.palette-chip-more {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  min-width: 42px;
+  padding: 0 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface);
+  border-left: 1px solid var(--stroke);
+}
+
+
+/* ------------------------------------------------------------ collections --- */
+
+/*
+ * A collection is a box the size of a palette, because at the top level they are the same kind of
+ * thing: something you can open, name, move and delete. Only the middle differs — a palette shows
+ * its colours there, a collection shows the palettes it holds.
+ */
+.collection-box {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+  text-align: left;
+}
+
+.collection-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.collection-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-header .palette-count {
+  flex: none;
+}
+
+/*
+ * The preview is the whole middle of the tile and is the way in, so it is one large target rather
+ * than a decoration with a separate "open" control beside it.
+ */
+button.collection-preview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  min-height: 54px;
+  height: 100%;
+  padding: 8px;
+  border: 1px dashed var(--stroke);
+  border-radius: 14px;
+  background: var(--surface-2);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface-2));
+  }
+}
+
+/* One palette, shrunk to a bar: enough to recognise what is inside without reading a name. */
+.collection-mini {
+  display: flex;
+  height: 16px;
+  border-radius: 5px;
+  overflow: hidden;
+
+  span {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+.collection-empty {
+  grid-column: 1 / -1;
+  align-self: center;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+/*
+ * A collection under the pointer is about to swallow what you are holding, and it has to say so
+ * loudly: the hint used to be a border colour on the preview, which sits on the tile's inner edge —
+ * a hairline, in the one moment the pointer is nowhere near it and the card being dragged is on
+ * top of it. The whole tile lights instead.
+ */
+.collection-box.is-drop-target {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.collection-box.is-drop-target button.collection-preview {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+}
+
+/* A palette over a folder's centre files into it; only the shared gap becomes an insertion seam. */
+.collection-box.is-insert-target::after {
+  content: "";
+  position: absolute;
+  z-index: 7;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 70%, transparent);
+  pointer-events: none;
+}
+
+.collection-box.is-insert-target[data-insert-edge="left"]::after,
+.collection-box.is-insert-target[data-insert-edge="right"]::after {
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+}
+
+.collection-box.is-insert-target[data-insert-edge="left"]::after {
+  left: -10px;
+}
+
+.collection-box.is-insert-target[data-insert-edge="right"]::after {
+  right: -10px;
+}
+
+.collection-box.is-insert-target[data-insert-edge="top"]::after,
+.collection-box.is-insert-target[data-insert-edge="bottom"]::after {
+  right: 10px;
+  left: 10px;
+  height: 4px;
+}
+
+.collection-box.is-insert-target[data-insert-edge="top"]::after {
+  top: -10px;
+}
+
+.collection-box.is-insert-target[data-insert-edge="bottom"]::after {
+  bottom: -10px;
+}
+
+
+/* ------------------------------------------------- collection navigation --- */
+
+/* The head's rule is the boundary; the boxes need air under it rather than sitting on the line. */
+.library-groups {
+  padding-top: var(--panel-pad);
+}
+
+/*
+ * Inside a collection.
+ *
+ * The view is the panel's contents, not a card within it: a frame here would put a box around a box
+ * of boxes. The crumb is the same bar the top level shows, so stepping in changes what is listed
+ * rather than what the page is made of.
+ */
+.library-group--open {
+  display: grid;
+  grid-template-rows: auto minmax(72px, 1fr);
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.panel-palettes .library-groups[data-level="folder"] {
+  flex: 1 1 auto;
+}
+
+.panel-palettes .library-groups[data-level="library"] {
+  flex: 1 1 auto;
+  grid-template-rows: minmax(72px, 1fr);
+  /* The root grid owns the visual gutter, just as the open-folder grid does. This lets its dotted
+     surface reach the panel edges without moving the cards. */
+  padding-top: 0;
+}
+
+.panel-palettes .library-groups[data-level="folder"] + .panel-palettes-spacer,
+.panel-palettes .library-groups[data-level="library"] + .panel-palettes-spacer {
+  flex: 0 0 4px;
+}
+
+.library-root {
+  min-height: 100%;
+  align-content: start;
+  margin-inline: calc(var(--panel-pad) * -1);
+  padding: var(--panel-pad) var(--panel-pad) 0;
+}
+
+.library-group--open > .section-head {
+  margin: calc(var(--panel-pad) * -1) calc(var(--panel-pad) * -1) 0;
+  padding: 8px var(--panel-pad);
+  border-radius: 0;
+  border-top: 0;
+  border-bottom: 1px solid var(--stroke-strong);
+  background: var(--surface);
+}
+
+.library-group--open > .library-group-body {
+  background: transparent;
+  min-height: 0;
+}
+
+.library-group--open .palette-grid {
+  min-height: 100%;
+  /* The grid fills the panel so its empty space remains a drop target, but its rows must keep the
+     same content-sized height as the root grid. The default stretch behavior made a lone palette
+     fill the entire folder and shrink again as more palettes were added. */
+  align-content: start;
+  margin-inline: calc(var(--panel-pad) * -1);
+  padding: var(--panel-pad) var(--panel-pad) 0;
+}
+
+/* Stepping in and out of a collection: a cross-fade with a nudge the way you are going. */
+@keyframes library-level-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes library-level-out {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.library-groups.is-entering-in {
+  animation: library-level-in 0.2s ease both;
+}
+
+.library-groups.is-entering-out {
+  animation: library-level-out 0.2s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-groups.is-entering-in,
+  .library-groups.is-entering-out {
+    animation: none;
+  }
+}
+
+/* The way back is also the way out: during a palette drag it advertises Home as a live target. */
+.library-crumb {
+  position: relative;
+  overflow: hidden;
+}
+
+.library-crumb-drag-hint {
+  display: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.is-dragging .library-crumb {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+body.is-dragging .library-crumb-name,
+body.is-dragging .library-crumb-title .palette-count {
+  display: none;
+}
+
+body.is-dragging .library-crumb-drag-hint {
+  display: inline;
+}
+
+.library-crumb.is-drop-target {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+@keyframes spring-open-progress {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.collection-box.is-drop-target::after,
+.library-crumb.is-drop-target::after {
+  content: "";
+  position: absolute;
+  z-index: 8;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 55%, transparent);
+  transform-origin: left;
+  animation: spring-open-progress 0.65s linear both;
+  pointer-events: none;
+}
+
+.collection-box.is-drop-target::after {
+  right: 12px;
+  bottom: 6px;
+  left: 12px;
+}
+
+.library-crumb.is-drop-target::after {
+  right: var(--panel-pad);
+  bottom: 5px;
+  left: var(--panel-pad);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) .collection-box.is-drop-target::after,
+  body:not([data-motion="on"]) .library-crumb.is-drop-target::after {
+    animation-timing-function: steps(1, end);
+  }
+}

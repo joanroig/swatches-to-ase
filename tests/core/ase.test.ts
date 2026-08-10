@@ -8,12 +8,7 @@ const writeUint16BE = (bytes: number[], value: number) => {
 };
 
 const writeUint32BE = (bytes: number[], value: number) => {
-  bytes.push(
-    (value >> 24) & 0xff,
-    (value >> 16) & 0xff,
-    (value >> 8) & 0xff,
-    value & 0xff
-  );
+  bytes.push((value >> 24) & 0xff, (value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff);
 };
 
 const writeFloat32BE = (bytes: number[], value: number) => {
@@ -39,12 +34,7 @@ const encodeUtf16be = (text: string) => {
   return bytes;
 };
 
-const makeColorBlock = (
-  name: string,
-  model: string,
-  channels: number[],
-  type = 0
-) => {
+const makeColorBlock = (name: string, model: string, channels: number[], type = 0) => {
   const block: number[] = [];
   const nameLength = name.length + 1;
   writeUint16BE(block, nameLength);
@@ -97,9 +87,7 @@ const buildAse = (blocks: number[][]) => {
 };
 
 test("encodeAse clamps values and defaults names", () => {
-  const encoded = encodeAse([
-    { name: "", rgb: [2.5, -1, 0.5], type: "spot" },
-  ]);
+  const encoded = encodeAse([{ name: "", rgb: [2.5, -1, 0.5], type: "spot" }]);
   const decoded = decodeAse(encoded);
   assert.equal(decoded.colors?.length, 1);
   const [entry] = decoded.colors ?? [];
@@ -111,11 +99,7 @@ test("encodeAse clamps values and defaults names", () => {
 });
 
 test("decodeAse skips group blocks and handles custom models", () => {
-  const data = buildAse([
-    makeGroupBlock("Group"),
-    makeColorBlock("Ink", "CMYK", [0.1, 0.2, 0.3, 0.4], 1),
-    makeGroupEndBlock(),
-  ]);
+  const data = buildAse([makeGroupBlock("Group"), makeColorBlock("Ink", "CMYK", [0.1, 0.2, 0.3, 0.4], 1), makeGroupEndBlock()]);
   const decoded = decodeAse(data);
   assert.equal(decoded.colors?.length, 1);
   assert.equal(decoded.colors?.[0]?.name, "Ink");

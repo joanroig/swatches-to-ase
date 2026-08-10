@@ -2,12 +2,33 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug: Web (Vite + Chrome)",
-      "type": "chrome",
+      "name": "Run: Web (Vite)",
+      "type": "node",
       "request": "launch",
-      "url": "http://localhost:5173",
-      "webRoot": "${workspaceFolder}/src",
-      "preLaunchTask": "npm: dev:web"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:web"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "serverReadyAction": {
+        "pattern": "Local:\\s+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "openExternally"
+      },
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Debug: Web (Chrome)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5173/",
+      "webRoot": "${workspaceFolder}/web",
+      "sourceMaps": true,
+      "resolveSourceMapLocations": ["${workspaceFolder}/web/**", "!**/node_modules/**"],
+      "sourceMapPathOverrides": {
+        "vite:///*": "${webRoot}/*",
+        "webpack:///*": "${webRoot}/*",
+        "webpack:///./*": "${webRoot}/*"
+      }
     },
     {
       "name": "Run: Desktop (Electron)",
@@ -20,7 +41,7 @@
       "skipFiles": ["<node_internals>/**"]
     },
     {
-      "name": "Debug: Convert CLI",
+      "name": "Run: Convert CLI",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -58,6 +79,35 @@
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Deploy: Web (PRODUCTION)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "firebase",
+      "runtimeArgs": ["deploy", "--only", "firestore,hosting:production,hosting:mirror-1,hosting:mirror-2"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "npm: build:web",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Deploy: Web (Prelive)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "firebase",
+      "runtimeArgs": ["deploy", "--only", "firestore,hosting:pre"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "npm: build:web",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Dev: Web (Vite + Chrome)",
+      "configurations": ["Run: Web (Vite)", "Debug: Web (Chrome)"],
+      "stopAll": true
     }
   ]
 }

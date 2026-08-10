@@ -1,0 +1,265 @@
+<div class="page app-shell" data-view="library" data-sidebar="expanded">
+  <div class="app-frame">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-logo" src="/favicon.svg" alt="Palette Studio" />
+        <div class="brand-text">
+          <span class="brand-title">Palette</span>
+          <span class="brand-subtitle">Studio</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="ghost icon-only" data-action="open-settings" data-context="topbar" type="button"></button>
+        <button
+          class="ghost avatar-button"
+          data-action="open-cloud"
+          type="button"
+          data-i18n-aria-label="action.cloud"
+          data-i18n-title="action.cloud"
+        >
+          <img class="user-avatar" data-cloud-avatar src="/avatar-placeholder.svg" alt="" />
+        </button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <main class="main-content">
+        <section class="panel panel-palettes view-section view-library is-active" data-view-section="library" style="--delay: 0.15s">
+          <div class="panel-head library-toolbar">
+            <div class="field compact library-search">
+              <input
+                id="library-search"
+                type="search"
+                placeholder="Search palettes, folders or hex"
+                data-i18n-placeholder="library.search.placeholder"
+                aria-label="Search palettes"
+                data-i18n-aria-label="library.search.label"
+              />
+            </div>
+            <button class="ghost" id="create-folder" type="button" data-i18n="folder.create">New folder</button>
+          </div>
+          <p class="empty is-hidden" id="library-empty-search" data-i18n="library.search.empty">No palettes match your search.</p>
+          <div class="library-groups" id="palette-list"></div>
+          <div class="panel-palettes-spacer" aria-hidden="true"></div>
+          <div class="action-dock" aria-label="Palette actions">
+            <button class="ghost" id="open-import" data-i18n="action.import">Import</button>
+            <button class="ghost export-trigger" id="open-export" disabled data-i18n="action.exportAll">Export all</button>
+            <button class="primary" id="open-generate" data-i18n="action.generate">New</button>
+          </div>
+
+          <div class="fab-hub" id="fab-hub">
+            <div class="fab-menu" id="fab-menu" role="menu">
+              <button class="ghost fab-action" data-fab-action="import" type="button" role="menuitem"></button>
+              <button class="ghost fab-action" data-fab-action="export" type="button" role="menuitem"></button>
+              <button class="primary fab-action" data-fab-action="generate" type="button" role="menuitem"></button>
+            </div>
+            <button class="primary fab-toggle" id="fab-toggle" type="button" aria-expanded="false" aria-controls="fab-menu"></button>
+          </div>
+        </section>
+
+        <section class="panel panel-discover view-section view-discover" data-view-section="discover" style="--delay: 0.2s">
+          <div class="section-card discover-shell">
+            <div class="panel-head discover-head">
+              <div class="field compact discover-search">
+                <input
+                  id="discover-search"
+                  type="search"
+                  placeholder="Search palettes or authors"
+                  data-i18n-placeholder="discover.search.placeholder"
+                  aria-label="Search"
+                  data-i18n-aria-label="discover.search.label"
+                />
+              </div>
+
+              <div class="discover-filter">
+                <button class="ghost discover-filter-toggle" id="discover-filter-toggle" type="button" aria-expanded="false" aria-haspopup="true" data-i18n-title="discover.filter.open" data-i18n-aria-label="discover.filter.open">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <use href="/icons/sort.svg#icon" xlink:href="/icons/sort.svg#icon" />
+                  </svg>
+                  <span class="discover-filter-text" data-i18n="discover.filter.open">Filter palettes</span>
+                  <span class="discover-filter-count" aria-hidden="true"></span>
+                </button>
+                <div class="discover-filter-panel" id="discover-filter-panel" role="dialog" aria-modal="false" data-i18n-aria-label="discover.filter.title"></div>
+              </div>
+
+              <div class="chip-group chip-group--labelled discover-sort is-hidden">
+                <span class="chip-label" data-i18n="discover.sort.label">Sort by</span>
+                <span class="chip chip--primary chip--select">
+                  <!-- Shown only when the chip collapses to a circle; see `.discover-sort .chip-icon`. -->
+                  <svg
+                    class="icon chip-icon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <use href="/icons/sort.svg#icon" xlink:href="/icons/sort.svg#icon" />
+                  </svg>
+                  <select id="discover-sort" aria-label="Sort by" data-i18n-aria-label="discover.sort.label">
+                    <option value="recent" data-i18n="discover.sort.recent">Most recent</option>
+                    <option value="likes-desc" data-i18n="discover.sort.likesDesc">Popularity (high to low)</option>
+                    <option value="likes-asc" data-i18n="discover.sort.likesAsc">Popularity (low to high)</option>
+                    <option value="saves-desc" data-i18n="discover.sort.savesDesc">Saves (high to low)</option>
+                    <option value="saves-asc" data-i18n="discover.sort.savesAsc">Saves (low to high)</option>
+                  </select>
+                </span>
+              </div>
+            </div>
+
+            <div class="section-body">
+              <div class="discover-grid" id="discover-list"></div>
+              <p class="empty is-hidden" id="discover-empty" data-i18n="discover.empty">No public palettes available yet.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel panel-playground view-section view-playground" data-view-section="playground" style="--delay: 0.2s">
+          <div class="panel-head playground-topbar">
+            <div class="chip-group playground-cluster playground-cluster--generate">
+              <button class="chip chip--primary" id="playground-shuffle" type="button"></button>
+              <button class="chip chip--icon" id="playground-undo" type="button"></button>
+              <button class="chip chip--icon" id="playground-redo" type="button"></button>
+            </div>
+
+            <div class="playground-topbar-lead" data-mode="hint">
+              <p class="playground-hint" id="playground-hint" data-i18n="playground.spaceHint">Press the spacebar to generate palettes</p>
+              <p class="playground-source is-hidden" id="playground-source">
+                <span class="playground-source-text" id="playground-source-text"></span>
+                <button
+                  class="playground-source-detach"
+                  id="playground-detach"
+                  type="button"
+                  data-i18n="playground.detach"
+                  data-i18n-title="playground.detachHint"
+                >
+                  Unlink
+                </button>
+              </p>
+            </div>
+
+            <div class="chip-group chip-group--labelled playground-cluster--harmony">
+              <span class="chip-label" data-i18n="playground.style">Harmony</span>
+              <span class="chip chip--primary chip--select">
+                <span class="chip-select-sizer" id="playground-style-text" aria-hidden="true"></span>
+                <select id="playground-style" aria-label="Harmony" data-i18n-aria-label="playground.style">
+                  <option value="analogous" data-i18n="style.analogous">Analogous</option>
+                  <option value="cold-pair" data-i18n="style.coldPair">Cold pair</option>
+                  <option value="complementary" data-i18n="style.complementary">Complementary</option>
+                  <option value="contrasting" data-i18n="style.contrasting">Contrasting</option>
+                  <option value="neutral" data-i18n="style.neutral">Neutral</option>
+                  <option value="pastel-pair" data-i18n="style.pastelPair">Pastel pair</option>
+                  <option value="same-family" data-i18n="style.sameFamily">Same family</option>
+                  <option value="shade" data-i18n="style.shade">Shade</option>
+                  <option value="triadic" data-i18n="style.triadic">Triadic</option>
+                  <option value="vivid-pair" data-i18n="style.vividPair">Vivid pair</option>
+                  <option value="warm-cold" data-i18n="style.warmCold">Warm / Cold</option>
+                  <option value="warm-pair" data-i18n="style.warmPair">Warm pair</option>
+                </select>
+              </span>
+            </div>
+
+            <div class="chip-group playground-cluster--save">
+              <button class="chip" id="playground-save" type="button"></button>
+            </div>
+          </div>
+
+          <div class="playground-ramp" id="playground-ramp" aria-label="Working palette"></div>
+
+          <section class="section-card playground-preview">
+            <header class="section-head">
+              <h2 class="section-title" data-i18n="playground.preview">Preview</h2>
+              <div class="section-actions playground-preview-controls">
+                <div class="chip-group playground-scene-tabs" id="playground-scene-tabs" role="tablist"></div>
+                <div class="chip-group playground-zoom" role="group" data-i18n-aria-label="playground.zoom">
+                  <button class="ghost icon-only playground-zoom-button" id="playground-zoom-out" type="button"></button>
+                  <span class="playground-zoom-value" id="playground-zoom-value">100%</span>
+                  <button class="ghost icon-only playground-zoom-button" id="playground-zoom-in" type="button"></button>
+                </div>
+                <button class="ghost icon-only playground-fullscreen" id="playground-fullscreen" type="button"></button>
+              </div>
+            </header>
+            <div class="playground-stage" id="playground-stage"></div>
+          </section>
+        </section>
+      </main>
+
+      <div class="sidebar-stack">
+        <aside class="sidebar">
+          <div class="brand brand--sidebar">
+            <img class="brand-logo" src="/favicon.svg" alt="Palette Studio" />
+            <div class="brand-text">
+              <span class="brand-title">Palette</span>
+              <span class="brand-subtitle">Studio</span>
+            </div>
+          </div>
+          <nav class="sidebar-nav" aria-label="Primary">
+            <button class="nav-item" type="button" data-view-target="library"></button>
+            <button class="nav-item" type="button" data-view-target="playground"></button>
+            <button class="nav-item" type="button" data-view-target="discover"></button>
+          </nav>
+        </aside>
+
+        <div class="sidebar-bottom">
+          <div class="sidebar-actions">
+            <button class="nav-item sidebar-toggle" type="button" data-action="toggle-sidebar"></button>
+            <button class="nav-item" type="button" data-action="open-settings" data-context="sidebar"></button>
+            <button class="nav-item nav-user" type="button" data-action="open-cloud" data-context="sidebar" data-i18n-aria-label="nav.user">
+              <img class="user-avatar" data-cloud-avatar src="/avatar-placeholder.svg" alt="" />
+              <span class="nav-label" data-i18n="nav.user">User</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-row">
+      <div class="footer-links">
+        <button class="footer-link" id="open-terms" type="button" data-i18n="footer.terms">Terms</button>
+        <button class="footer-link" id="open-privacy" type="button" data-i18n="footer.privacy">Privacy</button>
+        <button class="footer-link" id="open-cookies" type="button" data-i18n="footer.cookies">Cookies</button>
+        <button class="footer-link" id="open-license-footer" type="button" data-i18n="footer.license">License</button>
+        <button class="footer-link" id="open-contact" type="button" data-i18n="footer.contact">Contact</button>
+        <button class="footer-link" id="open-about" type="button" data-i18n="footer.about">About</button>
+      </div>
+      <div class="footer-links footer-links--meta">
+        <div class="footer-meta-row">
+          <a class="footer-button github-button" href="https://github.com/joanroig/palette-studio" target="_blank" rel="noreferrer">
+            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+              <use href="/icons/github.svg#icon"></use>
+            </svg>
+            <span data-i18n="footer.github">GitHub</span>
+          </a>
+          <div class="footer-version">
+            <a
+              class="footer-button version-button"
+              id="app-version"
+              href="https://github.com/joanroig/palette-studio/releases"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span class="version-label" data-i18n="footer.version">Version</span>
+              <span class="version-number" id="app-version-number"></span>
+            </a>
+            <div class="footer-deploy">
+              <span class="deploy-stamp" id="deploy-stamp" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <div data-slot="modals"></div>
+
+  <nav class="bottom-nav" aria-label="Primary">
+    <button class="nav-item" type="button" data-view-target="library"></button>
+    <button class="nav-item" type="button" data-view-target="playground"></button>
+    <button class="nav-item" type="button" data-view-target="discover"></button>
+  </nav>
+</div>

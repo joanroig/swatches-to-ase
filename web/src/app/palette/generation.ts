@@ -1,7 +1,7 @@
 import type { PaletteColor, StyleRanges } from "../types";
-import { createId } from "../utils/id";
-import { randomBetween, normalizeHue } from "../utils/math";
 import { hslToRgb, rgbToHex } from "../utils/color";
+import { createId } from "../utils/id";
+import { normalizeHue, randomBetween } from "../utils/math";
 import { nameColor } from "./naming";
 
 const pickFromRanges = (ranges: Array<[number, number]>) => {
@@ -31,15 +31,11 @@ const createOffsets = (base: number, count: number, spread: number) => {
   }
   const step = spread / (count - 1);
   const start = -spread / 2;
-  return Array.from({ length: count }, (_, index) =>
-    normalizeHue(base + start + step * index + randomBetween(-4, 4))
-  );
+  return Array.from({ length: count }, (_, index) => normalizeHue(base + start + step * index + randomBetween(-4, 4)));
 };
 
 const expandHues = (bases: number[], count: number, jitter = 12) =>
-  Array.from({ length: count }, (_, index) =>
-    normalizeHue(bases[index % bases.length] + randomBetween(-jitter, jitter))
-  );
+  Array.from({ length: count }, (_, index) => normalizeHue(bases[index % bases.length] + randomBetween(-jitter, jitter)));
 
 const getStyleRanges = (style: string): StyleRanges => {
   switch (style) {
@@ -75,57 +71,27 @@ const createHueList = (style: string, count: number, baseHue?: number) => {
     case "complementary":
       return expandHues([base, normalizeHue(base + 180)], count, 10);
     case "triadic":
-      return expandHues(
-        [base, normalizeHue(base + 120), normalizeHue(base + 240)],
-        count,
-        8
-      );
+      return expandHues([base, normalizeHue(base + 120), normalizeHue(base + 240)], count, 8);
     case "contrasting":
-      return Array.from({ length: count }, (_, index) =>
-        normalizeHue(base + (360 / count) * index + randomBetween(-8, 8))
-      );
+      return Array.from({ length: count }, (_, index) => normalizeHue(base + (360 / count) * index + randomBetween(-8, 8)));
     case "warm-cold":
-      return expandHues(
-        hasBase ? [base, normalizeHue(base + 180)] : [pickWarmHue(), pickCoolHue()],
-        count,
-        12
-      );
+      return expandHues(hasBase ? [base, normalizeHue(base + 180)] : [pickWarmHue(), pickCoolHue()], count, 12);
     case "warm-pair":
       return (() => {
         const warmBase = hasBase ? base : pickWarmHue();
-        return expandHues(
-          [
-            warmBase,
-            normalizeHue(
-              warmBase + randomBetween(25, 60) * (Math.random() > 0.5 ? 1 : -1)
-            ),
-          ],
-          count,
-          10
-        );
+        return expandHues([warmBase, normalizeHue(warmBase + randomBetween(25, 60) * (Math.random() > 0.5 ? 1 : -1))], count, 10);
       })();
     case "cold-pair":
       return (() => {
         const coolBase = hasBase ? base : pickCoolHue();
-        return expandHues(
-          [
-            coolBase,
-            normalizeHue(
-              coolBase + randomBetween(20, 50) * (Math.random() > 0.5 ? 1 : -1)
-            ),
-          ],
-          count,
-          10
-        );
+        return expandHues([coolBase, normalizeHue(coolBase + randomBetween(20, 50) * (Math.random() > 0.5 ? 1 : -1))], count, 10);
       })();
     case "pastel-pair":
       return expandHues([base, normalizeHue(base + randomBetween(140, 200))], count, 6);
     case "vivid-pair":
       return expandHues([base, normalizeHue(base + randomBetween(140, 200))], count, 10);
     case "neutral":
-      return Array.from({ length: count }, (_, index) =>
-        normalizeHue(base + (360 / Math.max(count, 1)) * index)
-      );
+      return Array.from({ length: count }, (_, index) => normalizeHue(base + (360 / Math.max(count, 1)) * index));
     default:
       return createOffsets(base, count, 90);
   }
@@ -137,17 +103,10 @@ const createShadeLightness = (count: number) => {
   }
   const start = 0.2;
   const end = 0.86;
-  return Array.from({ length: count }, (_, index) =>
-    start + (end - start) * (index / (count - 1))
-  );
+  return Array.from({ length: count }, (_, index) => start + (end - start) * (index / (count - 1)));
 };
 
-export const generatePaletteColors = (
-  style: string,
-  count = 5,
-  nameFormat: string,
-  baseHue?: number
-) => {
+export const generatePaletteColors = (style: string, count = 5, nameFormat: string, baseHue?: number) => {
   if (count <= 0) {
     return [] as PaletteColor[];
   }
@@ -158,7 +117,7 @@ export const generatePaletteColors = (
   return hueList.map((hue, index) => {
     const saturation = randomBetween(ranges.s[0], ranges.s[1]);
     const lightness = ranges.isShade
-      ? shadeLightness[index] ?? randomBetween(ranges.l[0], ranges.l[1])
+      ? (shadeLightness[index] ?? randomBetween(ranges.l[0], ranges.l[1]))
       : randomBetween(ranges.l[0], ranges.l[1]);
     const rgb = hslToRgb(hue, saturation, lightness);
     const hex = rgbToHex(rgb).toUpperCase();

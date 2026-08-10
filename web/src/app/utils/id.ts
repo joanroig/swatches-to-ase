@@ -1,2 +1,1 @@
-export const createId = () =>
-  (crypto.randomUUID?.() ?? `palette-${Date.now()}-${Math.random()}`).toString();
+export const createId = () => (crypto.randomUUID?.() ?? `palette-${Date.now()}-${Math.random()}`).toString();

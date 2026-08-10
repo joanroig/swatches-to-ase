@@ -9,7 +9,8 @@
     "paths": {
       "@core/*": ["../src/core/*"]
     },
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "allowImportingTsExtensions": true
   },
-  "include": ["src"]
+  "include": ["src", "../src/core/vendor.d.ts"]
 }

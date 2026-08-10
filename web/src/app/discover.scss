@@ -1,0 +1,556 @@
+.discover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+/*
+ * Chrome comes from `.section-card` / `.section-head`; only the control layout lives here.
+ *
+ * These selectors used to target a `.discover-controls` wrapper that no longer exists, so nothing
+ * constrained the sort chip and it stretched the full width of the header.
+ */
+/*
+ * A query container, so the head below can respond to the width it actually has.
+ *
+ * The narrow-width rule underneath was written as a `@container` query but nothing in Discover ever
+ * declared itself one, so it had never matched: on a phone the sort chip — which cannot shrink —
+ * took the row and squeezed the search field down to a few pixels of rounded sliver. The panel is
+ * also narrower than the viewport by whatever the rail is taking, and the rail collapses, so its
+ * own width is the honest thing to ask about.
+ */
+/*
+ * Flat, unlike the other section cards.
+ *
+ * A folder's card frames palettes that belong together; this one framed the whole view, which is
+ * the same box the panel around it used to draw. Its head keeps the controls in a row and drops the
+ * bar, so the feed's own cards are the only boxes on the page.
+ */
+.discover-shell {
+  align-content: start;
+  container-type: inline-size;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+/* Shape comes from `.panel-head`. */
+.discover-head {
+  gap: 10px;
+}
+
+/* Its own air under the bar, now that the bar no longer carries a margin for everyone. */
+.discover-shell > .section-body {
+  padding: var(--panel-pad) 0 0;
+}
+
+.discover-search {
+  /* A floor, not zero: the field is the head's flexible item and would otherwise shrink away
+     entirely rather than push the head into wrapping. */
+  flex: 1 1 220px;
+  min-width: 160px;
+  max-width: 420px;
+}
+
+.discover-search input {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Held against the panel's right gutter. The search box is capped at 420px so it does not sprawl on
+   a wide screen, which left both controls bunched at the left with the rest of the bar empty. */
+.discover-sort {
+  flex: none;
+  margin-left: auto;
+}
+
+/* Only ever visible in the collapsed form below. Declared before that block, not after: both
+   selectors are (0,2,0), so the later one wins and a rule placed afterwards would keep it hidden. */
+.discover-sort .chip-icon {
+  display: none;
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+/*
+ * Still one line, with the sort collapsed into a round button.
+ *
+ * The sort chip cannot shrink, so on a phone it took the row and squeezed the field down to a few
+ * pixels of rounded sliver. Wrapping onto two rows fixed that and cost a row of height; giving up
+ * the words instead keeps both controls on the line they belong on. The icon and the button's
+ * title carry what "Sort by / Most recent" was saying.
+ */
+@container (max-width: 560px) {
+  .discover-search {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .discover-sort {
+    padding-left: 4px;
+  }
+
+  .discover-sort .chip-label,
+  .discover-sort .chip-select-label {
+    display: none;
+  }
+
+  /* A circle: no text inside, so the chip's text padding and its chevron's reserved column both go,
+     and the icon sits in the middle of what is left. */
+  .discover-sort .chip--select {
+    width: var(--chip-height);
+    padding-inline: 0;
+  }
+
+  .discover-sort .chip--select::after {
+    display: none;
+  }
+
+  .discover-sort .chip-icon {
+    display: block;
+  }
+}
+
+.discover-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow-soft);
+  height: 100%;
+  cursor: pointer;
+}
+
+.discover-card.is-skeleton {
+  position: relative;
+  overflow: hidden;
+  pointer-events: none;
+  cursor: default;
+}
+
+.discover-card.is-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.22), transparent 70%);
+  transform: translateX(-100%);
+  animation: discover-shimmer 1.2s ease-in-out infinite;
+}
+
+.discover-card.is-skeleton * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Match the two control-height rows used by real cards. The old 14px header and 20px footer made
+   every placeholder 42px shorter, so the grid visibly jumped when results replaced it. */
+.discover-card.is-skeleton .discover-header,
+.discover-card.is-skeleton .discover-footer {
+  min-height: var(--control-md);
+}
+
+@keyframes discover-card-reveal {
+  from {
+    opacity: 0.45;
+    transform: translateY(4px);
+  }
+}
+
+.discover-grid.is-revealing .discover-card:not(.is-skeleton) {
+  animation: discover-card-reveal 0.22s ease-out both;
+}
+
+.discover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.discover-title {
+  font-weight: 600;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.discover-author {
+  flex: 0 1 45%;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+.discover-author-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: none;
+  display: inline;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+.discover-skeleton {
+  background: var(--surface-2);
+  border-radius: 999px;
+  height: 12px;
+}
+
+.discover-skeleton-title {
+  width: 62%;
+  height: 14px;
+}
+
+.discover-skeleton-author {
+  width: 38%;
+  height: 12px;
+}
+
+.discover-strip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+}
+
+.discover-strip span {
+  height: 30px;
+}
+
+.discover-strip--skeleton {
+  border-color: transparent;
+  background: var(--surface-2);
+}
+
+.discover-skeleton-swatch {
+  background: rgba(148, 163, 184, 0.3);
+  height: 30px;
+}
+
+.discover-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.discover-like {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.discover-like-count {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.discover-action {
+  border-radius: 12px;
+}
+
+.discover-skeleton-icon {
+  width: var(--control-md);
+  height: var(--control-md);
+  border-radius: var(--radius-pill);
+}
+
+.discover-skeleton-count {
+  width: 60px;
+  height: 12px;
+}
+
+.discover-profile-card {
+  display: grid;
+  /* avatar · meta · follow */
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--stroke);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+.discover-profile-avatar {
+  width: 64px;
+  height: 64px;
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.18);
+}
+
+.discover-profile-meta {
+  display: grid;
+  gap: 6px;
+}
+
+.discover-profile-name {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.discover-profile-grid {
+  margin-top: 4px;
+}
+
+@keyframes discover-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/*
+ * `.discover-controls` used to wrap the head's two controls and is long gone, so its rule here was
+ * dead — and the two that stretched the search and the sort to the full width outlived the layout
+ * they belonged to. The full-width sort chip was the worse of the pair: at 720px it took a 650px
+ * row and pushed itself past the head's right edge. The head's own container query handles the
+ * narrow case now, at the width the panel actually has rather than the width of the window.
+ */
+@media (max-width: 720px) {
+  .discover-profile-card {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .discover-profile-avatar {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]) .discover-card.is-skeleton::after,
+  body:not([data-motion="on"]) .discover-grid.is-revealing .discover-card:not(.is-skeleton) {
+    animation: none;
+  }
+}
+
+body[data-motion="off"] .discover-card.is-skeleton::after,
+body[data-motion="off"] .discover-grid.is-revealing .discover-card:not(.is-skeleton) {
+  animation: none;
+}
+
+
+.discover-follow {
+  justify-self: end;
+  min-width: 116px;
+}
+
+.discover-follow.is-hidden {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .discover-following-toggle {
+    margin-left: 0;
+  }
+
+  .discover-follow {
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
+/* ------------------------------------------------------------- filters --- */
+
+/*
+ * Sort, style and colour in one disclosure.
+ *
+ * The bar had a sort chip and nothing else, so the only question it could answer was "which of
+ * these is newest". These three sit together because they are the same kind of decision — narrowing
+ * the feed — and a panel keeps them off a bar that has to stay one line on a phone.
+ */
+.discover-filter {
+  position: relative;
+  flex: none;
+  margin-left: auto;
+}
+
+button.discover-filter-toggle {
+  gap: 8px;
+  padding-inline: 14px;
+
+  &.has-filters {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    color: var(--accent);
+  }
+}
+
+/*
+ * With no filters on, the badge is an empty span — and an empty flex item still takes its share of
+ * the row's `gap`, which pushed the icon 4px left of centre in the collapsed circular button. It
+ * has to be out of the layout, not merely unstyled.
+ */
+.discover-filter-count:empty {
+  display: none;
+}
+
+/* The count sits on the button so the bar says how narrowed the feed is without being opened. */
+.discover-filter-count:not(:empty) {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 6px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(130deg, var(--accent), var(--accent-3));
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.discover-filter-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 14;
+  display: none;
+  width: min(280px, calc(100vw - 32px));
+  max-height: min(60vh, 520px);
+  padding: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.discover-filter.is-open .discover-filter-panel {
+  display: grid;
+  gap: 2px;
+}
+
+.discover-filter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px 6px;
+}
+
+.discover-filter-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+button.discover-filter-clear {
+  font-size: 0.78rem;
+}
+
+.discover-filter-group {
+  display: grid;
+  gap: 1px;
+  padding-block: 4px;
+  border-top: 1px solid var(--stroke);
+}
+
+/* A section caption, in the same micro-caps the section headers use. */
+.discover-filter-label {
+  margin: 0;
+  padding: 6px 10px 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+button.discover-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: left;
+  justify-content: flex-start;
+
+  &.is-selected {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+  }
+}
+
+.discover-filter-option-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The colour rows are read by their swatch first and their name second. */
+.discover-filter-swatch {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--stroke-strong);
+}
+
+.discover-filter-tick {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+/* Below this the button is a circle: the bar has to stay one line, and the icon plus the count
+   badge say as much as the words did. */
+@container (max-width: 560px) {
+  .discover-filter-text {
+    display: none;
+  }
+
+  button.discover-filter-toggle {
+    padding-inline: 0;
+    width: var(--control-md);
+  }
+
+  .discover-filter-count:not(:empty) {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+  }
+}

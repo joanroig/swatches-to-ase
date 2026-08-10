@@ -3,10 +3,10 @@
     <path d="M267 67v133c0 37-30 67-67 67H67c-37 0-67-30-67-67V67C0 30 30 0 67 0h133c37 0 67 30 67 67z"/>
   </clipPath>
   <g clip-path="url(#c)" fill-rule="evenodd">
-    <path d="M-96 90l82-57 191 273-82 57z" fill="#658af1"/>
-    <path d="M-39 51l77-54 191 273-77 54z" fill="#61e0c5"/>
-    <path d="M12 15L89-39l191 273-77 54z" fill="#f2ca64"/>
-    <path d="M63-21l77-54 191 273-77 54z" fill="#f6a26a"/>
-    <path d="M114-57l57-40 191 273-57 40z" fill="#ef4d50"/>
+    <path d="M-96 90l82-57 191 273-82 57z" fill="#658AF1"/>
+    <path d="M-39 51l77-54 191 273-77 54z" fill="#61E0C5"/>
+    <path d="M12 15L89-39l191 273-77 54z" fill="#F2CA64"/>
+    <path d="M63-21l77-54 191 273-77 54z" fill="#F6A26A"/>
+    <path d="M114-57l57-40 191 273-57 40z" fill="#E64548"/>
   </g>
 </svg>

@@ -1,0 +1,1479 @@
+/* ============================================================== playground === */
+
+.panel-playground {
+  gap: 18px;
+  /* The preview stage is full-bleed against the panel's bottom edge, so the panel owns the clip
+     that keeps the scene inside its rounded corners. */
+  overflow: hidden;
+  /*
+   * Named container. A viewport media query cannot describe this panel's width: the sidebar takes
+   * ~250px above 960px and nothing below it, so 1000px of viewport is a *narrower* panel than
+   * 940px is. Every layout switch below is driven by the panel's own width instead.
+   */
+  container: playground / inline-size;
+}
+
+.playground-source {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: -6px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.playground-source-text {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+button.playground-source-detach {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.playground-history {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+}
+
+/* ------------------------------------------------------------------ ramp --- */
+
+.playground-ramp {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  min-height: 220px;
+  border-radius: 18px;
+  /* Not `overflow: hidden`: the "+" straddling the outer edges of the first and last swatch has to
+     be able to overhang. The end swatches round their own outer corners instead. */
+  border: 1px solid var(--stroke-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+.playground-swatch:first-child {
+  border-radius: 17px 0 0 17px;
+}
+
+.playground-swatch:last-child {
+  border-radius: 0 17px 17px 0;
+}
+
+.playground-swatch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 8px 18px;
+  min-width: 0;
+  /* The sortable translates the dragged item, so it must not also be a positioned overlay target. */
+  touch-action: none;
+}
+
+/*
+ * Locked shows the padlock and nothing else — no ring, no grip, no bin.
+ *
+ * The ring plus a full row of icons made a locked swatch the loudest thing on the ramp, when the
+ * point of locking is to take a colour *out* of consideration while you shuffle the rest. Hovering
+ * brings the other controls back.
+ */
+.playground-swatch.is-locked .playground-swatch-grip,
+.playground-swatch.is-locked .playground-swatch-action:not(.is-on) {
+  display: none;
+}
+
+.playground-swatch.is-locked:hover .playground-swatch-grip,
+.playground-swatch.is-locked:focus-within .playground-swatch-grip,
+.playground-swatch.is-locked:hover .playground-swatch-action,
+.playground-swatch.is-locked:focus-within .playground-swatch-action {
+  display: inline-flex;
+}
+
+.playground-swatch-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+/* Touch devices have no hover, so the controls stay visible there. */
+@media (hover: none) {
+  .playground-swatch-actions {
+    opacity: 0.75;
+  }
+}
+
+.playground-swatch:hover .playground-swatch-actions,
+.playground-swatch:focus-within .playground-swatch-actions,
+.playground-swatch.is-locked .playground-swatch-actions {
+  opacity: 1;
+}
+
+button.playground-swatch-action {
+  color: inherit;
+  border-color: transparent;
+  background: transparent;
+  padding: 6px;
+
+  &:hover:not(:disabled) {
+    background: rgb(255 255 255 / 18%);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+  }
+}
+
+/* The padlock carries the state on its own, so it needs no plate behind it. */
+button.playground-swatch-action.is-on {
+  background: transparent;
+  opacity: 1;
+}
+
+.playground-swatch-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  cursor: grab;
+  color: inherit;
+  opacity: 0.85;
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.playground-swatch-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 4px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 10px;
+
+  &:hover {
+    background: rgb(255 255 255 / 14%);
+  }
+}
+
+.playground-swatch-hex {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.playground-swatch-name {
+  display: block;
+  max-width: 100%;
+  font-size: 0.72rem;
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * The "+" between swatches, mirroring the palette editor. The zone is a hot strip straddling the
+ * seam so the button only appears when the pointer is near the boundary, not anywhere over a
+ * swatch, and it lives inside the swatch rather than as its own grid item — an extra item would
+ * add a track and resize every column.
+ */
+.playground-insert-zone {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 26px;
+  transform: translateX(-50%);
+}
+
+.playground-insert-zone--end {
+  left: auto;
+  right: 0;
+  transform: translateX(50%);
+}
+
+/* Beats the shared `button.icon-only` sizing: this one floats over the swatches and must stay a
+   small circle rather than take the toolbar control size. */
+button.playground-insert.icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  color: var(--ink);
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  /* A ring from `--ink`, not `--stroke`: the button floats over arbitrary swatch colours and a
+     fixed hairline simply vanished against mid-tones. */
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--ink) 55%, transparent),
+    0 4px 12px rgb(15 23 42 / 35%);
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.4;
+  }
+}
+
+.playground-insert-zone:hover .playground-insert,
+.playground-insert:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.playground-insert-zone:hover .playground-insert:hover {
+  transform: scale(1.12);
+}
+
+@media (hover: none) {
+  .playground-insert-zone {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------- top bar --- */
+
+/*
+ * The tool strip above the palette.
+ *
+ * Three clusters, borrowed wholesale from the preview tabs below it: each is a rounded bubble with
+ * its own surface, holding chips, and the *current* chip inside it is filled with the accent
+ * gradient. The previous version had six loose controls separated by hairline dividers, which left
+ * things like "Harmony", its value and its chevron reading as three unrelated marks that happened
+ * to be near each other rather than as one control.
+ *
+ * **It is always exactly one line.** Fixed height, `nowrap`, and the only thing that may shrink is
+ * the harmony value, which ellipsises.
+ */
+/*
+ * A band across the panel rather than a strip inside it: the panel is the one box, so this loses
+ * its own border and spans the full width, with a rule under it doing the separating.
+ */
+.playground-topbar {
+  --chip-height: 32px;
+
+  /* Shape, surface and full-bleed come from `.panel-head`; the fixed height is what keeps the strip
+     to exactly one line, and the wider gap is local to the clusters. */
+  gap: 12px;
+  height: 56px;
+  padding-block: 0;
+}
+
+
+
+
+/* One chip shape for everything in the bar. */
+
+/* The current selection, exactly as the active preview tab is drawn. */
+
+
+/*
+ * Holds the space-bar hint, or the "Editing <palette>" note when the playground is linked to a
+ * library palette — never both. `data-mode` says which, so the hint can be dropped on a narrow bar
+ * without also dropping the note, and so the slot collapses completely rather than leaving an
+ * empty box reserving a third of the bar.
+ */
+.playground-topbar-lead {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/*
+ * The bar's spring lives here rather than on the lead slot. The lead is hidden at the narrow
+ * breakpoints, and it was the only thing holding the harmony and save chips against the right edge:
+ * without it the whole row packed left and left a third of the bar empty. An auto margin takes the
+ * free space whenever there is any and collapses to nothing when there is not, so the wide bar is
+ * unchanged and the narrow one keeps its shape.
+ */
+.playground-cluster--harmony {
+  margin-left: auto;
+}
+
+/* `p.`, not `.`: `.panel p` in the shared layout is (0,1,1) and was winning, adding a 12px top
+   margin that pushed the text 6px below the bar's centre line. */
+p.playground-hint {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* `:not(.is-hidden)` because the element-qualified selector is (0,1,1) and would otherwise beat
+   the (0,1,0) `.is-hidden` utility — the note stayed on screen in its hidden state. */
+p.playground-source:not(.is-hidden) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  min-width: 0;
+  font-size: 0.86rem;
+}
+
+.playground-source-text {
+  min-width: 0;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.playground-source-detach {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/*
+ * The right-hand pair. The `auto` margin lives on the *first* of the two so they stay together at
+ * the end of the bar whether or not the lead is on screen — with it on the save cluster instead,
+ * hiding the lead let the harmony collapse leftward and the control appeared to jump sides as the
+ * window was resized.
+ */
+
+/* ------------------------------------------------------- the harmony chip --- */
+
+/*
+ * A native select is always as wide as its *longest* option, so with "Complementary" in the list
+ * the value sat in a box far wider than itself and the chevron ended up marooned at the far edge.
+ *
+ * The chip is sized by a hidden twin holding the selected label, with the real select absolutely
+ * positioned over it — absolutely positioned elements contribute nothing to intrinsic sizing, which
+ * is what stops the longest option dictating the width. The select stays fully visible and native:
+ * an earlier attempt flattened it with `color: transparent; opacity: 0` and the transparency leaked
+ * into the dropdown, which opened as a white box with every option invisible but the hovered one.
+ */
+
+
+
+
+/* --------------------------------------------------------------- preview --- */
+
+/* The scene tabs used to be a second free-floating toolbar with nothing tying them to the thing
+   they switch. They are now the preview card's own header. */
+.playground-preview {
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.playground-preview-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Same shell as the scene tabs beside it, so the whole header row is one family. */
+/* Shape, height and surface come from `.chip-group`; only the tighter gap is local. */
+.playground-zoom {
+  gap: 2px;
+}
+
+button.playground-zoom-button.icon-only {
+  width: var(--chip-height);
+  min-width: 0;
+  height: var(--chip-height);
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink);
+
+  .icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  &:disabled {
+    opacity: 0.32;
+  }
+}
+
+.playground-zoom-value {
+  min-width: 3.1rem;
+  text-align: center;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* Square on the group height beside it, so the three controls in the bar share one line. */
+button.playground-fullscreen.icon-only {
+  width: calc(var(--control-sm) + 8px);
+  min-width: 0;
+  height: calc(var(--control-sm) + 8px);
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--stroke);
+}
+
+/*
+ * Full screen is a fixed-position takeover rather than the Fullscreen API: the scenes are ordinary
+ * DOM, so keeping them in the page means the theme, the tab strip and the escape key all keep
+ * working, and it degrades to nothing where a real fullscreen request would be refused.
+ */
+/* Native: the element is already sized to the display, so this only strips the card treatment. */
+.playground-preview:fullscreen {
+  border-radius: 0;
+  border: 0;
+  background: var(--card);
+}
+
+/* Fallback: pinned over the page. */
+.playground-preview.is-fullscreen-fallback {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  border-radius: 0;
+  border: 0;
+  background: var(--card);
+}
+
+body.has-playground-fullscreen {
+  overflow: hidden;
+}
+
+/*
+ * Shape, height and surface come from `.chip-group`. It no longer scrolls: `ui/overflow-row.ts`
+ * folds the tabs that do not fit into the menu below, so there is nothing hidden off the end to
+ * scroll to.
+ */
+.playground-scene-tabs {
+  position: relative;
+}
+
+.playground-scene-primary {
+  display: contents;
+}
+
+.playground-scene-more.is-hidden {
+  display: none;
+}
+
+.playground-scene-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 12;
+  min-width: 160px;
+  gap: 2px;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+}
+
+.playground-scene-tabs.is-open .playground-scene-menu {
+  display: grid;
+}
+
+/* In the menu a tab is a row, not a pill in a strip. */
+.playground-scene-menu .playground-scene-tab {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: var(--radius-sm);
+}
+
+button.playground-scene-tab {
+  height: var(--chip-height);
+  min-height: 0;
+  padding: 0 15px;
+  border-radius: var(--radius-pill);
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+
+  &.is-active {
+    background: linear-gradient(130deg, var(--accent), var(--accent-3));
+    color: #fff;
+  }
+}
+
+.playground-stage {
+  --scene-zoom: 1;
+
+  display: grid;
+  min-width: 0;
+  min-height: 300px;
+  overflow: auto;
+  /* The container lives on the stage, not on `.scene`: a container query cannot style the element
+     that declares the container, and the scenes themselves need to respond to their own width. */
+  container-type: inline-size;
+  overflow: hidden;
+}
+
+/*
+ * `zoom`, not `transform: scale()`: zoom reflows, so a bigger preview means bigger *content* laid
+ * out for the space it now has, rather than the same picture blown up and blurred.
+ *
+ * No compensating `calc(100% / zoom)` on the size: percentages inside a zoomed box already resolve
+ * against the parent measured in the zoomed coordinate space, so dividing again overshot by exactly
+ * the zoom factor and pushed the scene off the right-hand edge.
+ */
+.playground-stage > .scene {
+  zoom: var(--scene-zoom);
+  width: 100%;
+}
+
+.scene {
+  min-height: 300px;
+  height: 100%;
+
+  /* Scenes colour themselves from the palette, so nothing inside may keep an app text colour. A
+     `<p>` picking up `var(--muted)` was invisible on a dark scene surface. */
+  h3,
+  p,
+  span,
+  button {
+    color: inherit;
+  }
+}
+
+/* -- blend ------------------------------------------------------------------ */
+
+.scene-blend {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+}
+
+.blend-mesh {
+  min-height: 220px;
+  /* Deliberately no `background-blend-mode`: `screen` drives every overlap toward white, which on a
+     light or analogous palette erases the palette entirely. Plain alpha stacking keeps the hues. */
+}
+
+.blend-ramp {
+  height: 26px;
+}
+
+.blend-stops {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+.blend-stop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 4px;
+  min-width: 0;
+}
+
+.blend-stop-hex {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* -- ui mock ---------------------------------------------------------------- */
+
+.scene-ui {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  padding: 0;
+  min-height: 460px;
+}
+
+.ui-rail {
+  display: grid;
+  align-content: start;
+  gap: 22px;
+  padding: 20px 16px;
+}
+
+.ui-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ui-brand-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  background: currentColor;
+  opacity: 0.92;
+  flex: none;
+}
+
+.ui-brand-name {
+  font-family: "Fraunces", serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-nav {
+  display: grid;
+  gap: 4px;
+}
+
+.ui-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.62;
+
+  &.is-active {
+    opacity: 1;
+    background: rgb(255 255 255 / 18%);
+  }
+}
+
+.ui-nav-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  background: currentColor;
+  flex: none;
+}
+
+.ui-nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-promo {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 14px;
+}
+
+.ui-promo-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ui-promo-body {
+  font-size: 0.72rem;
+  opacity: 0.85;
+  line-height: 1.35;
+}
+
+.ui-body {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 20px;
+  min-width: 0;
+}
+
+.ui-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ui-heading {
+  min-width: 0;
+}
+
+.ui-title {
+  margin: 0;
+  font-family: "Fraunces", serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.ui-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+button.ui-cta {
+  padding: 9px 18px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  /* Inert: this is a picture of a button, not a control. */
+  pointer-events: none;
+}
+
+.ui-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ui-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 14px;
+  min-width: 0;
+}
+
+.ui-card-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ui-card-label {
+  font-size: 0.72rem;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-card-delta {
+  font-size: 0.68rem;
+  font-weight: 700;
+  opacity: 0.75;
+  flex: none;
+}
+
+.ui-card-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ui-card-track {
+  height: 5px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 26%);
+  overflow: hidden;
+}
+
+.ui-card-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.ui-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 12px;
+  border: 1px solid;
+  border-radius: 16px;
+}
+
+.ui-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ui-panel-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.ui-panel-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ui-legend-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+
+.ui-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex: none;
+}
+
+/* The gridlines and the bars share one grid cell so the bars sit *on* the baseline. */
+.ui-plot {
+  position: relative;
+  display: grid;
+  height: 132px;
+}
+
+.ui-grid {
+  position: absolute;
+  inset: 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.ui-gridline {
+  height: 1px;
+}
+
+.ui-bars {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.ui-bar-slot {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ui-bar-stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  border-radius: 7px 7px 3px 3px;
+  overflow: hidden;
+}
+
+.ui-bar--upper {
+  opacity: 0.75;
+}
+
+.ui-bar-tick {
+  font-size: 0.62rem;
+  text-align: center;
+  height: 13px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ui-list {
+  display: grid;
+  border: 1px solid;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.ui-list-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.ui-avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  flex: none;
+}
+
+.ui-list-text {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ui-list-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-list-meta {
+  font-size: 0.7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex: none;
+}
+
+@container (max-width: 720px) {
+  .ui-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ui-cards .ui-card:last-child {
+    display: none;
+  }
+}
+
+@container (max-width: 560px) {
+  .scene-ui {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-rail {
+    grid-auto-flow: column;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+  }
+
+  .ui-nav,
+  .ui-promo {
+    display: none;
+  }
+
+  .ui-list {
+    display: none;
+  }
+}
+
+/* -- poster ----------------------------------------------------------------- */
+
+.scene-poster {
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  padding: 32px;
+  overflow: hidden;
+}
+
+.poster-shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.poster-shape {
+  position: absolute;
+  opacity: 0.85;
+  /* Deterministic placement: the same palette always draws the same composition. */
+  top: calc(6% + var(--shape-index) * 15%);
+  right: calc(-6% + var(--shape-index) * 9%);
+  width: calc(90px + var(--shape-index) * 14px);
+  height: calc(90px + var(--shape-index) * 14px);
+}
+
+.poster-shape--0 {
+  border-radius: 50%;
+}
+
+.poster-shape--1 {
+  border-radius: 22px;
+  transform: rotate(18deg);
+}
+
+.poster-shape--2 {
+  border-radius: 50% 4px 50% 50%;
+}
+
+.poster-copy {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  max-width: 26ch;
+}
+
+.poster-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.35em;
+  margin: 0;
+  font-family: "Fraunces", serif;
+  font-size: clamp(1.8rem, 6cqw, 3.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+
+.poster-lede {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.75;
+  max-width: 34ch;
+}
+
+.poster-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.poster-chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+/* -- chart ------------------------------------------------------------------ */
+
+.scene-chart {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(180px, 250px);
+  align-items: stretch;
+  gap: 14px;
+  padding: 18px;
+  background: var(--card);
+}
+
+.chart-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--stroke);
+  border-radius: 16px;
+  background: var(--surface);
+  min-width: 0;
+}
+
+.chart-card-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.chart-card--donut {
+  justify-items: center;
+}
+
+.chart-donut-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 156px;
+  height: 156px;
+}
+
+.chart-donut {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  mask: radial-gradient(circle, transparent 58%, #000 59%);
+  -webkit-mask: radial-gradient(circle, transparent 58%, #000 59%);
+}
+
+.chart-donut-centre {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  pointer-events: none;
+}
+
+.chart-donut-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.chart-donut-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+}
+
+/* Gridlines sit behind the columns and stop at the tick row, so the bars have a baseline to stand
+   on. Without one they read as loose rectangles floating in the card. */
+.chart-plot {
+  position: relative;
+  height: 190px;
+}
+
+.chart-grid {
+  position: absolute;
+  inset: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.chart-gridline {
+  height: 1px;
+  background: var(--stroke);
+}
+
+.chart-columns {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  height: 100%;
+}
+
+.chart-column {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 5px;
+  min-width: 0;
+}
+
+.chart-fill {
+  width: 100%;
+  border-radius: 7px 7px 2px 2px;
+}
+
+.chart-tick {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.58rem;
+  color: var(--muted);
+  text-align: center;
+  height: 11px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.chart-stack {
+  display: flex;
+  height: 16px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.chart-stack-segment {
+  flex-basis: 0;
+}
+
+.chart-legend {
+  display: grid;
+  gap: 7px;
+}
+
+.chart-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  min-width: 0;
+}
+
+.chart-legend-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chart-legend-value {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.66rem;
+  flex: none;
+}
+
+.chart-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  flex: none;
+}
+
+@container (max-width: 860px) {
+  .scene-chart {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .chart-card--stack {
+    grid-column: 1 / -1;
+  }
+}
+
+@container (max-width: 520px) {
+  .scene-chart {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ------------------------------------------------------------ responsive --- */
+
+@container playground (max-width: 980px) {
+  /*
+   * The hint goes first — it is advice, and the clusters are the bar's job. The whole slot goes,
+   * not just the text inside it: hiding only the paragraph left an empty box holding a third of the
+   * bar open for nothing. The "Editing <palette>" note is not advice and stays a while longer.
+   */
+  .playground-topbar-lead[data-mode="hint"] {
+    display: none;
+  }
+
+  /* The note keeps its name and loses its link. `flex: none` on the link put a hard floor under
+     the whole slot, which is what pushed the clusters off the end of a linked bar. */
+  .playground-source-detach {
+    display: none;
+  }
+}
+
+@container playground (max-width: 780px) {
+  /* Now the note goes too. The save chip already reads "Update palette", which says the same thing
+     in the space it was going to occupy anyway. */
+  .playground-topbar-lead {
+    display: none;
+  }
+}
+
+@container playground (max-width: 700px) {
+  /* "Harmony" is the least load-bearing word on the bar — the value below it says what it is. */
+  .playground-topbar .chip-label {
+    display: none;
+  }
+
+  .playground-cluster--harmony {
+    padding-left: 4px;
+  }
+}
+
+@container playground (max-width: 600px) {
+  /*
+   * Labels off the two text chips; the icons carry them and their titles still spell them out.
+   * The row stays one line throughout — this is what keeps it able to.
+   */
+  .playground-topbar .chip > span:not(.chip-select-label) {
+    display: none;
+  }
+
+  .playground-topbar .chip:not(.chip--select) {
+    width: var(--chip-height);
+    padding-inline: 0;
+  }
+}
+
+@container playground (max-width: 620px) {
+  /* Columns get unreadably narrow past a handful of colours, so the ramp turns into rows. */
+  .playground-ramp {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-auto-rows: minmax(56px, 1fr);
+  }
+
+  .playground-swatch {
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+  }
+
+  .playground-swatch:first-child {
+    border-radius: 17px 17px 0 0;
+  }
+
+  .playground-swatch:last-child {
+    border-radius: 0 0 17px 17px;
+  }
+
+  /* The seam runs horizontally when the ramp is stacked, so the hot strip turns with it. */
+  .playground-insert-zone {
+    top: 0;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: 24px;
+    transform: translateY(-50%);
+  }
+
+  .playground-insert-zone--end {
+    top: auto;
+    bottom: 0;
+    transform: translateY(50%);
+  }
+
+  .playground-swatch-label {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 10px;
+    width: auto;
+  }
+
+  .playground-preview .section-title {
+    display: none;
+  }
+
+  .playground-scene-tabs {
+    width: 100%;
+  }
+
+  .scene-ui {
+    grid-template-columns: 54px 1fr;
+  }
+}
+
+@container playground (max-width: 440px) {
+  /* Last resort: tighten the bar's own metrics so three clusters still fit a phone. */
+  .playground-topbar {
+    --chip-height: 30px;
+
+    gap: 6px;
+    padding-inline: 6px;
+  }
+
+  .playground-topbar .chip-group {
+    height: 36px;
+    gap: 2px;
+    padding: 3px;
+  }
+
+  .playground-topbar .chip--select {
+    padding-inline: 10px 24px;
+  }
+
+  .playground-topbar .chip--select select {
+    padding: 0 24px 0 10px;
+  }
+
+  .playground-topbar .chip--select::after {
+    right: 10px;
+  }
+}
+
+/*
+ * The preview is the third band, not a card. Same reasoning as the folder groups: the panel is the
+ * one box, and its header is what separates the preview from the ramp above it.
+ */
+.playground-preview {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+/* A rule above as well as below: the preview sits directly under the ramp, and with only a bottom
+   border the two read as one block that happened to have a caption in the middle. */
+.playground-preview > .section-head {
+  margin-inline: calc(var(--panel-pad) * -1);
+  padding-inline: var(--panel-pad);
+  border-radius: 0;
+  border-top: 1px solid var(--stroke-strong);
+}
+
+/* Bled on three sides, not two. The stage reached the panel's left and right edges but stopped
+   short of its bottom, leaving a strip of bare panel under the preview and above the phone's nav. */
+.playground-preview > .playground-stage {
+  margin-inline: calc(var(--panel-pad) * -1);
+  margin-bottom: calc(var(--panel-pad) * -1);
+  border-radius: 0;
+}
+
+/*
+ * The preview head has to be able to shrink.
+ *
+ * `.section-actions` is `flex: none` and a `.chip-group` is too, so on a narrow panel the tab strip,
+ * the zoom and the full-screen button kept their full 500px and simply hung off the side — 161px
+ * past the panel edge at 360px wide. The tab strip is the one that gives: it already scrolls rather
+ * than wraps, so it absorbs the shrink and the two fixed controls beside it stay whole.
+ */
+.playground-preview-controls {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.playground-preview-controls .playground-scene-tabs {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* The title yields before the controls do — the tabs are the thing being used. */
+.playground-preview > .section-head > .section-title {
+  flex: 0 1 auto;
+  overflow: hidden;
+}

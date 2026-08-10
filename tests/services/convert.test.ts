@@ -6,18 +6,9 @@ import { test } from "node:test";
 
 import { ColorConverter } from "../../src/services/convert.js";
 
-const swatchesFixture = path.resolve(
-  "examples/palette-in",
-  "Kitchen_Plant.swatches"
-);
-const aseFixture = path.resolve(
-  "tests/fixtures/ase",
-  "Midnight_Produce.ase"
-);
-const gplFixture = path.resolve(
-  "tests/fixtures/exports",
-  "Kitchen_Plant.gpl"
-);
+const swatchesFixture = path.resolve("examples/palette-in", "Kitchen_Plant.swatches");
+const aseFixture = path.resolve("tests/fixtures/ase", "Midnight_Produce.ase");
+const gplFixture = path.resolve("tests/fixtures/exports", "Kitchen_Plant.gpl");
 
 test("ColorConverter converts multiple palette formats into configured outputs", async () => {
   const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "palette-"));
@@ -41,10 +32,7 @@ test("ColorConverter converts multiple palette formats into configured outputs",
     addBlackWhite: false,
     outFormats: ["ase", "gpl", "swatches"],
   };
-  await fs.promises.writeFile(
-    path.join(tempDir, "config.json"),
-    JSON.stringify(config, null, 2)
-  );
+  await fs.promises.writeFile(path.join(tempDir, "config.json"), JSON.stringify(config, null, 2));
 
   const cwd = process.cwd();
   process.chdir(tempDir);

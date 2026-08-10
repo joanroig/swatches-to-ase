@@ -1,11 +1,5 @@
-import {
-  app,
-  BrowserWindow,
-  dialog,
-  ipcMain,
-  Menu,
-  shell,
-} from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
+import { existsSync } from "fs";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -13,19 +7,69 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 
-const devIconPath = isDev
-  ? path.join(process.cwd(), "assets", "icon.png")
-  : undefined;
-
 const APP_LINKS = {
-  webApp: "https://joanroig.github.io/palette-studio/",
+  webApp: "https://palettes.web.app/",
   releases: "https://github.com/joanroig/palette-studio/releases",
   repo: "https://github.com/joanroig/palette-studio",
   issues: "https://github.com/joanroig/palette-studio/issues",
 };
 
+const isAuthPopupUrl = (url: string) => {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") {
+      return false;
+    }
+    const host = parsed.hostname.toLowerCase();
+    const path = parsed.pathname.toLowerCase();
+    if (host === "accounts.google.com") {
+      return true;
+    }
+    if ((host.endsWith(".firebaseapp.com") || host.endsWith(".web.app")) && path.startsWith("/__/auth/")) {
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
+
+const getWindowIcon = () => {
+  if (process.platform === "darwin") {
+    return undefined;
+  }
+  const rootPath = app.isPackaged ? app.getAppPath() : process.cwd();
+  const preferred = path.join(rootPath, "assets", process.platform === "win32" ? "icon.ico" : "icon.png");
+  if (existsSync(preferred)) {
+    return preferred;
+  }
+  const fallback = path.join(rootPath, "assets", "icon.png");
+  return existsSync(fallback) ? fallback : undefined;
+};
+
 const openExternal = (url: string) => {
   void shell.openExternal(url);
+};
+
+const openModal = (channel: "open-legal") => {
+  const targetWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+  if (!targetWindow) {
+    return;
+  }
+  if (targetWindow.isMinimized()) {
+    targetWindow.restore();
+  }
+  targetWindow.show();
+  targetWindow.focus();
+
+  if (targetWindow.webContents.isLoadingMainFrame()) {
+    targetWindow.webContents.once("did-finish-load", () => {
+      targetWindow.webContents.send(channel);
+    });
+    return;
+  }
+
+  targetWindow.webContents.send(channel);
 };
 
 const showAboutDialog = async () => {
@@ -58,13 +102,7 @@ const createAppMenu = () => {
         },
         { type: "separator" },
         ...(isMac
-          ? [
-              { role: "hide" },
-              { role: "hideOthers" },
-              { role: "unhide" },
-              { type: "separator" },
-              { role: "quit" },
-            ]
+          ? [{ role: "hide" }, { role: "hideOthers" }, { role: "unhide" }, { type: "separator" }, { role: "quit" }]
           : [{ role: "quit" }]),
       ],
     },
@@ -107,6 +145,10 @@ const createAppMenu = () => {
           label: "Report an Issue",
           click: () => openExternal(APP_LINKS.issues),
         },
+        {
+          label: "Legal",
+          click: () => openModal("open-legal"),
+        },
       ],
     },
   ] as Electron.MenuItemConstructorOptions[];
@@ -115,17 +157,18 @@ const createAppMenu = () => {
 };
 
 const createWindow = () => {
+  const windowIcon = getWindowIcon();
   const win = new BrowserWindow({
     width: 1080,
     height: 720,
     minWidth: 960,
     minHeight: 640,
     backgroundColor: "#f3efe9",
-    ...(devIconPath ? { icon: devIconPath } : {}),
+    ...(windowIcon ? { icon: windowIcon } : {}),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "preload.cjs"),
     },
   });
 
@@ -136,9 +179,7 @@ const createWindow = () => {
     void win.loadFile(indexPath);
   }
 
-  const devOrigin = process.env.VITE_DEV_SERVER_URL
-    ? new URL(process.env.VITE_DEV_SERVER_URL).origin
-    : null;
+  const devOrigin = process.env.VITE_DEV_SERVER_URL ? new URL(process.env.VITE_DEV_SERVER_URL).origin : null;
   const isExternalUrl = (url: string) => {
     if (url.startsWith("file://")) {
       return false;
@@ -154,6 +195,25 @@ const createWindow = () => {
   };
 
   win.webContents.setWindowOpenHandler(({ url }) => {
+    if (isAuthPopupUrl(url)) {
+      return {
+        action: "allow",
+        overrideBrowserWindowOptions: {
+          parent: win,
+          modal: true,
+          width: 520,
+          height: 640,
+          resizable: false,
+          backgroundColor: "#ffffff",
+          ...(windowIcon ? { icon: windowIcon } : {}),
+          webPreferences: {
+            contextIsolation: true,
+            nodeIntegration: false,
+            sandbox: true,
+          },
+        },
+      };
+    }
     if (isExternalUrl(url)) {
       void shell.openExternal(url);
       return { action: "deny" };
@@ -185,17 +245,14 @@ app.on("window-all-closed", () => {
   }
 });
 
-ipcMain.handle(
-  "save-zip",
-  async (_event, options: { fileName: string; data: Uint8Array }) => {
-    const result = await dialog.showSaveDialog({
-      defaultPath: options.fileName || "swatches-ase.zip",
-      filters: [{ name: "Zip", extensions: ["zip"] }],
-    });
-    if (result.canceled || !result.filePath) {
-      return { saved: false };
-    }
-    await fs.writeFile(result.filePath, options.data);
-    return { saved: true, path: result.filePath };
+ipcMain.handle("save-zip", async (_event, options: { fileName: string; data: Uint8Array }) => {
+  const result = await dialog.showSaveDialog({
+    defaultPath: options.fileName || "swatches-ase.zip",
+    filters: [{ name: "Zip", extensions: ["zip"] }],
+  });
+  if (result.canceled || !result.filePath) {
+    return { saved: false };
   }
-);
+  await fs.writeFile(result.filePath, options.data);
+  return { saved: true, path: result.filePath };
+});

@@ -2,7 +2,7 @@ import { getValidFormats } from "@core/palette";
 
 export const STORAGE_KEY = "palette-studio.preferences";
 export const PALETTES_KEY = "palette-studio.palettes";
-export const SHARE_BASE_URL = "https://joanroig.github.io/palette-studio/";
+export const SHARE_BASE_URL = "https://palettes.web.app/";
 export const VALID_NAME_FORMATS = getValidFormats();
 
 export const COLOR_NOTATIONS = [
@@ -16,6 +16,7 @@ export const COLOR_NOTATIONS = [
 ];
 
 export const STYLE_LABELS: Record<string, string> = {
+  empty: "Empty",
   analogous: "Analogous",
   "cold-pair": "Cold Pair",
   complementary: "Complementary",

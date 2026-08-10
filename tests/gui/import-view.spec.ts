@@ -1,5 +1,5 @@
-import path from "node:path";
 import playwright from "@playwright/test";
+import path from "node:path";
 
 const { expect, test } = playwright;
 
@@ -16,10 +16,7 @@ test("importing a swatches file populates the palette list and view", async ({ p
   await expect(page.locator("#open-export")).toBeDisabled();
 
   await page.click("#open-import");
-  const filePath = path.resolve(
-    "examples/palette-in",
-    "Kitchen_Plant.swatches"
-  );
+  const filePath = path.resolve("examples/palette-in", "Kitchen_Plant.swatches");
   await page.setInputFiles("#file-input", filePath);
 
   const card = page.locator(".palette-card");
@@ -27,12 +24,9 @@ test("importing a swatches file populates the palette list and view", async ({ p
   await expect(page.locator("#open-export")).toBeEnabled();
   await expect(card.locator(".palette-count")).toContainText("colors");
 
-  await page.locator("#import-modal button[data-close=\"true\"]").click();
+  await page.locator('#import-modal button[data-close="true"]').click();
 
-  await card.getByRole("button", { name: "View" }).click();
-  await expect(page.locator("#view-modal")).toHaveAttribute(
-    "aria-hidden",
-    "false"
-  );
+  await card.click();
+  await expect(page.locator("#view-modal")).toHaveAttribute("aria-hidden", "false");
   await expect(page.locator("#view-subtitle")).toContainText("colors");
 });

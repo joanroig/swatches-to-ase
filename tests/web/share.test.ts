@@ -1,11 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  buildSharedPaletteUrl,
-  decodeSharedPalette,
-  encodeSharedPalette,
-} from "../../web/src/app/share.js";
+import { buildSharedPaletteUrl, decodeSharedPalette, encodeSharedPalette, parsePaletteHexSlug } from "../../web/src/app/share.js";
 import type { Palette } from "../../web/src/app/types.js";
 
 const ensureBase64Globals = () => {
@@ -45,12 +41,12 @@ test("decodeSharedPalette returns null for invalid input", () => {
   assert.equal(decodeSharedPalette("not-base64"), null);
 });
 
-test("buildSharedPaletteUrl embeds the encoded payload", () => {
+test("buildSharedPaletteUrl uses a coolors-style hex slug", () => {
   ensureBase64Globals();
   const url = buildSharedPaletteUrl(samplePalette);
   const parsed = new URL(url);
-  const encodedParam = parsed.searchParams.get("import");
-  assert.ok(encodedParam);
-  const decoded = decodeSharedPalette(decodeURIComponent(encodedParam ?? ""));
-  assert.equal(decoded?.name, "Summer");
+  assert.equal(parsed.searchParams.get("import"), null);
+  const slug = parsed.pathname.split("/").filter(Boolean).at(-1) ?? "";
+  assert.equal(slug, "ff8000-0099ff");
+  assert.deepEqual(parsePaletteHexSlug(slug), ["FF8000", "0099FF"]);
 });

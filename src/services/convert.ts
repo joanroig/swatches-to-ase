@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 
+import type { Palette, PaletteFormat } from "../core/palette.js";
 import {
   exportPaletteToAse,
   exportPaletteToGpl,
@@ -8,7 +9,6 @@ import {
   getSupportedPaletteFormats,
   readPaletteFile,
 } from "../core/palette.js";
-import type { Palette, PaletteFormat } from "../core/palette.js";
 
 type Config = {
   inFolder: string;
@@ -36,23 +36,14 @@ const normalizeOutFormats = (value: Config["outFormats"]): PaletteFormat[] => {
   if (normalized.includes("all")) {
     return [...SUPPORTED_FORMATS];
   }
-  const invalid = normalized.filter(
-    (entry) => !SUPPORTED_FORMAT_SET.has(entry as PaletteFormat)
-  );
+  const invalid = normalized.filter((entry) => !SUPPORTED_FORMAT_SET.has(entry as PaletteFormat));
   if (invalid.length > 0) {
-    throw new Error(
-      `Unsupported output format(s): ${invalid.join(
-        ", "
-      )}. Use: ${SUPPORTED_FORMATS.join(", ")}.`
-    );
+    throw new Error(`Unsupported output format(s): ${invalid.join(", ")}. Use: ${SUPPORTED_FORMATS.join(", ")}.`);
   }
   return Array.from(new Set(normalized)) as PaletteFormat[];
 };
 
-const exportPalette = async (
-  palette: Palette,
-  format: PaletteFormat
-): Promise<Uint8Array | string> => {
+const exportPalette = async (palette: Palette, format: PaletteFormat): Promise<Uint8Array | string> => {
   if (format === "swatches") {
     return exportPaletteToSwatches(palette);
   }
@@ -70,16 +61,12 @@ export class ColorConverter {
   outFormats: PaletteFormat[];
 
   constructor() {
-    const config = JSON.parse(
-      fs.readFileSync("./config.json", "utf-8")
-    ) as Config;
+    const config = JSON.parse(fs.readFileSync("./config.json", "utf-8")) as Config;
     this.inFolderPath = config.inFolder;
     this.outFolderPath = config.outFolder;
     this.colorNameFormat = config.colorNameFormat;
     this.addBlackWhite = config.addBlackWhite;
-    this.outFormats = normalizeOutFormats(
-      config.outFormats ?? config.outFormat ?? "ase"
-    );
+    this.outFormats = normalizeOutFormats(config.outFormats ?? config.outFormat ?? "ase");
   }
 
   async start() {

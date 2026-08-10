@@ -1,91 +1,188 @@
 export const dropzone = document.querySelector<HTMLDivElement>("#dropzone");
+export const importSourceOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="import-source"]'));
+export const importPanels = Array.from(document.querySelectorAll<HTMLElement>("[data-import-panel]"));
+export const imageDropzone = document.querySelector<HTMLDivElement>("#image-dropzone");
+export const imageInput = document.querySelector<HTMLInputElement>("#image-input");
+export const imageStage = document.querySelector<HTMLDivElement>("#image-stage");
+export const imageCanvas = document.querySelector<HTMLDivElement>("#image-canvas");
+export const imagePreview = document.querySelector<HTMLImageElement>("#image-preview");
+export const imagePointsLayer = document.querySelector<HTMLDivElement>("#image-points");
+export const imageModeOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="image-mode"]'));
+export const imageAutoControls = document.querySelector<HTMLDivElement>("#image-auto-controls");
+export const imageCountInput = document.querySelector<HTMLInputElement>("#image-count");
+export const imageCountValue = document.querySelector<HTMLOutputElement>("#image-count-value");
+export const imageSimilarityInput = document.querySelector<HTMLInputElement>("#image-similarity");
+export const imageSimilarityValue = document.querySelector<HTMLOutputElement>("#image-similarity-value");
+export const imagePointsHint = document.querySelector<HTMLParagraphElement>("#image-points-hint");
+export const imageStrip = document.querySelector<HTMLDivElement>("#image-strip");
+export const imageCreateButton = document.querySelector<HTMLButtonElement>("#image-create");
 export const fileInput = document.querySelector<HTMLInputElement>("#file-input");
 export const formatSelect = document.querySelector<HTMLSelectElement>("#format");
 export const addBwToggle = document.querySelector<HTMLInputElement>("#add-bw");
 export const log = document.querySelector<HTMLDivElement>("#log");
-export const loadingScreen =
-  document.querySelector<HTMLDivElement>("#loading-screen");
-export const versionBadge =
-  document.querySelector<HTMLAnchorElement>("#app-version");
+export const loadingScreen = document.querySelector<HTMLDivElement>("#loading-screen");
+export const topbar = document.querySelector<HTMLElement>(".topbar");
+export const appShell = document.querySelector<HTMLDivElement>(".app-shell");
+export const versionBadge = document.querySelector<HTMLAnchorElement>("#app-version");
+export const versionNumber = document.querySelector<HTMLSpanElement>("#app-version-number");
+export const deployStamp = document.querySelector<HTMLSpanElement>("#deploy-stamp");
+export const viewSections = Array.from(document.querySelectorAll<HTMLElement>("[data-view-section]"));
+export const viewToggleButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-view-target]"));
+export const openSettingsButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-action="open-settings"]'));
+export const openCloudButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-action="open-cloud"]'));
+export const shellAvatarImages = Array.from(document.querySelectorAll<HTMLImageElement>("[data-cloud-avatar]"));
+export const sidebarToggleButton = document.querySelector<HTMLButtonElement>('[data-action="toggle-sidebar"]');
 export const paletteList = document.querySelector<HTMLDivElement>("#palette-list");
-export const paletteEditor =
-  document.querySelector<HTMLDivElement>("#palette-editor");
-export const palettePreview =
-  document.querySelector<HTMLDivElement>("#palette-preview");
+export const librarySearchInput = document.querySelector<HTMLInputElement>("#library-search");
+export const libraryEmptySearch = document.querySelector<HTMLParagraphElement>("#library-empty-search");
+export const createFolderButton = document.querySelector<HTMLButtonElement>("#create-folder");
+export const actionDock = document.querySelector<HTMLDivElement>(".action-dock");
+export const paletteEditor = document.querySelector<HTMLDivElement>("#palette-editor");
 export const editorName = document.querySelector<HTMLDivElement>("#editor-name");
-export const editorFooter =
-  document.querySelector<HTMLDivElement>("#editor-footer");
-export const editorSubtitle =
-  document.querySelector<HTMLParagraphElement>("#editor-subtitle");
-export const themeSelect =
-  document.querySelector<HTMLSelectElement>("#theme-select");
-export const colorNotationSelect =
-  document.querySelector<HTMLSelectElement>("#color-notation");
-export const colorNotationEditorSelect =
-  document.querySelector<HTMLSelectElement>("#color-notation-editor");
-export const autoRenameToggle =
-  document.querySelector<HTMLInputElement>("#auto-rename-colors");
-export const paletteNameInput =
-  document.querySelector<HTMLInputElement>("#palette-name");
-export const addColorButton =
-  document.querySelector<HTMLButtonElement>("#add-color");
-export const editorExportButton =
-  document.querySelector<HTMLButtonElement>("#editor-export");
-export const openSettingsButton =
-  document.querySelector<HTMLButtonElement>("#open-settings");
-export const openImportButton =
-  document.querySelector<HTMLButtonElement>("#open-import");
-export const openGenerateButton =
-  document.querySelector<HTMLButtonElement>("#open-generate");
-export const removeAllButton =
-  document.querySelector<HTMLButtonElement>("#remove-all-palettes");
-export const openExportButton =
-  document.querySelector<HTMLButtonElement>("#open-export");
-export const openViewButton =
-  document.querySelector<HTMLButtonElement>("#open-view");
-export const importModal =
-  document.querySelector<HTMLDivElement>("#import-modal");
-export const settingsModal =
-  document.querySelector<HTMLDivElement>("#settings-modal");
-export const generateModal =
-  document.querySelector<HTMLDivElement>("#generate-modal");
-export const editorModal =
-  document.querySelector<HTMLDivElement>("#editor-modal");
-export const exportModal =
-  document.querySelector<HTMLDivElement>("#export-modal");
+export const editorTools = document.querySelector<HTMLDivElement>("#editor-tools");
+export const editorOverflow = document.querySelector<HTMLDivElement>("#editor-overflow");
+export const editorToolsTrigger = document.querySelector<HTMLButtonElement>("#editor-tools-trigger");
+export const editorToolsPanel = document.querySelector<HTMLDivElement>("#editor-tools-panel");
+export const editorSubtitle = document.querySelector<HTMLElement>("#editor-subtitle");
+export const editorLayoutToggle = document.querySelector<HTMLButtonElement>("#editor-layout-toggle");
+export const editorUndoButton = document.querySelector<HTMLButtonElement>("#editor-undo");
+export const editorRedoButton = document.querySelector<HTMLButtonElement>("#editor-redo");
+export const editorSaveButton = document.querySelector<HTMLButtonElement>("#editor-save");
+export const themeSelect = document.querySelector<HTMLSelectElement>("#theme-select");
+export const motionSelect = document.querySelector<HTMLSelectElement>("#motion-select");
+export const languageSelect = document.querySelector<HTMLSelectElement>("#language-select");
+export const colorNotationSelect = document.querySelector<HTMLSelectElement>("#color-notation");
+export const colorNotationEditorSelect = document.querySelector<HTMLSelectElement>("#color-notation-editor");
+export const paletteNameInput = document.querySelector<HTMLInputElement>("#palette-name");
+export const addColorButton = document.querySelector<HTMLButtonElement>("#add-color");
+export const editorExportButton = document.querySelector<HTMLButtonElement>("#editor-export");
+export const openLegalButton = document.querySelector<HTMLButtonElement>("#open-legal");
+export const openLicenseButton = document.querySelector<HTMLButtonElement>("#open-license");
+export const openLicensesButton = document.querySelector<HTMLButtonElement>("#open-licenses");
+export const openTermsButton = document.querySelector<HTMLButtonElement>("#open-terms");
+export const openPrivacyButton = document.querySelector<HTMLButtonElement>("#open-privacy");
+export const openCookiesButton = document.querySelector<HTMLButtonElement>("#open-cookies");
+export const openFooterLicenseButton = document.querySelector<HTMLButtonElement>("#open-license-footer");
+export const openContactButton = document.querySelector<HTMLButtonElement>("#open-contact");
+export const openAboutButton = document.querySelector<HTMLButtonElement>("#open-about");
+export const openImportButton = document.querySelector<HTMLButtonElement>("#open-import");
+export const openGenerateButton = document.querySelector<HTMLButtonElement>("#open-generate");
+export const removeAllButton = document.querySelector<HTMLButtonElement>("#remove-all-palettes");
+export const openExportButton = document.querySelector<HTMLButtonElement>("#open-export");
+export const openViewButton = document.querySelector<HTMLButtonElement>("#open-view");
+export const fabHub = document.querySelector<HTMLDivElement>("#fab-hub");
+export const fabMenu = document.querySelector<HTMLDivElement>("#fab-menu");
+export const fabToggleButton = document.querySelector<HTMLButtonElement>("#fab-toggle");
+export const fabActionButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-fab-action]"));
+export const fabImportButton = document.querySelector<HTMLButtonElement>('[data-fab-action="import"]');
+export const fabGenerateButton = document.querySelector<HTMLButtonElement>('[data-fab-action="generate"]');
+export const fabExportButton = document.querySelector<HTMLButtonElement>('[data-fab-action="export"]');
+export const importModal = document.querySelector<HTMLDivElement>("#import-modal");
+export const settingsModal = document.querySelector<HTMLDivElement>("#settings-modal");
+export const legalModal = document.querySelector<HTMLDivElement>("#legal-modal");
+export const termsModal = document.querySelector<HTMLDivElement>("#terms-modal");
+export const privacyModal = document.querySelector<HTMLDivElement>("#privacy-modal");
+export const cookiesModal = document.querySelector<HTMLDivElement>("#cookies-modal");
+export const contactModal = document.querySelector<HTMLDivElement>("#contact-modal");
+export const aboutModal = document.querySelector<HTMLDivElement>("#about-modal");
+export const licensesModal = document.querySelector<HTMLDivElement>("#licenses-modal");
+export const licenseModal = document.querySelector<HTMLDivElement>("#license-modal");
+export const cloudModal = document.querySelector<HTMLDivElement>("#cloud-modal");
+export const generateModal = document.querySelector<HTMLDivElement>("#generate-modal");
+export const editorModal = document.querySelector<HTMLDivElement>("#editor-modal");
+export const exportModal = document.querySelector<HTMLDivElement>("#export-modal");
 export const viewModal = document.querySelector<HTMLDivElement>("#view-modal");
-export const generateNameInput =
-  document.querySelector<HTMLInputElement>("#generate-name");
-export const generateStyleSelect =
-  document.querySelector<HTMLSelectElement>("#generate-style");
-export const generateFormatSelect =
-  document.querySelector<HTMLSelectElement>("#generate-format");
-export const generateCountInput =
-  document.querySelector<HTMLInputElement>("#generate-count");
-export const generateUseBaseToggle =
-  document.querySelector<HTMLInputElement>("#generate-use-base");
-export const generateBaseColorInput =
-  document.querySelector<HTMLInputElement>("#generate-base-color");
-export const confirmGenerateButton =
-  document.querySelector<HTMLButtonElement>("#confirm-generate");
-export const generateEmptyButton =
-  document.querySelector<HTMLButtonElement>("#generate-empty-button");
-export const exportAllButton =
-  document.querySelector<HTMLButtonElement>("#export-all");
-export const exportFormatOptions = Array.from(
-  document.querySelectorAll<HTMLInputElement>('input[name="export-format"]')
-);
-export const exportActionButtons = Array.from(
-  document.querySelectorAll<HTMLButtonElement>("[data-export-action]")
-);
-export const exportActionIcons = Array.from(
-  document.querySelectorAll<HTMLSpanElement>(".action-icon[data-icon]")
-);
-export const viewDisplay =
-  document.querySelector<HTMLDivElement>("#view-display");
+export const licensesList = document.querySelector<HTMLDivElement>("#licenses-list");
+export const licensesStatus = document.querySelector<HTMLParagraphElement>("#licenses-status");
+export const licenseText = document.querySelector<HTMLPreElement>("#license-text");
+export const generateNameInput = document.querySelector<HTMLInputElement>("#generate-name");
+export const generateStyleSelect = document.querySelector<HTMLSelectElement>("#generate-style");
+export const generateFormatSelect = document.querySelector<HTMLSelectElement>("#generate-format");
+export const generateCountInput = document.querySelector<HTMLSelectElement>("#generate-count");
+export const generateUseBaseToggle = document.querySelector<HTMLInputElement>("#generate-use-base");
+export const generateBaseColorField = document.querySelector<HTMLDivElement>("#generate-base-color-field");
+export const generateBaseColorInput = document.querySelector<HTMLInputElement>("#generate-base-color");
+export const generateHistoryBackButton = document.querySelector<HTMLButtonElement>("#generate-history-back");
+export const generateHistoryForwardButton = document.querySelector<HTMLButtonElement>("#generate-history-forward");
+export const confirmGenerateButton = document.querySelector<HTMLButtonElement>("#confirm-generate");
+export const saveGeneratedPaletteButton = document.querySelector<HTMLButtonElement>("#save-generated-palette");
+export const generatePreviewName = document.querySelector<HTMLParagraphElement>("#generate-preview-name");
+export const generatePreviewSubtitle = document.querySelector<HTMLParagraphElement>("#generate-preview-subtitle");
+export const generatePreviewStrip = document.querySelector<HTMLDivElement>("#generate-preview-strip");
+export const generateDestination = document.querySelector<HTMLParagraphElement>("#generate-destination");
+export const exportAllButton = document.querySelector<HTMLButtonElement>("#export-all");
+export const exportFormatOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="export-format"]'));
+export const exportActionButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-export-action]"));
+export const exportActionIcons = Array.from(document.querySelectorAll<HTMLSpanElement>(".action-icon[data-icon]"));
+export const viewDisplay = document.querySelector<HTMLDivElement>("#view-display");
 export const viewValues = document.querySelector<HTMLDivElement>("#view-values");
 export const viewStrip = document.querySelector<HTMLDivElement>("#view-strip");
-export const viewSubtitle =
-  document.querySelector<HTMLParagraphElement>("#view-subtitle");
-export const viewEditButton =
-  document.querySelector<HTMLButtonElement>("#view-edit");
+export const viewSubtitle = document.querySelector<HTMLParagraphElement>("#view-subtitle");
+export const viewPublicMeta = document.querySelector<HTMLDivElement>("#view-public-meta");
+export const viewLikeButton = document.querySelector<HTMLButtonElement>("#view-like");
+export const viewLikeCount = document.querySelector<HTMLSpanElement>("#view-like-count");
+export const viewSaveButton = document.querySelector<HTMLButtonElement>("#view-save");
+export const viewSaveEditButton = document.querySelector<HTMLButtonElement>("#view-save-edit");
+export const playgroundRamp = document.querySelector<HTMLDivElement>("#playground-ramp");
+export const playgroundShuffleButton = document.querySelector<HTMLButtonElement>("#playground-shuffle");
+export const playgroundStyleSelect = document.querySelector<HTMLSelectElement>("#playground-style");
+export const playgroundUndoButton = document.querySelector<HTMLButtonElement>("#playground-undo");
+export const playgroundRedoButton = document.querySelector<HTMLButtonElement>("#playground-redo");
+export const playgroundLead = document.querySelector<HTMLDivElement>(".playground-topbar-lead");
+export const playgroundHint = document.querySelector<HTMLParagraphElement>("#playground-hint");
+export const playgroundSource = document.querySelector<HTMLParagraphElement>("#playground-source");
+export const playgroundSourceText = document.querySelector<HTMLSpanElement>("#playground-source-text");
+export const playgroundDetachButton = document.querySelector<HTMLButtonElement>("#playground-detach");
+export const playgroundSaveButton = document.querySelector<HTMLButtonElement>("#playground-save");
+export const playgroundSceneTabs = document.querySelector<HTMLDivElement>("#playground-scene-tabs");
+export const playgroundPreview = document.querySelector<HTMLElement>(".playground-preview");
+export const playgroundZoomInButton = document.querySelector<HTMLButtonElement>("#playground-zoom-in");
+export const playgroundZoomOutButton = document.querySelector<HTMLButtonElement>("#playground-zoom-out");
+export const playgroundZoomValue = document.querySelector<HTMLSpanElement>("#playground-zoom-value");
+export const playgroundFullscreenButton = document.querySelector<HTMLButtonElement>("#playground-fullscreen");
+export const playgroundStage = document.querySelector<HTMLDivElement>("#playground-stage");
+
+export const discoverList = document.querySelector<HTMLDivElement>("#discover-list");
+export const discoverEmpty = document.querySelector<HTMLParagraphElement>("#discover-empty");
+export const discoverSortSelect = document.querySelector<HTMLSelectElement>("#discover-sort");
+export const discoverSearchInput = document.querySelector<HTMLInputElement>("#discover-search");
+export const discoverFilterToggle = document.querySelector<HTMLButtonElement>("#discover-filter-toggle");
+export const discoverFilterPanel = document.querySelector<HTMLDivElement>("#discover-filter-panel");
+export const discoverProfileModal = document.querySelector<HTMLDivElement>("#discover-profile-modal");
+export const discoverProfileAvatar = document.querySelector<HTMLImageElement>("#discover-profile-avatar");
+export const discoverProfileName = document.querySelector<HTMLHeadingElement>("#discover-profile-name");
+export const discoverProfileStats = document.querySelector<HTMLParagraphElement>("#discover-profile-stats");
+export const discoverProfileList = document.querySelector<HTMLDivElement>("#discover-profile-list");
+export const discoverFollowButton = document.querySelector<HTMLButtonElement>("#discover-follow");
+export const discoverProfileEmpty = document.querySelector<HTMLParagraphElement>("#discover-profile-empty");
+export const cloudStatus = document.querySelector<HTMLParagraphElement>("#cloud-status");
+export const cloudAuthSection = document.querySelector<HTMLDivElement>("#cloud-auth");
+export const cloudAuthSwitchButton = document.querySelector<HTMLButtonElement>("#cloud-auth-switch");
+export const cloudVerificationSection = document.querySelector<HTMLDivElement>("#cloud-verification");
+export const cloudVerificationEmail = document.querySelector<HTMLSpanElement>("#cloud-verification-email");
+export const cloudManagementSection = document.querySelector<HTMLDivElement>("#cloud-management");
+export const cloudSessionActions = document.querySelector<HTMLDivElement>("#cloud-session-actions");
+export const cloudSessionLinks = document.querySelector<HTMLDivElement>("#cloud-session-links");
+export const cloudSignInButton = document.querySelector<HTMLButtonElement>("#cloud-signin");
+export const cloudSignOutButton = document.querySelector<HTMLButtonElement>("#cloud-signout");
+export const cloudSyncButton = document.querySelector<HTMLButtonElement>("#cloud-sync");
+export const cloudDeleteAccountButton = document.querySelector<HTMLButtonElement>("#cloud-delete-account");
+export const cloudEmailInput = document.querySelector<HTMLInputElement>("#cloud-email-input");
+export const cloudPasswordInput = document.querySelector<HTMLInputElement>("#cloud-password-input");
+export const cloudRecaptcha = document.querySelector<HTMLDivElement>("#cloud-recaptcha");
+export const cloudEmailSignInButton = document.querySelector<HTMLButtonElement>("#cloud-email-signin");
+export const cloudEmailSignUpButton = document.querySelector<HTMLButtonElement>("#cloud-email-signup");
+export const cloudPasswordResetButton = document.querySelector<HTMLButtonElement>("#cloud-password-reset");
+export const cloudChangeEmailButton = document.querySelector<HTMLButtonElement>("#cloud-change-email");
+export const cloudUserCard = document.querySelector<HTMLDivElement>("#cloud-user");
+export const cloudAvatar = document.querySelector<HTMLImageElement>("#cloud-avatar");
+export const cloudName = document.querySelector<HTMLSpanElement>("#cloud-name");
+export const cloudEmail = document.querySelector<HTMLSpanElement>("#cloud-email");
+export const cloudSyncStatus = document.querySelector<HTMLSpanElement>("#cloud-sync-status");
+export const cloudVerifyEmailButton = document.querySelector<HTMLButtonElement>("#cloud-verify-email");
+export const cloudProfileSection = document.querySelector<HTMLDivElement>("#cloud-profile-section");
+export const cloudProfileAvatar = document.querySelector<HTMLImageElement>("#cloud-profile-avatar");
+export const cloudProfileNameInput = document.querySelector<HTMLInputElement>("#cloud-profile-name");
+export const cloudProfileAvatarBackgroundInput = document.querySelector<HTMLInputElement>("#cloud-profile-avatar-bg");
+export const cloudProfileAvatarForegroundInput = document.querySelector<HTMLInputElement>("#cloud-profile-avatar-fg");
+export const cloudProfileSaveButton = document.querySelector<HTMLButtonElement>("#cloud-profile-save");

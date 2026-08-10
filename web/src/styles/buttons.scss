@@ -1,0 +1,201 @@
+.export-trigger {
+  width: auto;
+  justify-content: center;
+}
+
+.footer-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-pill);
+  padding: 0 16px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ink);
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  min-height: var(--control-md);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow: 0 12px 24px rgba(28, 26, 22, 0.08);
+
+  &:hover {
+    border-color: rgba(28, 26, 22, 0.3);
+    box-shadow: 0 16px 28px rgba(28, 26, 22, 0.14);
+  }
+}
+
+button.footer-link {
+  border: none;
+  background: transparent;
+  min-height: 0;
+  padding: 6px 2px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  box-shadow: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--ink);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.version-button {
+  gap: 6px;
+}
+
+.version-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.version-number {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.github-button svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.deploy-stamp {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  /* Faint on purpose — it is a build stamp, not information — but 15% read as a rendering fault
+     rather than a deliberately quiet line. */
+  color: color-mix(in srgb, var(--muted) 38%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  border: none;
+  border-radius: var(--radius-pill);
+  min-height: var(--control-md);
+  padding: 0 18px;
+  font-size: 0.92rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition:
+    filter 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  &.primary {
+    background: linear-gradient(130deg, var(--accent), var(--accent-3));
+    color: #fff;
+    box-shadow: var(--shadow-soft);
+  }
+
+  &.ghost {
+    background: transparent;
+    border: 1px solid var(--stroke);
+    color: inherit;
+  }
+
+  &.danger {
+    background: linear-gradient(130deg, #ef4444, #b91c1c);
+    color: #fff;
+    box-shadow: var(--shadow-soft);
+  }
+
+  /*
+   * Lit, not lifted.
+   *
+   * Hover used to raise every button a pixel, which moves the control out from under the pointer
+   * that is reaching for it — a small target can slide out of its own hitbox mid-click, and a row
+   * of them ripples as the pointer crosses it. The tone changes instead, and nothing moves.
+   *
+   * Two treatments because there are two kinds of button: a flat one takes a tint, and a gradient
+   * one has no flat colour to tint, so it brightens. `.primary` and `.danger` are excluded from
+   * the tint by name rather than by specificity, since `button:hover` (0,1,1) would otherwise beat
+   * their (0,1,0) backgrounds and paint over the gradient.
+   */
+  /*
+   * The excluded classes are buttons in markup only.
+   *
+   * A text link zeroes out the padding, the border and the min-height that make a button look like
+   * one, so a hover fill lands as a pill sized by the base rule above rather than by the words
+   * inside it — a wide lozenge floating around two words of text. Each of them already declares an
+   * underline or a colour change on hover, which is the whole feedback a link needs. They are
+   * listed by name because there is no selector for "styled as a link"; anything else that strips
+   * button chrome belongs in this list too.
+   */
+  &:hover:not(:disabled):not(.primary):not(.danger):not(.text-link):not(.footer-link):not(.discover-author-button):not(.playground-source-detach) {
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+
+  &.primary:hover:not(:disabled),
+  &.danger:hover:not(:disabled) {
+    filter: brightness(1.06);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    box-shadow: none;
+  }
+
+  &.is-active {
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    background: rgba(79, 70, 229, 0.08);
+  }
+
+  /*
+   * A circle at the same height as a text button, so a row of mixed buttons reads as one row.
+   * Context rules must not set `padding` on it — that is what turned every icon button into a
+   * slightly different oval — so they scope their padding to `:not(.icon-only)`.
+   */
+  &.icon-only {
+    width: var(--control-md);
+    min-width: var(--control-md);
+    height: var(--control-md);
+    padding: 0;
+    border-radius: var(--radius-pill);
+    flex: 0 0 auto;
+
+    .icon {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &.close-button {
+    width: var(--control-md);
+    min-width: var(--control-md);
+    height: var(--control-md);
+    padding: 0;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--stroke);
+    background: transparent;
+    flex: 0 0 auto;
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      background: rgba(148, 163, 184, 0.15);
+    }
+  }
+}

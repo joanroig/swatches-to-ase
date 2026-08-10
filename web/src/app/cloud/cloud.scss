@@ -1,0 +1,326 @@
+.cloud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cloud-session-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+  justify-content: flex-end;
+}
+
+.cloud-session-actions.is-hidden {
+  display: none;
+}
+
+.cloud-session-links {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.cloud-session-links.is-hidden {
+  display: none;
+}
+
+.cloud-delete {
+  color: var(--accent-3);
+}
+
+.cloud-auth {
+  display: grid;
+  gap: 12px;
+}
+
+.cloud-auth.is-hidden {
+  display: none;
+}
+
+.cloud-auth[data-mode="signin"] [data-auth="signup"] {
+  display: none;
+}
+
+.cloud-auth[data-mode="signup"] [data-auth="signin"] {
+  display: none;
+}
+
+.cloud-email-hint {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.cloud-email-form {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+.cloud-recaptcha {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-x: auto;
+}
+
+.cloud-recaptcha.is-hidden {
+  display: none;
+}
+
+.cloud-email-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cloud-email-links {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cloud-auth-switch {
+  justify-self: end;
+  text-align: right;
+}
+
+.cloud-verification {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  background: var(--surface-2);
+}
+
+.cloud-verification-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.cloud-verification-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.cloud-verification-copy {
+  display: grid;
+  gap: 6px;
+
+  h5 {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .hint {
+    margin: 0;
+  }
+}
+
+.cloud-verification-email {
+  font-weight: 600;
+  color: var(--ink);
+  margin-left: 4px;
+  word-break: break-word;
+}
+
+.cloud-verification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cloud-management {
+  display: grid;
+  gap: 12px;
+}
+
+.cloud-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+}
+
+.cloud-user.is-hidden {
+  display: none;
+}
+
+.cloud-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  object-fit: cover;
+}
+
+.cloud-meta {
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.cloud-name {
+  font-weight: 600;
+}
+
+.cloud-email {
+  color: var(--muted);
+}
+
+.cloud-sync-status {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.cloud-profile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "avatar fields"
+    "actions actions";
+  gap: 16px;
+  align-items: start;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--stroke);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+.cloud-profile-avatar {
+  grid-area: avatar;
+  width: 72px;
+  height: 72px;
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.18);
+}
+
+.cloud-profile-fields {
+  grid-area: fields;
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+/*
+ * Compact swatch pills instead of full form fields: the avatar preview beside them already shows
+ * the result, so the colour inputs only need to be tappable, not large.
+ */
+/* Two equal columns rather than content-width pills, so the row lines up with the name field
+   above it instead of trailing off into empty space. */
+.cloud-profile-swatches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cloud-profile-swatch {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 5px 14px 5px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--stroke));
+    color: var(--ink);
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  input[type="color"] {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+  }
+
+  span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:has(input:disabled) {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.cloud-profile-actions {
+  grid-area: actions;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media (max-width: 560px) {
+  .cloud-profile {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "avatar"
+      "fields"
+      "actions";
+    justify-items: stretch;
+  }
+
+  .cloud-profile-avatar {
+    justify-self: center;
+    width: 64px;
+    height: 64px;
+  }
+
+  .cloud-profile-actions {
+    justify-content: stretch;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .cloud-verification-card {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+}

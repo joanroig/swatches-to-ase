@@ -1,0 +1,412 @@
+@media (min-width: 960px) {
+  /* Centred on the content column rather than the page: with the rail beside it, page-centred put
+     the footer noticeably left of the panel it belongs to. Tracks the rail's collapsed width too,
+     because `--sidebar-width` is set on the shell and inherited here. */
+  .footer {
+    margin-left: calc(var(--sidebar-width, 164px) + var(--rail-gap));
+  }
+
+  .shell {
+    grid-template-columns: var(--sidebar-width, 164px) minmax(0, 1fr);
+    grid-template-areas: "sidebar main";
+    transition: grid-template-columns 0.25s ease;
+  }
+
+  .sidebar {
+    display: grid;
+  }
+
+  /*
+   * Two sticky pieces, not one.
+   *
+   * The rail has to do two different things at once, and a single positioned box can only do one of
+   * them. Sticky as a whole, it was dragged off screen at the bottom of the page: sticky only
+   * travels inside its containing block, the shell ends where the app frame does, and the footer
+   * sits below that — so revealing the footer took the wordmark with it. Fixed as a whole, it stayed
+   * put but its lower controls hung past the panel they belong beside, out over the footer.
+   *
+   * Split, each half gets the behaviour it wants. The column stretches to the shell, the top group
+   * sticks to the top of the window, and the bottom group sticks to the *bottom* — which pins it to
+   * the window while there is still page below, then lets it settle exactly on the panel's bottom
+   * edge once you reach the end. Both groups are short, so neither can be pushed off screen.
+   */
+  .sidebar-stack {
+    align-self: stretch;
+    justify-content: space-between;
+    width: var(--sidebar-width, 164px);
+    transition: width 0.25s ease;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: var(--frame-padding-top);
+    /* Its own height, not the column's. The base rule grows it to fill the stack, which leaves a
+       sticky box exactly as tall as its container and therefore nowhere to stick. */
+    flex: 0 0 auto;
+  }
+
+  .sidebar-bottom {
+    position: sticky;
+    bottom: var(--frame-padding-bottom);
+  }
+
+  /*
+   * Two things stuck to opposite edges of a window shorter than both of them together will meet in
+   * the middle, and the rail's did: the nav and the lower controls printed on top of each other.
+   * Under this height the lower group gives up its perch and simply sits at the end of the column,
+   * which scrolls — nothing overlaps, and the nav stays where it is.
+   */
+  @media (max-height: 640px) {
+    .sidebar-bottom {
+      position: static;
+    }
+  }
+
+  .app-shell:not([data-sidebar-ready]) .shell,
+  .app-shell:not([data-sidebar-ready]) .sidebar-stack {
+    transition: none;
+  }
+
+  .topbar {
+    display: none;
+  }
+
+  .bottom-nav,
+  .fab-hub {
+    display: none;
+  }
+
+  .sidebar-actions {
+    display: flex;
+  }
+
+  .main-content {
+    display: flex;
+    flex-direction: column;
+    /* The frame is already exactly one viewport; the column just fills it. The old
+       `100vh - 104px` was a second, different guess at the same thing. */
+    min-height: 0;
+  }
+
+  .panel-palettes,
+  .panel-playground,
+  .panel-discover {
+    flex: 1 1 auto;
+  }
+
+}
+
+@media (max-width: 959.98px) {
+  .page {
+    --bottom-nav-height: 44px;
+    --page-bottom-padding: calc(var(--bottom-nav-height) + 20px + env(safe-area-inset-bottom));
+    --topbar-offset: 64px;
+    padding-bottom: var(--page-bottom-padding);
+  }
+
+  .shell {
+    grid-template-areas: "main";
+    gap: 0;
+  }
+
+  .sidebar-stack {
+    display: none;
+  }
+
+  .main-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .action-dock {
+    display: none;
+  }
+
+  // .panel-palettes-spacer {
+  //   display: none;
+  // }
+
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .panel-actions {
+    width: 100%;
+  }
+
+  .panel-palettes .panel-actions {
+    display: none;
+  }
+
+  .panel-palettes,
+  .panel-playground,
+  .panel-discover {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .export-controls {
+    justify-content: stretch;
+  }
+}
+
+@media (max-width: 720px) {
+  /*
+   * The footer stays centred. These rules left-aligned it from when it lived inside the library
+   * column; now that it sits under the whole app, alignment should match the desktop.
+   */
+  .footer {
+    margin-top: 28px;
+    gap: 14px;
+  }
+
+  .footer-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  /* Sized so all six links sit on one row at 390px: at the desktop size they wrapped 5 + 1, which
+     left "About" stranded on a line of its own. */
+  /* Sized so all six links sit on one row at 390px: at the desktop size they wrapped 5 + 1, which
+     left "About" stranded on a line of its own. */
+  .footer-links {
+    justify-content: center;
+    gap: 8px 10px;
+  }
+
+  /* `button.footer-link`, not `.footer-link`: the base rule in `buttons.scss` is element-qualified
+     and outranks a bare class however late it comes in the cascade. */
+  button.footer-link {
+    font-size: 0.78rem;
+    /* A comfortable tap target without changing how the row reads. */
+    padding: 4px 0;
+  }
+
+
+  /*
+   * Full-bleed on phones. The page's side padding plus the panel's own inset was costing ~52px of
+   * a 390px screen — most of a swatch — and it bought nothing: the panel edge already separates the
+   * content from the background. The panel keeps its top and bottom corners and loses its side
+   * borders, so it reads as a sheet rather than a card floating in a gutter.
+   */
+  .page {
+    --frame-padding-top: 16px;
+    --page-pad: 0px;
+
+    padding: 0 var(--page-pad) var(--page-bottom-padding);
+  }
+
+  .topbar,
+  .footer {
+    padding-inline: 14px;
+  }
+
+  /* Square: a full-bleed sheet with rounded top corners read as a card that had lost its sides. */
+  /* The gutter moves through the variable, never through `padding` alone: the panel heads bleed
+     out by exactly `--panel-pad`, so a hardcoded padding here left every one of them overshooting
+     the panel by the difference — 4px of head hanging off both edges, and a page that scrolled
+     sideways because of it. */
+  .panel {
+    --panel-pad: 14px;
+
+    border-radius: 0;
+    border-inline: 0;
+  }
+
+  /* The head rounds its top corners to sit inside the panel's; a full-bleed panel has none, so the
+     head's showed as two curls against a square edge. */
+  .panel-head {
+    border-radius: 0;
+  }
+
+  /* Full width, so its rounded top corners had nothing to sit inside either. */
+  .bottom-nav {
+    border-radius: 0;
+  }
+
+  /*
+   * `.section-card` used to be a card inside a full-bleed panel and softened its corners here to
+   * suit. The folders and the preview are bands now, with `border-radius: 0` — but that is (0,1,0)
+   * and so was this, and this comes later in the cascade, so it won: every band on a phone had two
+   * rounded corners curling away from a square panel edge.
+   */
+
+  .library-group .palette-grid {
+    padding: 10px;
+  }
+
+  .library-group--open .palette-grid {
+    margin-inline: calc(var(--panel-pad) * -1);
+    /* The drop surface remains full-bleed, while its cards start on the same gutter and keep the
+       same width as cards in the root grid. Adding the group's 10px inset here made folder cards
+       20px narrower on phones and tablets. */
+    padding-inline: var(--panel-pad);
+  }
+
+  .topbar {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    top: 0;
+    padding: 6px 10px;
+    margin-bottom: 12px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand-text {
+    display: flex;
+  }
+
+  /* One value resizes the whole lockup. */
+  .brand {
+    --brand-size: 32px;
+  }
+
+  .topbar-actions {
+    width: auto;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .topbar-actions .avatar-button {
+    padding: 6px;
+  }
+
+  .topbar-actions .field {
+    width: 100%;
+  }
+
+
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .export-actions,
+  .modal-actions,
+  .panel-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /*
+   * The row used to be `edit, duplicate | spacer | publish, remove`, and these rules dressed it for
+   * a phone: labels off, padding down, and an auto margin after the second button to hold the last
+   * two against the right edge. The spacer is long gone and the row is an overflow row now, so all
+   * that margin did was split six circles into two clumps with 64px of nothing between them. The
+   * buttons are icon-only at every width already, and the container query on the card handles the
+   * rest — none of this had anything left to do.
+   */
+
+  input[type="color"] {
+    width: 48px;
+    height: 48px;
+  }
+
+  /*
+   * `width: auto` plus padding, from when these were labelled buttons that shed their text on a
+   * phone. They are icon-only controls now and size themselves square; overriding the width here
+   * made both of them ovals, wider than they were tall.
+   */
+
+  .topbar-actions .topbar-label {
+    display: none;
+  }
+
+  .toast-stack {
+    left: 50%;
+    right: auto;
+    bottom: 16px;
+    width: calc(100% - 32px);
+    transform: translateX(-50%);
+  }
+
+  .toast {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+}
+
+@media (max-width: 720px) {
+  .modal-card.modal-view {
+    padding: 18px;
+  }
+
+  .modal-card.modal-view .modal-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .modal-card.modal-view .modal-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .modal-card.modal-view .modal-body {
+    gap: 12px;
+  }
+
+  .view-display {
+    min-height: clamp(160px, 32vh, 220px);
+    padding: 16px;
+  }
+
+  .view-values {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px 16px;
+  }
+
+  .view-strip {
+    overflow-x: auto;
+  }
+
+  .view-swatch {
+    flex: 1 1 48px;
+    min-width: 48px;
+  }
+}
+
+@media (max-height: 720px) {
+  .modal-card.modal-view {
+    padding: 18px;
+  }
+
+  .modal-card.modal-view .modal-body {
+    gap: 12px;
+  }
+
+  .view-display {
+    min-height: clamp(160px, 32vh, 220px);
+    padding: 16px;
+  }
+
+  .view-values {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px 16px;
+  }
+
+  .view-strip {
+    overflow-x: auto;
+  }
+
+  .view-swatch {
+    flex: 1 1 48px;
+    min-width: 48px;
+  }
+}

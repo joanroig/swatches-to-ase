@@ -1,5 +1,5 @@
-import fs from "node:fs";
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import playwright from "playwright";
 
 const { chromium } = playwright;

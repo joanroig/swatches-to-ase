@@ -7,7 +7,7 @@
 <p align="center">
   <strong>Import, edit, and export palettes across Procreate, Adobe, and GIMP formats.</strong>
   <br />
-  <a href="https://joanroig.github.io/palette-studio/"><strong>Open Web App</strong></a> •
+  <a href="https://palettes.web.app/"><strong>Open Web App</strong></a> •
   <a href="https://github.com/joanroig/palette-studio/releases"><strong>Download Desktop</strong></a>
 </p>
 
@@ -15,14 +15,14 @@
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22%2B-43853d?logo=node.js&logoColor=white" alt="Node.js 22+"/></a>
   <a href="https://github.com/joanroig/palette-studio/actions/workflows/release.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/release.yml/badge.svg" alt="Build and Release"/></a>
   <a href="https://github.com/joanroig/palette-studio/actions/workflows/tests.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/tests.yml/badge.svg" alt="Tests"/></a>
-  <a href="https://github.com/joanroig/palette-studio/actions/workflows/pages.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/pages.yml/badge.svg" alt="Deploy Pages"/></a>
-  <a href="https://joanroig.github.io/palette-studio/"><img src="https://img.shields.io/badge/GitHub%20Pages-live-brightgreen" alt="GitHub Pages"/></a>
+  <a href="https://github.com/joanroig/palette-studio/actions/workflows/pages.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/pages.yml/badge.svg" alt="Deploy Firebase Hosting"/></a>
+  <a href="https://palettes.web.app/"><img src="https://img.shields.io/badge/Firebase%20Hosting-live-FFCA28?logo=firebase&logoColor=black" alt="Firebase Hosting"/></a>
 </p>
 
 <br>
 
 <p align="center">
-  <a href="https://joanroig.github.io/palette-studio/">
+  <a href="https://palettes.web.app/">
     <img alt="Showcase" src="img/showcase.png">
   </a>
   <br>
@@ -59,8 +59,8 @@ Go to the `examples` folder to see some converted palettes like this one:
 
 ## GUI (Web + Desktop)
 
-The project now includes a cross-platform GUI that runs in the browser (GitHub
-Pages compatible) and as a desktop app for Windows, macOS, and Linux.
+The project now includes a cross-platform GUI that runs in the browser (Firebase
+Hosting) and as a desktop app for Windows, macOS, and Linux.
 
 ### Web
 
@@ -73,12 +73,102 @@ Pages compatible) and as a desktop app for Windows, macOS, and Linux.
 - Export single palettes or batch export as ASE/Swatches/GPL.
 - Use quick exports for images, PDF, CSS, Tailwind, SVG, JSON, embed snippets, or share URLs.
 
+### Deploy (Firebase Hosting)
+
+Use the Firebase CLI to deploy the web build without GitHub Actions. The repo is
+already configured for Hosting in `firebase.json` (public dir: `dist-web`).
+
+1. Install the Firebase CLI once: `npm install -g firebase-tools`.
+2. Authenticate: `firebase login`.
+3. Link this repo to a Firebase project.
+4. Build the web assets: `npm run build:web`.
+5. Deploy Firestore rules and Hosting: `firebase deploy --only firestore:rules,hosting`.
+
+Project linking options:
+
+1. Create a local alias file: `firebase use --add` (creates `.firebaserc`).
+2. Or deploy with an explicit project each time: `firebase deploy --project <PROJECT_ID> --only firestore:rules,hosting`.
+
+Optional local preview:
+
+1. Build the web assets: `npm run build:web`.
+2. Serve the Hosting build locally: `firebase serve --only hosting`.
+
+Multiple Hosting targets (staging/testing/production):
+
+Use Firebase Hosting targets to map additional sites to this repo. Example for a production target:
+
+```bash
+firebase target:apply hosting production palettes
+firebase deploy --only hosting:production
+```
+
+### Firebase Sync + Discovery (Free Tier)
+
+Palette Studio can sync palettes between devices, publish public palettes, and
+show a discovery feed using Firebase Auth + Firestore (Spark/free tier).
+
+1. Create a Firebase project (Spark plan) and add a Web app.
+2. Enable Authentication → Sign-in method → Google (and optionally add your
+   support email).
+3. Create a Firestore database in production mode.
+4. Copy the Firebase config into `web/.env` using `web/.env.example` as a guide:
+   ```
+   VITE_FIREBASE_API_KEY=...
+   VITE_FIREBASE_AUTH_DOMAIN=...
+   VITE_FIREBASE_PROJECT_ID=...
+   VITE_FIREBASE_APP_ID=...
+   VITE_FIREBASE_STORAGE_BUCKET=...
+   VITE_FIREBASE_MESSAGING_SENDER_ID=...
+   VITE_FIREBASE_APP_CHECK_KEY=... (optional)
+   ```
+5. Restart the dev server or rebuild the app.
+
+**Optional: GitHub Actions secrets**
+Add the same `VITE_FIREBASE_*` keys as repository secrets to ensure builds
+deploy with Firebase enabled (for hosting and releases).
+
+**Recommended Firestore rules**
+Use rules that only allow authenticated users to read/write their own sync document, and allow public palettes to be read by anyone while restricting writes to their owners. The repo now includes a hardened baseline in `firestore.rules` with per-user access, size limits, and simple rate limits.
+
+Deploy `firestore.rules` before shipping a client whose sync payload has changed: `firebase deploy --only firestore:rules`. The GitHub deployment workflow does this before publishing Hosting; its service account therefore needs the Firebase Rules Admin role (`roles/firebaserules.admin`) in addition to its Hosting permissions.
+
+### Android (Capacitor)
+
+Palette Studio can be wrapped as an Android app using Capacitor:
+
+1. Build the web app: `npm run build:web`
+2. Add Android once: `npx cap add android`
+3. Sync web assets: `npm run build:android`
+4. Open Android Studio: `npm run open:android`
+
+Be sure to register the Android app in Firebase and add the generated
+`google-services.json` to the Android project when you enable sync.
+
+### Firebase security and key restrictions
+
+To ensure only this app can talk to Firebase:
+
+- **Restrict API keys** in Google Cloud Console → APIs & Services → Credentials.
+  - For web: restrict HTTP referrers to your production domains.
+  - For Android: restrict by package name and SHA-1 certificate fingerprints.
+- **Enable App Check** with reCAPTCHA v3 (web) and Play Integrity (Android) to stop unauthorized clients.
+  - Web uses `VITE_FIREBASE_APP_CHECK_KEY` (reCAPTCHA v3 site key).
+  - Electron/desktop needs a custom App Check provider if you plan to enforce App Check on Firestore.
+- **Lock down Firestore rules** (see above) and avoid public write access.
+- **Rotate keys** if you suspect leakage and keep `.env` out of version control.
+
 ### Desktop
 
 - Run `npm run dev:desktop` to launch the Electron app with hot reload.
 - Build the desktop bundle with `npm run build:desktop` (outputs: `dist-electron`, `dist-web`).
 - Build installers with `npm run dist:desktop` (outputs: `release`).
 - Desktop mode uses the same drag-and-drop workflow and saves zip exports via a native dialog.
+
+**Code signing (recommended)**
+Configure CI signing secrets so releases are signed on Windows/macOS:
+- Windows: `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD`
+- macOS: `MAC_CSC_LINK`, `MAC_CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`
 
 ## CLI
 
