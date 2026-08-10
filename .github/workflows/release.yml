@@ -131,7 +131,15 @@ jobs:
         run: npm ci
 
       - name: Build desktop packages
+        shell: bash
         run: |
+          # Unset empty code signing variables to prevent electron-builder from reading the current directory as a file
+          [ -z "$CSC_LINK" ] && unset CSC_LINK
+          [ -z "$CSC_KEY_PASSWORD" ] && unset CSC_KEY_PASSWORD
+          [ -z "$APPLE_ID" ] && unset APPLE_ID
+          [ -z "$APPLE_APP_SPECIFIC_PASSWORD" ] && unset APPLE_APP_SPECIFIC_PASSWORD
+          [ -z "$APPLE_TEAM_ID" ] && unset APPLE_TEAM_ID
+
           npm run build:desktop
           npx --no-install electron-builder --publish never --${{ matrix.platform }} ${{ matrix.target }} ${{ matrix.arch_flag }}
         env:
