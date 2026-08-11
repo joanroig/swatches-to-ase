@@ -65,6 +65,7 @@ export const applyTheme = (theme: string) => {
   const resolved = theme || "system";
   document.body.dataset.theme = resolved;
   document.documentElement.dataset.theme = resolved;
+  window.desktopApi?.setTheme?.(resolved);
 };
 
 export const applyMotionPreference = (value: string, persist = true) => {

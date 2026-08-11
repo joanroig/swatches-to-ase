@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, shell } from "electron";
 import { existsSync } from "fs";
 import fs from "fs/promises";
 import path from "path";
@@ -13,6 +13,18 @@ const APP_LINKS = {
   repo: "https://github.com/joanroig/palette-studio",
   issues: "https://github.com/joanroig/palette-studio/issues",
 };
+
+const THEME_BACKGROUNDS: Record<string, string> = {
+  studio: "#eef1f7",
+  dawn: "#f7f3ef",
+  flora: "#eef8f3",
+  noir: "#0f111a",
+  graphite: "#141822",
+  aurora: "#0b1321",
+};
+
+const getThemeBackground = (theme = "system") =>
+  THEME_BACKGROUNDS[theme] ?? (nativeTheme.shouldUseDarkColors ? THEME_BACKGROUNDS.noir : THEME_BACKGROUNDS.studio);
 
 const isAuthPopupUrl = (url: string) => {
   try {
@@ -163,7 +175,7 @@ const createWindow = () => {
     height: 720,
     minWidth: 960,
     minHeight: 640,
-    backgroundColor: "#f3efe9",
+    backgroundColor: getThemeBackground(),
     ...(windowIcon ? { icon: windowIcon } : {}),
     webPreferences: {
       contextIsolation: true,
@@ -255,4 +267,12 @@ ipcMain.handle("save-zip", async (_event, options: { fileName: string; data: Uin
   }
   await fs.writeFile(result.filePath, options.data);
   return { saved: true, path: result.filePath };
+});
+
+ipcMain.on("set-theme", (event, theme: unknown) => {
+  const targetWindow = BrowserWindow.fromWebContents(event.sender);
+  if (!targetWindow) {
+    return;
+  }
+  targetWindow.setBackgroundColor(getThemeBackground(typeof theme === "string" ? theme : "system"));
 });
