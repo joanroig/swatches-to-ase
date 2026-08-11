@@ -267,12 +267,19 @@ const renderSceneTabs = () => {
 
   playgroundSceneTabs.append(primary, more, menu);
   const popover = setupPopover({ root: playgroundSceneTabs, trigger: more, panel: menu });
+  const syncOverflowSelection = () => {
+    const selected = menu.querySelector<HTMLElement>(".playground-scene-tab.is-active");
+    const label = selected?.textContent?.trim();
+    more.classList.toggle("is-active", Boolean(selected));
+    more.setAttribute("aria-label", label ? `${t("action.moreActions")}: ${label}` : t("action.moreActions"));
+  };
   sceneOverflow = createOverflowRow({
     row: playgroundSceneTabs,
     primary,
     menu,
     trigger: more,
     onCollapse: popover.close,
+    onChange: syncOverflowSelection,
   });
 };
 

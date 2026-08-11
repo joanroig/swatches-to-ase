@@ -25,6 +25,8 @@ export type OverflowRowOptions = {
   availableWidth?: () => number;
   /** Called when the trigger is hidden, so an open menu does not stay open with nothing in it. */
   onCollapse?: () => void;
+  /** Called after items move, for state derived from whether an item is in the menu. */
+  onChange?: () => void;
 };
 
 /**
@@ -52,6 +54,7 @@ export const createOverflowRow = ({
   resizeTarget = row,
   availableWidth = () => row.clientWidth,
   onCollapse,
+  onChange,
 }: OverflowRowOptions) => {
   const items = [...primary.children].filter((child): child is HTMLElement => child instanceof HTMLElement);
   let widths = new WeakMap<HTMLElement, number>();
@@ -114,6 +117,7 @@ export const createOverflowRow = ({
     if (!overflowed) {
       onCollapse?.();
     }
+    onChange?.();
     row.dataset.overflowReady = "true";
   };
 
