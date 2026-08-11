@@ -1418,6 +1418,9 @@ button.ui-cta {
     gap: 10px;
     width: auto;
     max-width: calc(100% - 112px);
+    /* Space Grotesk's glyph box sits above its line box. Keep the control itself centred while
+       optically lowering the code and name onto the handle/action centre line. */
+    padding: 9px 4px 3px;
   }
 
   .playground-preview .section-title {

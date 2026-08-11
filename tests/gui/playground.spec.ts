@@ -253,6 +253,8 @@ test.describe("playground", () => {
         const actionButtons = [...swatch.querySelectorAll<HTMLElement>(".playground-swatch-action")].map((button) =>
           button.getBoundingClientRect(),
         );
+        const hex = swatch.querySelector<HTMLElement>(".playground-swatch-hex")!.getBoundingClientRect();
+        const name = swatch.querySelector<HTMLElement>(".playground-swatch-name")!.getBoundingClientRect();
         const row = swatch.getBoundingClientRect();
         return {
           row: { top: row.top, bottom: row.bottom },
@@ -262,6 +264,13 @@ test.describe("playground", () => {
           actionGap: actionButtons[1].left - actionButtons[0].right,
           actionIconWidth: swatch.querySelector<HTMLElement>(".playground-swatch-action .icon")!.getBoundingClientRect().width,
           gripWidth: grip.width,
+          centers: {
+            row: row.top + row.height / 2,
+            grip: grip.top + grip.height / 2,
+            hex: hex.top + hex.height / 2,
+            name: name.top + name.height / 2,
+            actions: actions.top + actions.height / 2,
+          },
         };
       }),
     );
@@ -271,6 +280,10 @@ test.describe("playground", () => {
     expect(positions[0].actionGap).toBe(6);
     expect(positions[0].actionIconWidth).toBe(14);
     expect(positions[0].gripWidth).toBe(22);
+    expect(Math.abs(positions[0].centers.grip - positions[0].centers.row)).toBeLessThanOrEqual(1);
+    expect(Math.abs(positions[0].centers.hex - positions[0].centers.row)).toBeLessThanOrEqual(1);
+    expect(Math.abs(positions[0].centers.name - positions[0].centers.row)).toBeLessThanOrEqual(1);
+    expect(Math.abs(positions[0].centers.actions - positions[0].centers.row)).toBeLessThanOrEqual(1);
     expect(Math.abs(positions[0].row.bottom - positions[1].row.top)).toBeLessThanOrEqual(1);
     await expect(page.locator(`${SWATCH} .playground-swatch-hex`).first()).toHaveText(/^#/);
   });
