@@ -250,18 +250,27 @@ test.describe("playground", () => {
         const grip = swatch.querySelector<HTMLElement>(".playground-swatch-grip")!.getBoundingClientRect();
         const label = swatch.querySelector<HTMLElement>(".playground-swatch-label")!.getBoundingClientRect();
         const actions = swatch.querySelector<HTMLElement>(".playground-swatch-actions")!.getBoundingClientRect();
+        const actionButtons = [...swatch.querySelectorAll<HTMLElement>(".playground-swatch-action")].map((button) =>
+          button.getBoundingClientRect(),
+        );
         const row = swatch.getBoundingClientRect();
         return {
           row: { top: row.top, bottom: row.bottom },
           grip: { left: grip.left, right: grip.right },
           label: { left: label.left, right: label.right },
           actions: { left: actions.left, right: actions.right },
+          actionGap: actionButtons[1].left - actionButtons[0].right,
+          actionIconWidth: swatch.querySelector<HTMLElement>(".playground-swatch-action .icon")!.getBoundingClientRect().width,
+          gripWidth: grip.width,
         };
       }),
     );
 
     expect(positions[0].grip.right).toBeLessThanOrEqual(positions[0].label.left + 1);
     expect(positions[0].label.right).toBeLessThanOrEqual(positions[0].actions.left + 1);
+    expect(positions[0].actionGap).toBe(6);
+    expect(positions[0].actionIconWidth).toBe(14);
+    expect(positions[0].gripWidth).toBe(22);
     expect(Math.abs(positions[0].row.bottom - positions[1].row.top)).toBeLessThanOrEqual(1);
     await expect(page.locator(`${SWATCH} .playground-swatch-hex`).first()).toHaveText(/^#/);
   });
