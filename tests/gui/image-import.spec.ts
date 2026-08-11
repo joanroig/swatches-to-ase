@@ -23,6 +23,23 @@ const openImageImport = async (page) => {
   await expect(page.locator("#image-stage")).toBeVisible();
 };
 
+test("active image formats are rejected before preview", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("body")).toHaveClass(/is-ready/);
+  await page.locator("#open-import").click();
+  await expect(page.locator("#import-modal")).toHaveAttribute("aria-hidden", "false");
+  const imageSource = page.locator('input[name="import-source"][value="image"]');
+  await page.locator(".segmented-option", { has: imageSource }).click();
+  await page.locator("#image-input").setInputFiles({
+    name: "active.svg",
+    mimeType: "image/svg+xml",
+    buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'),
+  });
+
+  await expect(page.locator("#image-stage")).not.toBeVisible();
+  await expect(page.locator("#image-preview")).not.toHaveAttribute("src", /blob:/);
+});
+
 const stripHexes = (page) =>
   page
     .locator(".image-chip")

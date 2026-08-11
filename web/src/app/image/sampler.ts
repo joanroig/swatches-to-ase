@@ -16,26 +16,20 @@ const MIN_ALPHA = 128;
 export type ImageSampler = {
   width: number;
   height: number;
+  /** A raster-only preview generated from decoded pixels, safe to assign to an image element. */
+  previewUrl: string;
   /** color at a normalised (0..1, 0..1) point on the image. */
   sampleAt: (x: number, y: number) => Rgb255;
   /** The `count` most representative colors, with near-duplicates merged. */
   extract: (count: number, similarity: number) => Rgb255[];
 };
 
-export const loadImageSampler = async (source: Blob | string): Promise<ImageSampler> => {
-  const url = typeof source === "string" ? source : URL.createObjectURL(source);
+export const loadImageSampler = async (source: Blob): Promise<ImageSampler> => {
+  const bitmap = await createImageBitmap(source);
   try {
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const element = new Image();
-      element.crossOrigin = "anonymous";
-      element.onload = () => resolve(element);
-      element.onerror = () => reject(new Error("Unable to decode image"));
-      element.src = url;
-    });
-
-    const scale = Math.min(1, MAX_SAMPLE_EDGE / Math.max(image.naturalWidth, image.naturalHeight));
-    const width = Math.max(1, Math.round(image.naturalWidth * scale));
-    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const scale = Math.min(1, MAX_SAMPLE_EDGE / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
 
     const canvas = document.createElement("canvas");
     canvas.width = width;
@@ -44,7 +38,7 @@ export const loadImageSampler = async (source: Blob | string): Promise<ImageSamp
     if (!context) {
       throw new Error("Canvas 2D context unavailable");
     }
-    context.drawImage(image, 0, 0, width, height);
+    context.drawImage(bitmap, 0, 0, width, height);
     const { data } = context.getImageData(0, 0, width, height);
 
     const pixelAt = (px: number, py: number): Rgb255 => {
@@ -53,8 +47,10 @@ export const loadImageSampler = async (source: Blob | string): Promise<ImageSamp
     };
 
     return {
-      width: image.naturalWidth,
-      height: image.naturalHeight,
+      width: bitmap.width,
+      height: bitmap.height,
+      // Re-encoding decoded pixels as PNG strips active content and file-supplied markup.
+      previewUrl: canvas.toDataURL("image/png"),
       sampleAt: (x, y) => {
         const px = Math.min(width - 1, Math.max(0, Math.round(x * (width - 1))));
         const py = Math.min(height - 1, Math.max(0, Math.round(y * (height - 1))));
@@ -75,8 +71,6 @@ export const loadImageSampler = async (source: Blob | string): Promise<ImageSamp
       },
     };
   } finally {
-    if (typeof source !== "string") {
-      URL.revokeObjectURL(url);
-    }
+    bitmap.close();
   }
 };

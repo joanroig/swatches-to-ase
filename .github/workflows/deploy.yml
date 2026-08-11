@@ -15,7 +15,12 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == github.event.repository.default_branch)
     runs-on: ubuntu-latest
     env:
       VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
@@ -26,11 +31,13 @@ jobs:
       VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
       VITE_FIREBASE_APP_CHECK_KEY: ${{ secrets.VITE_FIREBASE_APP_CHECK_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      # Production deploys always use the trusted default branch. Never derive this ref from the
+      # workflow_run payload because this job receives Firebase credentials.
+      - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
           cache: "npm"

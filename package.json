@@ -7,7 +7,7 @@
   "author": "Joan Roig <12451419+joanroig@users.noreply.github.com>",
   "license": "SEE LICENSE IN LICENSE.md",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.22.2"
   },
   "type": "module",
   "scripts": {

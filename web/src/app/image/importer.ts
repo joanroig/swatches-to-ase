@@ -35,6 +35,8 @@ import { loadImageSampler, type ImageSampler } from "./sampler";
 type Mode = "auto" | "points";
 type SamplePoint = { id: string; x: number; y: number; rgb: Rgb255 };
 
+const SUPPORTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+
 const toUnitRgb = (rgb: Rgb255): [number, number, number] => [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255];
 
 const session = {
@@ -133,7 +135,7 @@ const resetSession = () => {
 };
 
 const loadFile = async (file: File) => {
-  if (!file.type.startsWith("image/")) {
+  if (!SUPPORTED_IMAGE_TYPES.has(file.type)) {
     showToast(t("toast.profileImageType"), "error");
     return;
   }
@@ -142,8 +144,7 @@ const loadFile = async (file: File) => {
     session.fileName = file.name.replace(/\.[^.]+$/, "");
     session.points = [];
     if (imagePreview) {
-      // A second object URL for display: the sampler revokes its own once decoding is done.
-      imagePreview.src = URL.createObjectURL(file);
+      imagePreview.src = session.sampler.previewUrl;
     }
     imageStage?.classList.remove("is-hidden");
     renderPoints();
