@@ -140,6 +140,24 @@ test("a collection can be created and shows what it holds", async ({ page }) => 
   await expect(page.locator(".collection-empty")).toBeVisible();
 });
 
+test("a collection keeps its delete action on the right edge", async ({ page }) => {
+  await seed(page, ["Alpha"], [{ id: "f1", name: "Greens" }]);
+
+  const positions = await page.locator(".collection-actions").evaluate((actions) => {
+    const rename = actions.querySelector<HTMLElement>('[title="Rename folder"]')!.getBoundingClientRect();
+    const remove = actions.querySelector<HTMLElement>('[title="Delete folder"]')!.getBoundingClientRect();
+    const row = actions.getBoundingClientRect();
+    return {
+      renameRight: rename.right,
+      removeLeft: remove.left,
+      removeRightInset: row.right - remove.right,
+    };
+  });
+
+  expect(positions.removeLeft).toBeGreaterThan(positions.renameRight);
+  expect(positions.removeRightInset).toBeCloseTo(0, 1);
+});
+
 test("opening a collection shows only its palettes, and back returns", async ({ page }) => {
   await seed(page, ["Inside", "Outside"], [{ id: "f1", name: "Greens" }], { Inside: "f1" });
   const list = page.locator("#palette-list");

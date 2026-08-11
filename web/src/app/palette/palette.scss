@@ -919,6 +919,10 @@ body[data-motion="off"] .palette-grid::before {
   flex: none;
 }
 
+.collection-actions .collection-delete {
+  margin-left: auto;
+}
+
 /*
  * The preview is the whole middle of the tile and is the way in, so it is one large target rather
  * than a decoration with a separate "open" control beside it.

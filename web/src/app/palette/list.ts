@@ -838,6 +838,7 @@ const createCollectionActions = (group: LibraryGroup, folder: Folder) => {
       renderPaletteList();
     },
   });
+  removeButton.classList.add("collection-delete");
 
   actions.append(renameButton, removeButton);
   return actions;
