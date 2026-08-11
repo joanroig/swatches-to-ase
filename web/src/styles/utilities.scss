@@ -53,3 +53,7 @@
     border-radius: 6px;
   }
 }
+
+[data-overflow-ready="false"] {
+  visibility: hidden;
+}

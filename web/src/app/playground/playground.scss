@@ -1461,7 +1461,9 @@ button.ui-cta {
 }
 
 .playground-preview-controls .playground-scene-tabs {
-  flex: 0 1 auto;
+  /* A zero basis makes the available width independent of how many tabs currently live in the
+     primary row, so moving one into the overflow menu cannot resize the row and trigger a loop. */
+  flex: 1 1 0;
   min-width: 0;
 }
 

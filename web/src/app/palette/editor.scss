@@ -99,7 +99,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
   padding-top: 12px;
   border-top: 1px solid var(--stroke);
 }
@@ -109,6 +110,10 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
+}
+
+.editor-tools {
+  flex: 0 1 auto;
 }
 
 .editor-toolbar-spacer {
@@ -151,17 +156,54 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
-.overflow-trigger {
+.editor-tools-primary {
+  display: contents;
+}
+
+.overflow-trigger.is-hidden {
   display: none;
 }
 
 .overflow-panel {
-  display: flex;
-  align-items: center;
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 6;
+  display: grid;
   gap: 6px;
+  min-width: 190px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+}
+
+.overflow-group.is-open .overflow-panel {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.overflow-panel button {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.overflow-panel .editor-notation {
+  max-width: none;
+  width: 100%;
 }
 
 /* Adding a color is normally done with the inline "+" between swatches, so the toolbar button is
@@ -665,57 +707,16 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
 
 /* ------------------------------------------------------------ responsive --- */
 
-@media (max-width: 820px) {
-  .overflow-trigger {
-    display: inline-flex;
-  }
-
-  .overflow-panel {
-    position: absolute;
-    right: 0;
-    bottom: calc(100% + 10px);
-    z-index: 6;
-    display: grid;
-    gap: 6px;
-    min-width: 190px;
-    padding: 10px;
-    border-radius: 14px;
-    border: 1px solid var(--stroke);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow);
-    opacity: 0;
-    transform: translateY(6px);
-    pointer-events: none;
-    transition:
-      opacity 0.16s ease,
-      transform 0.16s ease;
-  }
-
-  .overflow-group.is-open .overflow-panel {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
-  .overflow-panel button {
-    justify-content: flex-start;
-    width: 100%;
-  }
-
-  .overflow-panel #editor-save {
-    padding: 8px 18px;
-  }
-
-  .editor-notation {
-    max-width: none;
-    width: 100%;
-  }
-}
-
 @media (max-width: 720px) {
   .modal-card.modal-editor {
     width: min(96vw, 640px);
     gap: 12px;
+  }
+
+  /* A phone has no hover seam for inserting colors. Keep the explicit action available even when
+     responsive behavior is being exercised with a mouse or desktop touch emulation. */
+  .editor-add-color {
+    display: inline-flex;
   }
 }
 
