@@ -19,6 +19,10 @@ export type OverflowRowOptions = {
   menu: HTMLElement;
   /** Shown only while something has overflowed. */
   trigger: HTMLElement;
+  /** Optional stable element to observe when moving items changes the row's own width. */
+  resizeTarget?: HTMLElement;
+  /** Optional width calculation for rows that can reclaim space from a flexible sibling. */
+  availableWidth?: () => number;
   /** Called when the trigger is hidden, so an open menu does not stay open with nothing in it. */
   onCollapse?: () => void;
 };
@@ -40,7 +44,15 @@ const widthOf = (item: HTMLElement, cache: WeakMap<HTMLElement, number>) => {
   return width;
 };
 
-export const createOverflowRow = ({ row, primary, menu, trigger, onCollapse }: OverflowRowOptions) => {
+export const createOverflowRow = ({
+  row,
+  primary,
+  menu,
+  trigger,
+  resizeTarget = row,
+  availableWidth = () => row.clientWidth,
+  onCollapse,
+}: OverflowRowOptions) => {
   const items = [...primary.children].filter((child): child is HTMLElement => child instanceof HTMLElement);
   let widths = new WeakMap<HTMLElement, number>();
   let scheduledFrame = 0;
@@ -53,7 +65,7 @@ export const createOverflowRow = ({ row, primary, menu, trigger, onCollapse }: O
       trigger.classList.remove("is-hidden");
       widths = new WeakMap<HTMLElement, number>();
     }
-    const available = row.clientWidth;
+    const available = availableWidth();
     if (available === 0 || items.length === 0) {
       return;
     }
@@ -118,7 +130,7 @@ export const createOverflowRow = ({ row, primary, menu, trigger, onCollapse }: O
   // Moving controls changes layout. Doing that work outside the ResizeObserver callback prevents
   // resize-delivery loops and the one-frame shuffling they cause on narrow rows.
   const observer = new ResizeObserver(schedule);
-  observer.observe(row);
+  observer.observe(resizeTarget);
   apply();
 
   return {
