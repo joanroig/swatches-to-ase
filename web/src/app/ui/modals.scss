@@ -40,7 +40,7 @@
   padding: 24px;
   box-shadow: var(--shadow);
   display: grid;
-  gap: 16px;
+  gap: 12px;
   max-height: 86vh;
   overflow: hidden;
   grid-template-rows: auto minmax(0, 1fr);
@@ -71,6 +71,15 @@
 
 .modal-card.modal-view {
   width: min(680px, 92vw);
+  gap: 8px;
+
+  .modal-body {
+    gap: 10px;
+  }
+}
+
+.modal-card.modal-view #view-subtitle {
+  margin: 4px 0 0;
 }
 
 .modal-card.modal-view .modal-header {

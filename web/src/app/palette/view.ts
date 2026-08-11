@@ -1,5 +1,7 @@
 import {
+  viewBlocks,
   viewDisplay,
+  viewLayoutButtons,
   viewLikeButton,
   viewLikeCount,
   viewModal,
@@ -15,12 +17,56 @@ import { cloudState, discoveryState, state, viewState } from "../state";
 import type { PublicPalette } from "../types";
 import { setButtonContent } from "../ui/icons";
 import { setModalOpen } from "../ui/modals";
+import type { QuickViewLayout } from "../types";
 import { getColorMetrics, getContrastColor, rgbToHex } from "../utils/color";
+import { readStoredText, writeStoredText } from "../utils/storage";
 import { resolveActiveNameFormat } from "./format";
 import { getPaletteById, syncActivePalette } from "./mutations";
 import { nameColor } from "./naming";
 
 const compactNumber = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
+const VIEW_LAYOUT_STORAGE_KEY = "palette-studio.quick-view-layout";
+let viewLayoutReady = false;
+
+const isQuickViewLayout = (value: string | null): value is QuickViewLayout => value === "details" || value === "blocks";
+
+const syncViewLayout = (hasColors: boolean) => {
+  const showBlocks = hasColors && viewState.layout === "blocks";
+  viewDisplay?.classList.toggle("is-hidden", showBlocks);
+  viewStrip?.classList.toggle("is-hidden", showBlocks);
+  viewBlocks?.classList.toggle("is-hidden", !showBlocks);
+
+  viewLayoutButtons.forEach((button) => {
+    const layout = button.dataset.viewLayout as QuickViewLayout;
+    const selected = layout === viewState.layout;
+    setButtonContent(button, layout === "details" ? "view" : "rows", t(`view.layout.${layout}`));
+    button.classList.toggle("is-active", selected);
+    button.setAttribute("aria-pressed", selected ? "true" : "false");
+    button.disabled = !hasColors;
+  });
+};
+
+const ensureViewLayout = () => {
+  if (viewLayoutReady) {
+    return;
+  }
+  viewLayoutReady = true;
+  const stored = readStoredText(VIEW_LAYOUT_STORAGE_KEY);
+  if (isQuickViewLayout(stored)) {
+    viewState.layout = stored;
+  }
+  viewLayoutButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const layout = button.dataset.viewLayout;
+      if (!isQuickViewLayout(layout) || layout === viewState.layout) {
+        return;
+      }
+      viewState.layout = layout;
+      writeStoredText(VIEW_LAYOUT_STORAGE_KEY, layout);
+      renderViewModal();
+    });
+  });
+};
 
 export const openViewForPalette = (paletteId: string) => {
   syncActivePalette(paletteId);
@@ -99,15 +145,17 @@ const renderLocalActions = (hasPalette: boolean) => {
 };
 
 export const renderViewModal = () => {
-  if (!viewDisplay || !viewValues || !viewStrip || !viewSubtitle) {
+  if (!viewDisplay || !viewValues || !viewStrip || !viewBlocks || !viewSubtitle) {
     return;
   }
+  ensureViewLayout();
   const isDiscoverView = viewState.mode === "discover" && Boolean(viewState.publicPaletteId);
   const publicPalette = isDiscoverView ? discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId) : null;
   const palette = isDiscoverView ? null : getPaletteById(viewState.paletteId ?? state.activePaletteId);
 
   viewValues.innerHTML = "";
   viewStrip.innerHTML = "";
+  viewBlocks.innerHTML = "";
 
   if (viewPublicMeta) {
     setHidden(viewPublicMeta, !(publicPalette || (!isDiscoverView && palette)));
@@ -130,6 +178,7 @@ export const renderViewModal = () => {
     viewDisplay.style.color = "";
     viewSubtitle.textContent = t("view.emptySubtitle");
     viewValues.textContent = t("view.empty");
+    syncViewLayout(false);
     return;
   }
 
@@ -158,6 +207,7 @@ export const renderViewModal = () => {
     viewDisplay.style.background = "";
     viewDisplay.style.color = "";
     viewValues.textContent = t("view.emptyColors");
+    syncViewLayout(false);
     return;
   }
 
@@ -220,5 +270,20 @@ export const renderViewModal = () => {
       renderViewModal();
     });
     viewStrip.appendChild(swatch);
+
+    const block = document.createElement("div");
+    block.className = "view-block";
+    block.style.background = rgbToHex(color.rgb);
+    block.style.color = getContrastColor(color.rgb);
+    const blockValue = document.createElement("span");
+    blockValue.className = "view-block-value";
+    blockValue.textContent = rgbToHex(color.rgb).toUpperCase();
+    const blockName = document.createElement("span");
+    blockName.className = "view-block-name";
+    blockName.textContent = color.name;
+    block.append(blockValue, blockName);
+    viewBlocks.appendChild(block);
   });
+
+  syncViewLayout(true);
 };

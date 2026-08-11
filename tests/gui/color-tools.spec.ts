@@ -167,6 +167,28 @@ test("editor swatches join edge-to-edge in both layouts", async ({ page }) => {
   expect(Math.abs(vertical[0].right - vertical[1].left)).toBeLessThanOrEqual(1);
 });
 
+test("the editor keeps the palette close to its header and footer without a divider", async ({ page }) => {
+  await openEditor(page);
+
+  const spacing = await page.locator(".modal-card.modal-editor").evaluate((modal) => {
+    const header = modal.querySelector<HTMLElement>(".editor-header")!.getBoundingClientRect();
+    const rows = modal.querySelectorAll<HTMLElement>(".color-row");
+    const first = rows[0].getBoundingClientRect();
+    const last = rows[rows.length - 1].getBoundingClientRect();
+    const toolbar = modal.querySelector<HTMLElement>(".editor-toolbar")!;
+    const toolbarBox = toolbar.getBoundingClientRect();
+    return {
+      topGap: first.top - header.bottom,
+      bottomGap: toolbarBox.top - last.bottom,
+      divider: getComputedStyle(toolbar).borderTopWidth,
+    };
+  });
+
+  expect(spacing.topGap).toBeLessThanOrEqual(20);
+  expect(spacing.bottomGap).toBeLessThanOrEqual(20);
+  expect(spacing.divider).toBe("0px");
+});
+
 test("change color only occupies the code and name", async ({ page }) => {
   await openEditor(page);
   const row = page.locator(".color-row").first();

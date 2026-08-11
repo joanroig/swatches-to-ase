@@ -1,4 +1,4 @@
-import type { CloudUser, DiscoverySort, ExportMode, Folder, Palette, PublicPalette } from "./types";
+import type { CloudUser, DiscoverySort, ExportMode, Folder, Palette, PublicPalette, QuickViewLayout } from "./types";
 
 export const state = {
   processing: false,
@@ -29,6 +29,7 @@ export const viewState = {
   colorId: null as string | null,
   mode: "local" as "local" | "discover",
   publicPaletteId: null as string | null,
+  layout: "details" as QuickViewLayout,
 };
 
 export const cloudState = {
