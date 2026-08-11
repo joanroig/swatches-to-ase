@@ -137,6 +137,10 @@ test("editor actions stay on one row and overflow by available width", async ({ 
   await expect(page.locator("#add-color")).toBeVisible();
   await expect(page.locator("#editor-save")).toBeVisible();
   await expect(page.locator("#editor-tools-panel #open-view")).toHaveCount(1);
+  await expect(page.locator("#editor-tools-primary > *")).not.toHaveCount(0);
+  await expect(page.locator("#editor-tools-panel > *")).not.toHaveCount(0);
+  await page.locator("#editor-tools-trigger").click();
+  await expect(page.locator("#editor-tools-panel #open-view")).toBeVisible();
 
   const toolbar = await page.locator(".editor-toolbar").evaluate((element) => {
     const undo = element.querySelector<HTMLElement>("#editor-undo")!.getBoundingClientRect();
@@ -148,4 +152,9 @@ test("editor actions stay on one row and overflow by available width", async ({ 
   });
   expect(toolbar.topDifference).toBeLessThanOrEqual(1);
   expect(toolbar.overflow).toBeLessThanOrEqual(1);
+
+  await page.setViewportSize({ width: 824, height: 844 });
+  await expect(page.locator("#editor-tools-trigger")).toBeHidden();
+  await expect(page.locator("#editor-tools-primary > *")).toHaveCount(5);
+  await expect(page.locator("#editor-tools-panel > *")).toHaveCount(0);
 });

@@ -49,6 +49,8 @@ import {
   editorModal,
   editorRedoButton,
   editorSaveButton,
+  editorToolbar,
+  editorToolbarSpacer,
   editorOverflow,
   editorToolsPrimary,
   editorToolsPanel,
@@ -609,13 +611,15 @@ export const setupActions = () => {
   setupModal(viewModal);
   setupModal(discoverProfileModal);
   setupEditorLayout();
-  if (editorOverflow && editorToolsPrimary && editorToolsPanel && editorToolsTrigger) {
+  if (editorOverflow && editorToolbar && editorToolbarSpacer && editorToolsPrimary && editorToolsPanel && editorToolsTrigger) {
     const popover = setupPopover({ root: editorOverflow, trigger: editorToolsTrigger, panel: editorToolsPanel });
     editorOverflowRow = createOverflowRow({
       row: editorOverflow,
       primary: editorToolsPrimary,
       menu: editorToolsPanel,
       trigger: editorToolsTrigger,
+      resizeTarget: editorToolbar,
+      availableWidth: () => editorOverflow.clientWidth + editorToolbarSpacer.clientWidth,
       onCollapse: popover.close,
     });
   }
