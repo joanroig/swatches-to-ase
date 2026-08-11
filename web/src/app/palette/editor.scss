@@ -165,6 +165,14 @@
   display: contents;
 }
 
+.editor-tools-primary > * {
+  flex: 0 0 auto;
+}
+
+.editor-tools-primary button {
+  white-space: nowrap;
+}
+
 .overflow-trigger.is-hidden {
   display: none;
 }

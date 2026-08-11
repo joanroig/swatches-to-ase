@@ -124,13 +124,29 @@ test("opening the palette editor does not focus the title field", async ({ page 
 });
 
 test("editor actions stay on one row and overflow by available width", async ({ page }) => {
-  await page.setViewportSize({ width: 720, height: 900 });
+  await page.setViewportSize({ width: 824, height: 900 });
   await seedPalette(page);
   await page.locator(".palette-card").getByRole("button", { name: "Edit" }).click();
 
   await expect(page.locator("#open-view")).toBeVisible();
   await expect(page.locator("#editor-export")).toBeVisible();
   await expect(page.locator("#editor-tools-trigger")).toBeHidden();
+
+  await page.setViewportSize({ width: 613, height: 844 });
+  await expect(page.locator("#editor-tools-trigger")).toBeVisible();
+  await expect(page.locator("#add-color")).toBeVisible();
+  await expect(page.locator("#editor-export")).toBeVisible();
+  await expect(page.locator("#open-view")).toBeVisible();
+  const addColorGeometry = await page.locator("#add-color").evaluate((button) => ({
+    height: button.getBoundingClientRect().height,
+    exportHeight: document.querySelector<HTMLElement>("#editor-export")!.getBoundingClientRect().height,
+    whiteSpace: getComputedStyle(button).whiteSpace,
+    scrollWidth: button.scrollWidth,
+    clientWidth: button.clientWidth,
+  }));
+  expect(addColorGeometry.height).toBeCloseTo(addColorGeometry.exportHeight, 1);
+  expect(addColorGeometry.whiteSpace).toBe("nowrap");
+  expect(addColorGeometry.scrollWidth).toBeLessThanOrEqual(addColorGeometry.clientWidth);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator("#editor-tools-trigger")).toBeVisible();
