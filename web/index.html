@@ -5,6 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <script>
+      // Resolve the saved theme before the browser can paint its default canvas. This must remain
+      // ahead of every stylesheet and other resource reference to avoid a light flash on reload.
+      let initialTheme = "system";
+      try {
+        const raw = localStorage.getItem("palette-studio.preferences");
+        const savedTheme = raw ? JSON.parse(raw)?.theme : null;
+        const themes = new Set(["system", "studio", "dawn", "flora", "noir", "graphite", "aurora"]);
+        initialTheme = themes.has(savedTheme) ? savedTheme : "system";
+      } catch {}
+      document.documentElement.dataset.theme = initialTheme;
+      window.desktopApi?.setTheme?.(initialTheme);
+    </script>
+    <style>
+      :root,
+      :root[data-theme="studio"] {
+        color-scheme: light;
+        background: #eef1f7;
+        color: #141627;
+      }
+      :root[data-theme="dawn"] {
+        background: #f7f3ef;
+        color: #2b1f1a;
+      }
+      :root[data-theme="flora"] {
+        background: #eef8f3;
+        color: #0f2a24;
+      }
+      :root[data-theme="noir"] {
+        color-scheme: dark;
+        background: #0f111a;
+        color: #f8fafc;
+      }
+      :root[data-theme="graphite"] {
+        color-scheme: dark;
+        background: #141822;
+        color: #f1f5f9;
+      }
+      :root[data-theme="aurora"] {
+        color-scheme: dark;
+        background: #0b1321;
+        color: #eef5ff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root[data-theme="system"] {
+          color-scheme: dark;
+          background: #0f111a;
+          color: #f8fafc;
+        }
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: inherit;
+        color: inherit;
+      }
+      body:not(.is-ready) .page {
+        visibility: hidden;
+      }
+      .loading-screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: inherit;
+        color: inherit;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        z-index: 1000;
+      }
+    </style>
+    <script>
       // Public assets live beside this document in packaged builds, but at the origin root on the
       // hosted app. Defining the base before any resource references keeps both cases working,
       // including Firebase rewrite URLs that end in a slash.
@@ -78,54 +150,6 @@
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
         "license": "https://polyformproject.org/licenses/shield/1.0.0",
         "author": { "@type": "Person", "name": "Joan Roig" }
-      }
-    </script>
-    <style>
-      :root {
-        background: #eef1f7;
-        color: #141627;
-      }
-      :root[data-theme="noir"] {
-        background: #0f111a;
-        color: #f8fafc;
-      }
-      :root[data-theme="graphite"] {
-        background: #141822;
-        color: #f1f5f9;
-      }
-      html,
-      body {
-        margin: 0;
-        min-height: 100%;
-        background: inherit;
-        color: inherit;
-      }
-      body:not(.is-ready) .page {
-        visibility: hidden;
-      }
-      .loading-screen {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: inherit;
-        color: inherit;
-        font-family: "Segoe UI", system-ui, sans-serif;
-        z-index: 1000;
-      }
-    </style>
-    <script>
-      try {
-        const raw = localStorage.getItem("palette-studio.preferences");
-        if (raw) {
-          const prefs = JSON.parse(raw);
-          if (prefs && prefs.theme) {
-            document.documentElement.dataset.theme = prefs.theme;
-          }
-        }
-      } catch {
-        // Ignore theme pre-hydration failures.
       }
     </script>
     <link rel="stylesheet" href="/src/style.scss" />

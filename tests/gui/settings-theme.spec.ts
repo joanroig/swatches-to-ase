@@ -18,3 +18,34 @@ test("theme selection updates body dataset", async ({ page }) => {
   await page.selectOption("#theme-select", "noir");
   await expect(page.locator("body")).toHaveAttribute("data-theme", "noir");
 });
+
+for (const [theme, background] of [
+  ["noir", "rgb(15, 17, 26)"],
+  ["graphite", "rgb(20, 24, 34)"],
+  ["aurora", "rgb(11, 19, 33)"],
+] as const) {
+  test(`${theme} paints its dark background before app styles load`, async ({ page }) => {
+    await page.addInitScript((savedTheme) => {
+      localStorage.setItem("palette-studio.preferences", JSON.stringify({ theme: savedTheme }));
+    }, theme);
+    await page.route("**/src/style.scss", (route) => route.abort());
+
+    await page.goto("/");
+
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    await expect(page.locator("html")).toHaveCSS("background-color", background);
+  });
+}
+
+test("system dark paints a dark background before app styles load", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.addInitScript(() => {
+    localStorage.setItem("palette-studio.preferences", JSON.stringify({ theme: "system" }));
+  });
+  await page.route("**/src/style.scss", (route) => route.abort());
+
+  await page.goto("/");
+
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "system");
+  await expect(page.locator("html")).toHaveCSS("background-color", "rgb(15, 17, 26)");
+});
