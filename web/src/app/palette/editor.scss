@@ -7,7 +7,7 @@
   height: min(820px, 88vh);
   /* header · list · toolbar */
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 14px;
+  gap: 10px;
 
   .modal-body {
     display: flex;
@@ -101,8 +101,8 @@
   gap: 8px;
   flex-wrap: nowrap;
   min-width: 0;
-  padding-top: 12px;
-  border-top: 1px solid var(--stroke);
+  padding-top: 0;
+  border-top: 0;
 }
 
 .editor-toolbar-group {
@@ -242,7 +242,7 @@
 #palette-editor[data-layout="horizontal"] .color-list {
   grid-auto-flow: row;
   /* Room for the insert buttons that straddle the outer edges of the first and last swatch. */
-  padding: 16px 0;
+  padding: 8px 0;
   /* A floor rather than an unbounded 1fr: a long palette scrolls instead of collapsing into
      unreadable slivers. */
   grid-auto-rows: minmax(52px, 1fr);
@@ -252,7 +252,7 @@
 
 #palette-editor[data-layout="vertical"] .color-list {
   grid-auto-flow: column;
-  padding: 0 16px;
+  padding: 0 8px;
   grid-auto-columns: minmax(54px, 1fr);
   grid-auto-rows: minmax(0, 1fr);
   overflow-x: auto;

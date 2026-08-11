@@ -56,6 +56,8 @@ export type StoredPreferences = Required<Preferences>;
 
 export type ExportMode = "single" | "batch";
 
+export type QuickViewLayout = "details" | "blocks";
+
 export type DiscoverySort = "recent" | "likes-desc" | "likes-asc" | "saves-desc" | "saves-asc";
 
 export type AvatarColors = {
