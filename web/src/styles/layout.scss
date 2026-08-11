@@ -767,9 +767,9 @@
 }
 
 /*
- * Below the rail breakpoint the action dock is replaced by the FAB, which is anchored to the
- * palette panel rather than to the viewport — pinned to the viewport it floated over whatever
- * happened to be under it and sat outside the box whose actions it carries.
+ * Below the rail breakpoint the action dock is replaced by the FAB. Its natural position is at the
+ * palette panel's end; sticky pulls it up above the bottom navigation while there are more palettes
+ * to scroll, then lets it settle at the panel's lower edge instead of following the footer.
  */
 @media (max-width: 959.98px) {
   .panel-palettes {
@@ -777,10 +777,11 @@
   }
 
   .fab-hub {
-    position: absolute;
-    right: 12px;
-    bottom: 12px;
-    z-index: 4;
+    position: sticky;
+    right: auto;
+    bottom: calc(env(safe-area-inset-bottom) + var(--bottom-nav-height) + 12px);
+    align-self: flex-end;
+    margin-top: 4px;
   }
 }
 
