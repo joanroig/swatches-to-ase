@@ -39,7 +39,7 @@ const loadLicenses = async () => {
     return cachedLicenses;
   }
   if (!loadPromise) {
-    const licensesUrl = new URL("licenses.json", window.location.href).toString();
+    const licensesUrl = new URL("licenses.json", document.baseURI).toString();
     loadPromise = fetch(licensesUrl, { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) {
@@ -134,7 +134,7 @@ const loadLicense = async () => {
     return cachedLicenseText;
   }
   if (!licensePromise) {
-    const licenseUrl = new URL("license.txt", window.location.href).toString();
+    const licenseUrl = new URL("license.txt", document.baseURI).toString();
     licensePromise = fetch(licenseUrl, { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) {
