@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
+    <script>
+      // Public assets live beside this document in packaged builds, but at the origin root on the
+      // hosted app. Defining the base before any resource references keeps both cases working,
+      // including Firebase rewrite URLs that end in a slash.
+      const appBase = document.createElement("base");
+      appBase.href = window.location.protocol === "file:" ? new URL(".", window.location.href).toString() : "/";
+      document.head.append(appBase);
+    </script>
     <meta name="theme-color" content="#eef1f7" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f111a" media="(prefers-color-scheme: dark)" />
 
