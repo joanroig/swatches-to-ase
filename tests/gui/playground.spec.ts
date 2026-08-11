@@ -241,6 +241,51 @@ test.describe("playground", () => {
     expect(saved).toEqual(colors.map((color) => color.replace("#", "")));
   });
 
+  test("a selected scene remains indicated when its tab overflows", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await openPlayground(page);
+
+    const more = page.locator(".playground-scene-more");
+    await more.click();
+    await page.locator('.playground-scene-menu .playground-scene-tab[data-scene="chart"]').click();
+
+    const active = page.locator('.playground-scene-tab[data-scene="chart"]');
+    if (await active.evaluate((tab) => tab.parentElement?.classList.contains("playground-scene-menu") ?? false)) {
+      await expect(more).toHaveClass(/is-active/);
+      await expect(more).toHaveAttribute("aria-label", /Charts/);
+    } else {
+      await expect(page.locator('.playground-scene-primary .playground-scene-tab[data-scene="chart"]')).toHaveClass(/is-active/);
+    }
+  });
+
+  test("the Interface scene stacks its mobile rail above the content", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPlayground(page);
+    const interfaceTab = page.locator('.playground-scene-primary .playground-scene-tab[data-scene="ui"]');
+    if (await interfaceTab.isVisible()) {
+      await interfaceTab.click();
+    } else {
+      await page.locator(".playground-scene-more").click();
+      await page.locator('.playground-scene-menu .playground-scene-tab[data-scene="ui"]').click();
+    }
+
+    const geometry = await page.locator(".scene-ui").evaluate((scene) => {
+      const rail = scene.querySelector<HTMLElement>(".ui-rail")!.getBoundingClientRect();
+      const brand = scene.querySelector<HTMLElement>(".ui-brand")!.getBoundingClientRect();
+      const body = scene.querySelector<HTMLElement>(".ui-body")!.getBoundingClientRect();
+      return {
+        rail: { left: rail.left, right: rail.right, bottom: rail.bottom },
+        brand: { left: brand.left, right: brand.right },
+        body: { left: body.left, top: body.top },
+      };
+    });
+
+    expect(geometry.rail.bottom).toBeLessThanOrEqual(geometry.body.top + 1);
+    expect(geometry.brand.left).toBeGreaterThanOrEqual(geometry.rail.left);
+    expect(geometry.brand.right).toBeLessThanOrEqual(geometry.rail.right);
+    expect(geometry.body.left).toBeGreaterThanOrEqual(geometry.rail.left);
+  });
+
   test("mobile swatches use the editor control order without gaps", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await openPlayground(page);

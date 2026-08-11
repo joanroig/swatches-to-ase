@@ -521,6 +521,11 @@ body.has-playground-fullscreen {
   display: none;
 }
 
+button.playground-scene-more.is-active {
+  background: linear-gradient(130deg, var(--accent), var(--accent-3));
+  color: #fff;
+}
+
 .playground-scene-menu {
   display: none;
   position: absolute;
@@ -1013,14 +1018,14 @@ button.ui-cta {
   }
 }
 
-@container (max-width: 560px) {
+@container (max-width: 620px) {
   .scene-ui {
     grid-template-columns: 1fr;
   }
 
   .ui-rail {
-    grid-auto-flow: column;
-    grid-template-columns: auto 1fr;
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
     gap: 14px;
     padding: 12px 14px;
@@ -1429,10 +1434,6 @@ button.ui-cta {
 
   .playground-scene-tabs {
     width: 100%;
-  }
-
-  .scene-ui {
-    grid-template-columns: 54px 1fr;
   }
 }
 
