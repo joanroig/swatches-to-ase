@@ -208,23 +208,47 @@ test("editor actions stay on one row and overflow by available width", async ({ 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator("#editor-tools-trigger")).toBeVisible();
   await expect(page.locator("#add-color")).toBeVisible();
+  await expect(page.locator("#add-color")).toHaveAttribute("aria-label", "Add color");
+  await expect(page.locator("#add-color > span")).toBeHidden();
   await expect(page.locator("#editor-save")).toBeVisible();
   await expect(page.locator("#editor-tools-panel #open-view")).toHaveCount(1);
   await expect(page.locator("#editor-tools-primary > *")).not.toHaveCount(0);
   await expect(page.locator("#editor-tools-panel > *")).not.toHaveCount(0);
   await page.locator("#editor-tools-trigger").click();
   await expect(page.locator("#editor-tools-panel #open-view")).toBeVisible();
+  await page.locator("#editor-tools-trigger").click();
+  await expect(page.locator("#editor-tools-trigger")).toHaveAttribute("aria-expanded", "false");
 
-  const toolbar = await page.locator(".editor-toolbar").evaluate((element) => {
+  const measureToolbar = () => page.locator(".editor-toolbar").evaluate((element) => {
     const undo = element.querySelector<HTMLElement>("#editor-undo")!.getBoundingClientRect();
     const save = element.querySelector<HTMLElement>("#editor-save")!.getBoundingClientRect();
+    const history = element.querySelector<HTMLElement>(".editor-toolbar-group:first-child")!.getBoundingClientRect();
+    const tools = element.querySelector<HTMLElement>("#editor-tools")!.getBoundingClientRect();
+    const visibleToolLeft = ["#editor-tools-primary > button", "#editor-tools-trigger", "#editor-save"]
+      .flatMap((selector) => Array.from(element.querySelectorAll<HTMLElement>(selector)))
+      .map((control) => control.getBoundingClientRect())
+      .filter((rect) => rect.width > 0 && rect.height > 0)
+      .reduce((left, rect) => Math.min(left, rect.left), Number.POSITIVE_INFINITY);
     return {
       topDifference: Math.abs(undo.top - save.top),
       overflow: element.scrollWidth - element.clientWidth,
+      groupGap: tools.left - history.right,
+      controlGap: visibleToolLeft - history.right,
     };
   });
+
+  const toolbar = await measureToolbar();
   expect(toolbar.topDifference).toBeLessThanOrEqual(1);
   expect(toolbar.overflow).toBeLessThanOrEqual(1);
+  expect(toolbar.groupGap).toBeGreaterThanOrEqual(0);
+  expect(toolbar.controlGap).toBeGreaterThanOrEqual(0);
+
+  // Android's font scaling can enlarge labels without changing the CSS viewport width.
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "20px";
+  });
+  await expect(page.locator("#add-color")).toBeVisible();
+  await expect.poll(async () => (await measureToolbar()).controlGap).toBeGreaterThanOrEqual(0);
 
   await page.setViewportSize({ width: 824, height: 844 });
   await expect(page.locator("#editor-tools-trigger")).toBeHidden();

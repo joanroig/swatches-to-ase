@@ -729,6 +729,19 @@ body[data-motion="off"] #palette-editor[data-layout="vertical"] .color-actions {
 }
 
 @media (max-width: 480px) {
+  /* Keep the one action that must stay outside the overflow menu compact. Its accessible name is
+     retained on the button, while the icon leaves enough room for history, overflow and Save. */
+  .editor-add-color {
+    width: var(--control-md);
+    min-width: var(--control-md);
+    justify-content: center;
+    padding: 8px !important;
+
+    > span {
+      display: none;
+    }
+  }
+
   .editor-toolbar button:not(.icon-only) {
     padding: 8px 10px;
   }
