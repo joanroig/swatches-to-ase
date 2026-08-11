@@ -1,8 +1,15 @@
 .discover-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: stretch;
+}
+
+@media (min-width: 960px) {
+  .discover-grid {
+    /* Match the Library grid so palette cards keep the same width and column count across views. */
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
 }
 
 /*
