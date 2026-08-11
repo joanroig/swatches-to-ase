@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22%2B-43853d?logo=node.js&logoColor=white" alt="Node.js 22+"/></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22.22%2B-43853d?logo=node.js&logoColor=white" alt="Node.js 22.22+"/></a>
   <a href="https://github.com/joanroig/palette-studio/actions/workflows/release.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/release.yml/badge.svg" alt="Build and Release"/></a>
   <a href="https://github.com/joanroig/palette-studio/actions/workflows/tests.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/tests.yml/badge.svg" alt="Tests"/></a>
   <a href="https://github.com/joanroig/palette-studio/actions/workflows/deploy.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/deploy.yml/badge.svg" alt="Deploy Firebase Hosting"/></a>
@@ -176,7 +176,7 @@ Configure CI signing secrets so releases are signed on Windows/macOS:
 
 ## CLI
 
-Be sure to have [Node.js](https://nodejs.org/en/download/) 22+ installed, then:
+Be sure to have [Node.js](https://nodejs.org/en/download/) 22.22+ installed, then:
 
 - [Download](https://github.com/joanroig/palette-studio/archive/refs/heads/main.zip) or clone the repo.
 - Run `npm install` in the root folder to install dependencies.
