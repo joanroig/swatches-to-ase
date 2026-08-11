@@ -213,7 +213,7 @@ const renderRamp = () => {
  * torn down and rebuilt with them — each one owns a `ResizeObserver`, and leaving the old one
  * watching a detached strip would leak one per click.
  */
-let sceneOverflow: { destroy: () => void } | null = null;
+let sceneOverflow: ReturnType<typeof createOverflowRow> | null = null;
 
 const renderSceneTabs = () => {
   if (!playgroundSceneTabs) {
@@ -504,6 +504,9 @@ const shuffle = () => {
 export const setPlaygroundActive = (active: boolean) => {
   isActive = active;
   if (active) {
+    // The tab strip is created while this view is hidden, when it has no measurable width. Refresh
+    // it synchronously after the shell reveals the view so all tabs never flash before collapsing.
+    sceneOverflow?.refresh();
     render();
     return;
   }

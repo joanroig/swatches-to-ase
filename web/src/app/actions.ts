@@ -50,6 +50,7 @@ import {
   editorRedoButton,
   editorSaveButton,
   editorOverflow,
+  editorToolsPrimary,
   editorToolsPanel,
   editorToolsTrigger,
   editorUndoButton,
@@ -146,6 +147,7 @@ import { cloudState, discoveryState, libraryState, state, viewState } from "./st
 import { hydrateExportActionIcons, setButtonContent } from "./ui/icons";
 import { closeOpenModals, setModalOpen, setupModal } from "./ui/modals";
 import { setupPopover } from "./ui/popover";
+import { createOverflowRow } from "./ui/overflow-row";
 import { appendLog, showToast } from "./ui/notifications";
 import { rgbToHex } from "./utils/color";
 import { createId } from "./utils/id";
@@ -244,11 +246,14 @@ export const setupActions = () => {
   cloudPasswordInput?.addEventListener("input", activateRecaptchaOnInput);
   setCloudAuthMode("signin");
 
+  let editorOverflowRow: ReturnType<typeof createOverflowRow> | null = null;
+
   onLanguageChange(() => {
     setCloudAuthMode(getCloudAuthMode());
     syncGeneratedPalettePreviewName();
     // The filter panel is built from script, so nothing else re-translates its twenty-odd rows.
     refreshDiscoveryFilters();
+    requestAnimationFrame(() => editorOverflowRow?.refresh(true));
   });
 
   openSettingsButtons.forEach((button) => {
@@ -604,8 +609,15 @@ export const setupActions = () => {
   setupModal(viewModal);
   setupModal(discoverProfileModal);
   setupEditorLayout();
-  if (editorOverflow) {
-    setupPopover({ root: editorOverflow, trigger: editorToolsTrigger, panel: editorToolsPanel });
+  if (editorOverflow && editorToolsPrimary && editorToolsPanel && editorToolsTrigger) {
+    const popover = setupPopover({ root: editorOverflow, trigger: editorToolsTrigger, panel: editorToolsPanel });
+    editorOverflowRow = createOverflowRow({
+      row: editorOverflow,
+      primary: editorToolsPrimary,
+      menu: editorToolsPanel,
+      trigger: editorToolsTrigger,
+      onCollapse: popover.close,
+    });
   }
   createSelectChip(discoverSortSelect);
   setupCloudAuthBindings();

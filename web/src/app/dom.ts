@@ -41,6 +41,7 @@ export const paletteEditor = document.querySelector<HTMLDivElement>("#palette-ed
 export const editorName = document.querySelector<HTMLDivElement>("#editor-name");
 export const editorTools = document.querySelector<HTMLDivElement>("#editor-tools");
 export const editorOverflow = document.querySelector<HTMLDivElement>("#editor-overflow");
+export const editorToolsPrimary = document.querySelector<HTMLDivElement>("#editor-tools-primary");
 export const editorToolsTrigger = document.querySelector<HTMLButtonElement>("#editor-tools-trigger");
 export const editorToolsPanel = document.querySelector<HTMLDivElement>("#editor-tools-panel");
 export const editorSubtitle = document.querySelector<HTMLElement>("#editor-subtitle");

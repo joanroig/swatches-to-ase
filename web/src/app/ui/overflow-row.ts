@@ -42,9 +42,17 @@ const widthOf = (item: HTMLElement, cache: WeakMap<HTMLElement, number>) => {
 
 export const createOverflowRow = ({ row, primary, menu, trigger, onCollapse }: OverflowRowOptions) => {
   const items = [...primary.children].filter((child): child is HTMLElement => child instanceof HTMLElement);
-  const widths = new WeakMap<HTMLElement, number>();
+  let widths = new WeakMap<HTMLElement, number>();
+  let scheduledFrame = 0;
 
-  const apply = () => {
+  row.dataset.overflowReady = "false";
+
+  const apply = (remeasure = false) => {
+    if (remeasure) {
+      items.forEach((item) => primary.appendChild(item));
+      trigger.classList.remove("is-hidden");
+      widths = new WeakMap<HTMLElement, number>();
+    }
     const available = row.clientWidth;
     if (available === 0 || items.length === 0) {
       return;
@@ -94,11 +102,33 @@ export const createOverflowRow = ({ row, primary, menu, trigger, onCollapse }: O
     if (!overflowed) {
       onCollapse?.();
     }
+    row.dataset.overflowReady = "true";
   };
 
-  const observer = new ResizeObserver(() => apply());
+  const schedule = () => {
+    if (scheduledFrame) {
+      return;
+    }
+    scheduledFrame = requestAnimationFrame(() => {
+      scheduledFrame = 0;
+      apply();
+    });
+  };
+
+  // Moving controls changes layout. Doing that work outside the ResizeObserver callback prevents
+  // resize-delivery loops and the one-frame shuffling they cause on narrow rows.
+  const observer = new ResizeObserver(schedule);
   observer.observe(row);
   apply();
 
-  return { refresh: apply, destroy: () => observer.disconnect() };
+  return {
+    refresh: apply,
+    destroy: () => {
+      observer.disconnect();
+      if (scheduledFrame) {
+        cancelAnimationFrame(scheduledFrame);
+      }
+      delete row.dataset.overflowReady;
+    },
+  };
 };
