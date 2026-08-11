@@ -197,7 +197,7 @@
    * borders, so it reads as a sheet rather than a card floating in a gutter.
    */
   .page {
-    --frame-padding-top: 16px;
+    --frame-padding-top: 8px;
     --page-pad: 0px;
 
     padding: 0 var(--page-pad) var(--page-bottom-padding);
@@ -256,8 +256,8 @@
     flex-wrap: nowrap;
     gap: 8px;
     top: 0;
-    padding: 6px 10px;
-    margin-bottom: 12px;
+    padding: 4px 10px;
+    margin-bottom: 8px;
   }
 
   .brand {

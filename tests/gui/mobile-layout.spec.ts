@@ -42,8 +42,12 @@ test("mobile header avatar fits and centers inside its button", async ({ page })
 
   const geometry = await page.locator(".topbar .avatar-button").evaluate((button) => {
     const avatar = button.querySelector<HTMLImageElement>(".user-avatar")!;
+    const topbar = button.closest<HTMLElement>(".topbar")!;
+    const shell = document.querySelector<HTMLElement>(".shell")!;
     const buttonRect = button.getBoundingClientRect();
     const avatarRect = avatar.getBoundingClientRect();
+    const topbarRect = topbar.getBoundingClientRect();
+    const shellRect = shell.getBoundingClientRect();
     const style = getComputedStyle(button);
     const horizontalInset = Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.paddingLeft);
     const verticalInset = Number.parseFloat(style.borderTopWidth) + Number.parseFloat(style.paddingTop);
@@ -54,6 +58,9 @@ test("mobile header avatar fits and centers inside its button", async ({ page })
       expectedHeight: buttonRect.height - verticalInset * 2,
       avatarWidth: avatarRect.width,
       avatarHeight: avatarRect.height,
+      topbarTop: topbarRect.top,
+      topbarHeight: topbarRect.height,
+      shellGap: shellRect.top - topbarRect.bottom,
     };
   });
 
@@ -61,6 +68,9 @@ test("mobile header avatar fits and centers inside its button", async ({ page })
   expect(Math.abs(geometry.centerY)).toBeLessThanOrEqual(0.5);
   expect(geometry.avatarWidth).toBeCloseTo(geometry.expectedWidth, 1);
   expect(geometry.avatarHeight).toBeCloseTo(geometry.expectedHeight, 1);
+  expect(geometry.topbarTop).toBeLessThanOrEqual(8);
+  expect(geometry.topbarHeight).toBeLessThanOrEqual(46);
+  expect(geometry.shellGap).toBeCloseTo(8, 0);
 });
 
 test("mobile view tabs do not create transient page overflow or move the navigation", async ({ page }) => {
