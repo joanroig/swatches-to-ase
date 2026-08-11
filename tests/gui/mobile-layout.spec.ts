@@ -73,6 +73,29 @@ test("mobile header avatar fits and centers inside its button", async ({ page })
   expect(geometry.shellGap).toBeCloseTo(8, 0);
 });
 
+test("creator profile close button stays inside its compact header", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedPalette(page);
+
+  await page.locator("#discover-profile-modal").evaluate((modal) => {
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+  });
+
+  const geometry = await page.locator("#discover-profile-modal .modal-card").evaluate((card) => {
+    const header = card.querySelector<HTMLElement>(".modal-header")!.getBoundingClientRect();
+    const close = card.querySelector<HTMLElement>(".close-button")!.getBoundingClientRect();
+    const body = card.querySelector<HTMLElement>(".modal-body")!.getBoundingClientRect();
+    return {
+      closeOverflow: close.bottom - header.bottom,
+      contentGap: body.top - close.bottom,
+    };
+  });
+
+  expect(geometry.closeOverflow).toBeLessThanOrEqual(1);
+  expect(geometry.contentGap).toBeGreaterThanOrEqual(7.5);
+});
+
 test("mobile view tabs do not create transient page overflow or move the navigation", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedPalette(page);
