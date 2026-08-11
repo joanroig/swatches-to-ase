@@ -2,10 +2,24 @@ import playwright from "@playwright/test";
 
 const { expect, test } = playwright;
 
+const showDiscoverView = async (page) => {
+  await page.locator("[data-view-section]").evaluateAll((sections) => {
+    sections.forEach((section) => {
+      const isDiscover = (section as HTMLElement).dataset.viewSection === "discover";
+      section.classList.toggle("is-active", isDiscover);
+      section.setAttribute("aria-hidden", isDiscover ? "false" : "true");
+    });
+  });
+  await expect(page.locator('[data-view-section="discover"]')).toBeVisible();
+};
+
 const openDiscoverFilters = async (page) => {
   await page.goto("/");
   await expect(page.locator("body")).toHaveClass(/is-ready/);
-  await page.locator('[data-view-target="discover"]:visible').first().click();
+  // Discover is intentionally unavailable when Firebase is not configured. CI does not receive
+  // production Firebase secrets, and these tests exercise the filter UI rather than cloud setup,
+  // so expose the view directly instead of depending on developer-local environment variables.
+  await showDiscoverView(page);
   await page.locator("#discover-filter-toggle").click();
   await expect(page.locator(".discover-filter-panel")).toBeVisible();
 };

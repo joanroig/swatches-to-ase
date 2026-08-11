@@ -34,6 +34,15 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
+      - name: Validate Firebase deployment credentials
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        shell: bash
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error title=Missing Firebase credentials::Add the service-account JSON as the FIREBASE_SERVICE_ACCOUNT repository secret."
+            exit 1
+          fi
       - run: npm ci
       - run: npm run build:web
       - name: Authenticate Firebase CLI

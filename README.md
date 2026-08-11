@@ -15,7 +15,7 @@
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22%2B-43853d?logo=node.js&logoColor=white" alt="Node.js 22+"/></a>
   <a href="https://github.com/joanroig/palette-studio/actions/workflows/release.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/release.yml/badge.svg" alt="Build and Release"/></a>
   <a href="https://github.com/joanroig/palette-studio/actions/workflows/tests.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/tests.yml/badge.svg" alt="Tests"/></a>
-  <a href="https://github.com/joanroig/palette-studio/actions/workflows/pages.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/pages.yml/badge.svg" alt="Deploy Firebase Hosting"/></a>
+  <a href="https://github.com/joanroig/palette-studio/actions/workflows/deploy.yml"><img src="https://github.com/joanroig/palette-studio/actions/workflows/deploy.yml/badge.svg" alt="Deploy Firebase Hosting"/></a>
   <a href="https://palettes.web.app/"><img src="https://img.shields.io/badge/Firebase%20Hosting-live-FFCA28?logo=firebase&logoColor=black" alt="Firebase Hosting"/></a>
 </p>
 
@@ -127,6 +127,10 @@ show a discovery feed using Firebase Auth + Firestore (Spark/free tier).
 **Optional: GitHub Actions secrets**
 Add the same `VITE_FIREBASE_*` keys as repository secrets to ensure builds
 deploy with Firebase enabled (for hosting and releases).
+
+The deployment workflow also requires a `FIREBASE_SERVICE_ACCOUNT` repository
+secret containing the complete JSON key for a service account with Firebase
+Hosting Admin and Firebase Rules Admin access to the project.
 
 **Recommended Firestore rules**
 Use rules that only allow authenticated users to read/write their own sync document, and allow public palettes to be read by anyone while restricting writes to their owners. The repo now includes a hardened baseline in `firestore.rules` with per-user access, size limits, and simple rate limits.

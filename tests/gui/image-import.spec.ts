@@ -15,7 +15,10 @@ const openImageImport = async (page) => {
   await page.reload();
   await expect(page.locator("body")).toHaveClass(/is-ready/);
   await page.locator("#open-import").click();
-  await page.locator('input[name="import-source"][value="image"]').check({ force: true });
+  await expect(page.locator("#import-modal")).toHaveAttribute("aria-hidden", "false");
+  const imageSource = page.locator('input[name="import-source"][value="image"]');
+  await page.locator(".segmented-option", { has: imageSource }).click();
+  await expect(imageSource).toBeChecked();
   await page.locator("#image-input").setInputFiles(IMAGE);
   await expect(page.locator("#image-stage")).toBeVisible();
 };
