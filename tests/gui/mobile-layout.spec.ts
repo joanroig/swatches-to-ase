@@ -112,6 +112,50 @@ test("mobile palette actions use one control shadow without a menu haze", async 
   expect(shadows.backdropContent).toBe("none");
 });
 
+test("mobile add button follows the viewport until the palette panel ends", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 700 });
+  await seedPalette(page);
+  await page.evaluate(() => {
+    const stored = JSON.parse(localStorage.getItem("palette-studio.palettes") ?? "{}") as {
+      palettes?: Array<Record<string, unknown>>;
+    };
+    const source = stored.palettes?.[0];
+    if (!source) {
+      return;
+    }
+    stored.palettes = Array.from({ length: 10 }, (_, index) => ({
+      ...source,
+      id: `mobile-palette-${index}`,
+      name: `Mobile palette ${index + 1}`,
+    }));
+    localStorage.setItem("palette-studio.palettes", JSON.stringify(stored));
+  });
+  await page.reload();
+  await expect(page.locator("body")).toHaveClass(/is-ready/);
+
+  const measure = () =>
+    page.evaluate(() => {
+      const fab = document.querySelector<HTMLElement>("#fab-hub")!.getBoundingClientRect();
+      const panel = document.querySelector<HTMLElement>(".panel-palettes")!.getBoundingClientRect();
+      const nav = document.querySelector<HTMLElement>(".bottom-nav")!.getBoundingClientRect();
+      return { fabTop: fab.top, fabBottom: fab.bottom, panelBottom: panel.bottom, navTop: nav.top };
+    });
+
+  const atTop = await measure();
+  expect(atTop.fabBottom).toBeLessThan(atTop.navTop);
+  expect(atTop.navTop - atTop.fabBottom).toBeGreaterThanOrEqual(6);
+
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight / 2));
+  const midway = await measure();
+  expect(midway.fabBottom).toBeCloseTo(atTop.fabBottom, 0);
+  expect(midway.fabTop).toBeCloseTo(atTop.fabTop, 0);
+
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const atEnd = await measure();
+  expect(atEnd.fabBottom).toBeLessThanOrEqual(atEnd.panelBottom + 1);
+  expect(atEnd.fabBottom).toBeLessThan(atEnd.navTop - 12);
+});
+
 test("opening the palette editor does not focus the title field", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedPalette(page);
