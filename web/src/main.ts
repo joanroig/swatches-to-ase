@@ -1,12 +1,6 @@
 import { applyActionLabels, setupActions } from "./app/actions";
-import {
-  prefetchCloud,
-  refreshCloudControls,
-  renderDiscovery,
-  scheduleCloudSync,
-  setupCloudAuth,
-  syncCloudProfileForm,
-} from "./app/cloud/lazy";
+import { hasRememberedCloudSession } from "./app/cloud/config";
+import { prefetchCloud, refreshLoadedCloudUi, scheduleCloudSync } from "./app/cloud/lazy";
 import { updateExportAvailability } from "./app/export/manager";
 import { onLanguageChange } from "./app/i18n";
 import { setupImageImport } from "./app/image/importer";
@@ -46,9 +40,7 @@ onLanguageChange(() => {
   renderPaletteList();
   renderEditor();
   renderViewModal();
-  renderDiscovery();
-  refreshCloudControls();
-  syncCloudProfileForm();
+  refreshLoadedCloudUi();
   refreshPlayground();
 });
 hydratePreferences();
@@ -58,13 +50,12 @@ setupActions();
 restoreCollapsedFolders();
 hydratePalettes();
 syncPaletteColorNames();
-setupCloudAuth();
 importSharedPaletteFromUrl();
 renderPaletteList();
 renderEditor();
 updateExportAvailability();
 void waitForAppReady().then(() => {
-  // Warm the Firebase chunk once the app has painted, so the first cloud action is not also a
-  // 370 kB download. Deliberately after `waitForAppReady`, never before it.
-  prefetchCloud();
+  if (hasRememberedCloudSession()) {
+    prefetchCloud();
+  }
 });

@@ -19,6 +19,33 @@ test("theme selection updates body dataset", async ({ page }) => {
   await expect(page.locator("body")).toHaveAttribute("data-theme", "noir");
 });
 
+test("closed modals cannot receive focus", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto("/");
+
+  const settings = page.locator("#settings-modal");
+  await expect(settings).toHaveAttribute("aria-hidden", "true");
+  await expect(settings).toHaveAttribute("inert", "");
+
+  await page.locator('[data-action="open-settings"]:visible').click();
+  await expect(settings).toHaveAttribute("aria-hidden", "false");
+  await expect(settings).not.toHaveAttribute("inert", "");
+});
+
+test("a local-only startup does not download Firebase", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto("/");
+  await expect(page.locator("body")).toHaveClass(/is-ready/);
+
+  const firebaseResources = await page.evaluate(() =>
+    performance
+      .getEntriesByType("resource")
+      .map((entry) => entry.name)
+      .filter((url) => url.toLowerCase().includes("firebase")),
+  );
+  expect(firebaseResources).toEqual([]);
+});
+
 for (const [theme, background] of [
   ["noir", "rgb(15, 17, 26)"],
   ["graphite", "rgb(20, 24, 34)"],

@@ -24,8 +24,21 @@ export default defineConfig({
           if (!id.includes("node_modules")) {
             return;
           }
-          if (id.includes("firebase")) {
-            return "firebase";
+          const moduleId = id.replaceAll("\\", "/");
+          if (moduleId.includes("/firebase/analytics/") || moduleId.includes("/@firebase/analytics/")) {
+            return "firebase-analytics";
+          }
+          if (moduleId.includes("/firebase/app-check/") || moduleId.includes("/@firebase/app-check/")) {
+            return "firebase-app-check";
+          }
+          if (moduleId.includes("/firebase/auth/") || moduleId.includes("/@firebase/auth/")) {
+            return "firebase-auth";
+          }
+          if (moduleId.includes("/firebase/firestore/") || moduleId.includes("/@firebase/firestore/")) {
+            return "firebase-firestore";
+          }
+          if (moduleId.includes("firebase")) {
+            return "firebase-core";
           }
           if (id.includes("jszip")) {
             return "jszip";

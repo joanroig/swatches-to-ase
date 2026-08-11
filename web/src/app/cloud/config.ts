@@ -30,6 +30,18 @@ export const firebaseConfig: FirebaseConfig = {
 
 export const appCheckDisabled = import.meta.env.VITE_DISABLE_APP_CHECK === "true" || import.meta.env.VITE_DISABLE_APP_CHECK === "1";
 
+const CLOUD_SESSION_KEY = "palette-studio.cloud-session";
+
+export const hasRememberedCloudSession = () => localStorage.getItem(CLOUD_SESSION_KEY) === "1";
+
+export const rememberCloudSession = (signedIn: boolean) => {
+  if (signedIn) {
+    localStorage.setItem(CLOUD_SESSION_KEY, "1");
+  } else {
+    localStorage.removeItem(CLOUD_SESSION_KEY);
+  }
+};
+
 const requiredKeys = ["apiKey", "authDomain", "projectId", "appId"] as const;
 
 export const getFirebaseConfigStatus = () => {

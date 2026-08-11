@@ -12,8 +12,10 @@ import { t } from "../i18n";
 import { discoveryState } from "../state";
 import { createIcon } from "../ui/icons";
 import { setupPopover } from "../ui/popover";
-import { clearDiscoveryFilters, countDiscoveryFilters, setDiscoveryColor, setDiscoverySort, setDiscoveryStyle } from "./discovery";
+import { clearDiscoveryFilters, setDiscoveryColor, setDiscoverySort, setDiscoveryStyle } from "./lazy";
 import { PALETTE_COLORS, PALETTE_STYLES } from "./palette-traits";
+
+const countDiscoveryFilters = () => (discoveryState.style ? 1 : 0) + (discoveryState.color ? 1 : 0);
 
 /** The swatch beside each color row, so the list can be read at a glance rather than word by word. */
 const COLOR_SWATCHES: Record<string, string> = {

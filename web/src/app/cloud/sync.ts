@@ -32,6 +32,7 @@ import { cloudState, discoveryState, state } from "../state";
 import type { CloudUser, Palette, SyncPayload } from "../types";
 import { showToast } from "../ui/notifications";
 import { ensureAppCheckToken, firebaseClient, firebaseConfigStatus } from "./context";
+import { rememberCloudSession } from "./config";
 import { fetchUserInteractions, renderDiscovery } from "./discovery";
 import { getFirebaseErrorCode, logCloudError, resolveCloudErrorMessage } from "./errors";
 import { fetchFollowing } from "./follow";
@@ -523,6 +524,7 @@ export const setupCloudAuth = () => {
     return;
   }
   onAuthStateChanged(firebaseClient.auth, async (user) => {
+    rememberCloudSession(Boolean(user));
     const authUid = user?.uid ?? null;
     const resolvedUser = user ? await resolveCloudUser(user) : null;
     if (authUid && firebaseClient.auth.currentUser?.uid !== authUid) {

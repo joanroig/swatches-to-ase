@@ -18,12 +18,15 @@ export {
   syncNow,
 } from "./auth-actions";
 export {
+  clearDiscoveryFilters,
   fetchUserInteractions,
   listenToDiscovery,
   renderDiscovery,
   savePublicPalette,
+  setDiscoveryColor,
   setDiscoverySearch,
   setDiscoverySort,
+  setDiscoveryStyle,
   setupDiscoveryProfileControls,
   sortDiscoveryPalettes,
   toggleLikePublicPalette,

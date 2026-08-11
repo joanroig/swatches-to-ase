@@ -1,6 +1,3 @@
-import { exportPaletteToAse, exportPaletteToGpl, exportPaletteToSwatches } from "@core/palette";
-import JSZip from "jszip";
-
 import {
   exportActionButtons,
   exportAllButton,
@@ -22,6 +19,13 @@ import { rgbToHex } from "../utils/color";
 import { sanitizeFileName } from "../utils/text";
 import { buildCodeExport, buildCssExport, buildEmbedExport, buildSvgExport, buildTailwindExport } from "./builders";
 import { getPaletteHexes, selectExportTargets, selectPrimaryExportPalette } from "./helpers";
+
+let paletteToolsPromise: Promise<typeof import("@core/palette")> | null = null;
+
+const loadPaletteTools = () => {
+  paletteToolsPromise ??= import("@core/palette");
+  return paletteToolsPromise;
+};
 
 const getPaletteForExportAction = () => {
   const palette = getPrimaryExportPalette();
@@ -148,6 +152,7 @@ const openPinterestLink = (url: string, description: string) => {
 };
 
 const exportSinglePalette = async (palette: Palette, formatOverride?: string) => {
+  const { exportPaletteToAse, exportPaletteToGpl, exportPaletteToSwatches } = await loadPaletteTools();
   const format = formatOverride ?? getSelectedExportFormat();
   const cleanName = sanitizeFileName(palette.name);
   const payload = {
@@ -186,10 +191,14 @@ const exportPalettes = async (palettes: Palette[]) => {
   }
   updateProcessingState(true);
   const format = getSelectedExportFormat();
-  const zip = new JSZip();
   appendLog(t("log.exporting", { count: palettes.length }), "info");
 
   try {
+    const [{ default: JSZip }, { exportPaletteToAse, exportPaletteToGpl, exportPaletteToSwatches }] = await Promise.all([
+      import("jszip"),
+      loadPaletteTools(),
+    ]);
+    const zip = new JSZip();
     for (const palette of palettes) {
       const cleanName = sanitizeFileName(palette.name);
       const payload = {

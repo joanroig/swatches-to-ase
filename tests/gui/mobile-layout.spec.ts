@@ -107,7 +107,10 @@ test("mobile palette actions use one control shadow without a menu haze", async 
   await page.setViewportSize({ width: 390, height: 844 });
   await seedPalette(page);
 
+  await expect(page.locator("#create-folder")).toHaveAttribute("aria-label", "New folder");
+  await expect(page.locator("#fab-menu")).toHaveAttribute("inert", "");
   await page.locator("#fab-toggle").click();
+  await expect(page.locator("#fab-menu")).not.toHaveAttribute("inert", "");
 
   const shadows = await page.locator("#fab-hub").evaluate((hub) => {
     const selectors = ["#fab-toggle", '[data-fab-action="import"]', '[data-fab-action="generate"]'];
