@@ -145,3 +145,68 @@ test("long notations are not truncated in the column layout", async ({ page }) =
     );
   expect(clipped).toBe(0);
 });
+
+test("editor swatches join edge-to-edge in both layouts", async ({ page }) => {
+  await openEditor(page);
+  const rows = page.locator(".color-row");
+  const horizontal = await rows.evaluateAll((elements) =>
+    elements.slice(0, 2).map((element) => {
+      const box = element.getBoundingClientRect();
+      return { top: box.top, right: box.right, bottom: box.bottom, left: box.left };
+    }),
+  );
+  expect(Math.abs(horizontal[0].bottom - horizontal[1].top)).toBeLessThanOrEqual(1);
+
+  await page.locator("#editor-layout-toggle").click();
+  const vertical = await rows.evaluateAll((elements) =>
+    elements.slice(0, 2).map((element) => {
+      const box = element.getBoundingClientRect();
+      return { top: box.top, right: box.right, bottom: box.bottom, left: box.left };
+    }),
+  );
+  expect(Math.abs(vertical[0].right - vertical[1].left)).toBeLessThanOrEqual(1);
+});
+
+test("change color only occupies the code and name", async ({ page }) => {
+  await openEditor(page);
+  const row = page.locator(".color-row").first();
+  const geometry = await row.evaluate((element) => {
+    const target = element.querySelector<HTMLElement>(".color-card-text")!.getBoundingClientRect();
+    const actions = element.querySelector<HTMLElement>(".color-actions")!.getBoundingClientRect();
+    return {
+      target: { right: target.right, top: target.top, bottom: target.bottom, width: target.width },
+      actions: { left: actions.left },
+    };
+  });
+
+  expect(geometry.target.width).toBeLessThan(260);
+  expect(geometry.target.right).toBeLessThan(geometry.actions.left);
+  await page.mouse.click((geometry.target.right + geometry.actions.left) / 2, (geometry.target.top + geometry.target.bottom) / 2);
+  await expect(page.locator(".color-tools")).toHaveCount(0);
+  await row.locator(".color-card-name").click();
+  await expect(page.locator(".color-tools")).toBeVisible();
+});
+
+test("vertical labels stay centered with code before name", async ({ page }) => {
+  await openEditor(page, 390, 844);
+  await page.locator("#editor-layout-toggle").evaluate((button: HTMLButtonElement) => button.click());
+
+  const labels = await page.locator(".color-row").evaluateAll((rows) =>
+    rows.map((row) => {
+      const rowBox = row.getBoundingClientRect();
+      const label = row.querySelector<HTMLElement>(".color-card-text")!;
+      const labelBox = label.getBoundingClientRect();
+      return {
+        centerDelta: Math.abs(rowBox.left + rowBox.width / 2 - (labelBox.left + labelBox.width / 2)),
+        flexDirection: getComputedStyle(label).flexDirection,
+        parts: [...label.children].map((child) => child.className),
+      };
+    }),
+  );
+
+  for (const label of labels) {
+    expect(label.centerDelta).toBeLessThanOrEqual(1);
+    expect(label.flexDirection).toBe("row");
+    expect(label.parts).toEqual(["color-card-value", "color-card-name"]);
+  }
+});
