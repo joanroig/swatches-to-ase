@@ -1,8 +1,10 @@
-import type { Palette, PublicPalette } from "../types";
+import { discoveryState } from "../state";
+import type { DiscoverySort, Palette, PublicPalette } from "../types";
 // Eager and Firebase-free: importing it here is what sets `cloudState.isConfigured` before the
 // first render, so the publish and sign-in controls are drawn in the right state without waiting
 // for the SDK. Do not make this a type-only import — the side effect is the point.
 import "./config";
+import { isPaletteColorFamily, isPaletteStyle } from "./palette-traits";
 
 /**
  * The one door into the cloud layer from the rest of the app.
@@ -10,7 +12,7 @@ import "./config";
  * Everything behind `./bundle` transitively pulls in the Firebase SDK — roughly 370 kB, 117 kB
  * gzipped, which was the single largest thing the app downloaded and parsed before it could paint,
  * for a feature most visits never touch. Routing every call through a dynamic import keeps that
- * chunk off the critical path: it arrives once the app is interactive, or on the first cloud
+ * chunk off the critical path: it arrives for a remembered signed-in session or the first cloud
  * action, whichever comes first.
  *
  * Everything here is a thin forwarder. Void functions are fire-and-forget so callers stay
@@ -21,16 +23,28 @@ import "./config";
  */
 
 let bundlePromise: Promise<typeof import("./bundle")> | null = null;
+let cloudSetupComplete = false;
 
-/** Start loading the cloud layer. Safe to call repeatedly; the import is cached. */
-export const loadCloud = () => {
+const loadBundle = () => {
   if (!bundlePromise) {
     bundlePromise = import("./bundle");
   }
   return bundlePromise;
 };
 
-/** Warm the chunk once the app is interactive, so the first cloud click is not also a download. */
+/** Start and initialise the cloud layer. Safe to call repeatedly; both steps are cached. */
+export const loadCloud = async () => {
+  const bundle = await loadBundle();
+  if (!cloudSetupComplete) {
+    cloudSetupComplete = true;
+    bundle.setupCloudAuth();
+    bundle.setupCloudProfileControls();
+    bundle.setupDiscoveryProfileControls();
+  }
+  return bundle;
+};
+
+/** Warm cloud support for a remembered session or an explicit cloud action. */
 export const prefetchCloud = () => {
   void loadCloud().catch(() => {
     // A failed prefetch is retried on the next real call.
@@ -45,12 +59,25 @@ const run = (task: (bundle: typeof import("./bundle")) => unknown) => {
     });
 };
 
+/** Refresh translated cloud UI only when another action has already loaded the SDK. */
+export const refreshLoadedCloudUi = () => {
+  if (!bundlePromise) {
+    return;
+  }
+  run((cloud) => {
+    cloud.renderDiscovery();
+    cloud.refreshCloudControls();
+    cloud.syncCloudProfileForm();
+  });
+};
+
 /* -- lifecycle ------------------------------------------------------------- */
 
-export const setupCloudAuth = () => run((cloud) => cloud.setupCloudAuth());
-export const setupCloudProfileControls = () => run((cloud) => cloud.setupCloudProfileControls());
-export const setupDiscoveryProfileControls = () => run((cloud) => cloud.setupDiscoveryProfileControls());
-export const scheduleCloudSync = () => run((cloud) => cloud.scheduleCloudSync());
+export const scheduleCloudSync = () => {
+  if (bundlePromise) {
+    run((cloud) => cloud.scheduleCloudSync());
+  }
+};
 export const syncToCloud = (source: "manual" | "auto" | "init" = "auto") => run((cloud) => cloud.syncToCloud(source));
 export const refreshCloudControls = () => run((cloud) => cloud.refreshCloudControls());
 export const refreshCloudUser = () => run((cloud) => cloud.refreshCloudUser());
@@ -61,8 +88,33 @@ export const syncCloudProfileForm = () => run((cloud) => cloud.syncCloudProfileF
 
 export const renderDiscovery = () => run((cloud) => cloud.renderDiscovery());
 export const listenToDiscovery = () => run((cloud) => cloud.listenToDiscovery());
-export const setDiscoverySort = (value: string) => run((cloud) => cloud.setDiscoverySort(value));
-export const setDiscoverySearch = (value: string) => run((cloud) => cloud.setDiscoverySearch(value));
+const DISCOVERY_SORT_OPTIONS: DiscoverySort[] = ["recent", "likes-desc", "likes-asc", "saves-desc", "saves-asc"];
+
+export const setDiscoverySort = (value: string) => {
+  discoveryState.sort = (DISCOVERY_SORT_OPTIONS as string[]).includes(value) ? (value as DiscoverySort) : "recent";
+  run((cloud) => cloud.renderDiscovery());
+};
+
+export const setDiscoverySearch = (value: string) => {
+  discoveryState.search = value;
+  run((cloud) => cloud.renderDiscovery());
+};
+
+export const setDiscoveryStyle = (value: string | null) => {
+  discoveryState.style = value && isPaletteStyle(value) ? value : null;
+  run((cloud) => cloud.renderDiscovery());
+};
+
+export const setDiscoveryColor = (value: string | null) => {
+  discoveryState.color = value && isPaletteColorFamily(value) ? value : null;
+  run((cloud) => cloud.renderDiscovery());
+};
+
+export const clearDiscoveryFilters = () => {
+  discoveryState.style = null;
+  discoveryState.color = null;
+  run((cloud) => cloud.renderDiscovery());
+};
 export const fetchUserInteractions = async () => {
   const cloud = await loadCloud();
   return cloud.fetchUserInteractions();

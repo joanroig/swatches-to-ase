@@ -1,4 +1,4 @@
-import { getValidFormats } from "@core/palette";
+import { getValidFormats } from "@core/formats";
 
 export const STORAGE_KEY = "palette-studio.preferences";
 export const PALETTES_KEY = "palette-studio.palettes";

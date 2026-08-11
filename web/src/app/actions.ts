@@ -9,8 +9,6 @@ import {
   savePublicPalette,
   setDiscoverySearch,
   setDiscoverySort,
-  setupCloudProfileControls,
-  setupDiscoveryProfileControls,
   toggleLikePublicPalette,
   unpublishPalette,
 } from "./cloud/lazy";
@@ -625,8 +623,6 @@ export const setupActions = () => {
   }
   createSelectChip(discoverSortSelect);
   setupCloudAuthBindings();
-  setupCloudProfileControls();
-  setupDiscoveryProfileControls();
 
   window.desktopApi?.onOpenLegal?.(() => {
     setModalOpen(legalModal, true);

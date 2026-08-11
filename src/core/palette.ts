@@ -3,6 +3,9 @@ import namer from "color-namer/dist/color-namer.js";
 import { createSwatchesFile, readSwatchesFile } from "procreate-swatches";
 
 import { AseColor, decodeAse, encodeAse } from "./ase.js";
+import { VALID_NAME_FORMATS } from "./formats.js";
+
+export { getSupportedPaletteFormats, getValidFormats } from "./formats.js";
 
 export type PaletteColor = {
   name: string;
@@ -21,8 +24,6 @@ export type PaletteImportOptions = {
   addBlackWhite: boolean;
 };
 
-const VALID_NAME_FORMATS = ["roygbiv", "basic", "html", "x11", "pantone", "ntc"];
-
 const clamp = (value: number, min = 0, max = 1) => Math.min(Math.max(value, min), max);
 
 const normalizeRgb = (rgb: number[]): [number, number, number] => {
@@ -35,7 +36,7 @@ const normalizeRgb = (rgb: number[]): [number, number, number] => {
 
 const resolveNameFormat = (format: string) => {
   const normalized = format?.toLowerCase().trim();
-  if (!VALID_NAME_FORMATS.includes(normalized)) {
+  if (!(VALID_NAME_FORMATS as readonly string[]).includes(normalized)) {
     throw new Error(`Invalid color name format! Use one of: ${VALID_NAME_FORMATS.join(", ")}`);
   }
   return normalized;
@@ -228,6 +229,3 @@ export const exportPaletteToGpl = (palette: Palette): string => {
   }
   return `${lines.join("\n")}\n`;
 };
-
-export const getValidFormats = () => [...VALID_NAME_FORMATS];
-export const getSupportedPaletteFormats = () => ["swatches", "ase", "gpl"] as const;

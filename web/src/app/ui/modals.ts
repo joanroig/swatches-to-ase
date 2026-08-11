@@ -39,6 +39,7 @@ export const setModalOpen = (modal: HTMLDivElement | null, open: boolean) => {
   if (!modal) {
     return;
   }
+  modal.toggleAttribute("inert", !open);
   if (open) {
     modal.setAttribute("aria-hidden", "false");
     modal.classList.remove("is-open");
@@ -62,6 +63,7 @@ type ModalSetupOptions = {
 };
 
 export const setupModal = (modal: HTMLDivElement | null, options: ModalSetupOptions = {}) => {
+  modal?.toggleAttribute("inert", modal.getAttribute("aria-hidden") !== "false");
   modal?.addEventListener("click", (event) => {
     const target = event.target as HTMLElement;
     const closeTarget = target?.closest?.<HTMLElement>('[data-close="true"]');

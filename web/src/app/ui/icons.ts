@@ -79,14 +79,13 @@ export const setButtonContent = (button: HTMLButtonElement | null, iconName: Ico
     return;
   }
   button.textContent = "";
+  button.setAttribute("aria-label", label);
   button.appendChild(createIcon(iconName));
   if (iconOnly) {
     button.classList.add("icon-only");
-    button.setAttribute("aria-label", label);
     button.title = label;
   } else {
     button.classList.remove("icon-only");
-    button.removeAttribute("aria-label");
     const span = document.createElement("span");
     span.textContent = label;
     button.appendChild(span);

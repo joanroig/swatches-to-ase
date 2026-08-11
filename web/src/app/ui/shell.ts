@@ -98,6 +98,7 @@ const setFabOpen = (open: boolean) => {
   fabToggleButton.setAttribute("aria-expanded", open ? "true" : "false");
   if (fabMenu) {
     fabMenu.setAttribute("aria-hidden", open ? "false" : "true");
+    fabMenu.toggleAttribute("inert", !open);
   }
 };
 

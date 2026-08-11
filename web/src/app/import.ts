@@ -1,5 +1,3 @@
-import { readPaletteFile } from "@core/palette";
-
 import { trackEvent } from "./cloud/analytics";
 import { dropzone, fileInput, formatSelect } from "./dom";
 import { updateExportAvailability } from "./export/manager";
@@ -31,6 +29,7 @@ export const handleFiles = async (fileList: FileList | null) => {
   appendLog(t("import.importing", { count: files.length }), "info");
 
   try {
+    const { readPaletteFile } = await import("@core/palette");
     const nameFormat = resolveNameFormat(formatSelect?.value ?? "pantone");
     for (const file of files) {
       try {

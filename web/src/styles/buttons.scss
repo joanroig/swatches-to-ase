@@ -78,7 +78,7 @@ button.footer-link {
   text-transform: uppercase;
   /* Faint on purpose — it is a build stamp, not information — but 15% read as a rendering fault
      rather than a deliberately quiet line. */
-  color: color-mix(in srgb, var(--muted) 38%, transparent);
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
   font-variant-numeric: tabular-nums;
 }
 
