@@ -15,6 +15,23 @@
 
 #discover-profile-modal {
   z-index: 11;
+
+  .modal-card {
+    gap: 8px;
+  }
+
+  .modal-header {
+    min-height: var(--control-md);
+    padding-right: 0;
+  }
+
+  .modal-header-actions .close-button {
+    position: static;
+  }
+
+  .modal-body {
+    gap: 12px;
+  }
 }
 
 .modal.is-open {
