@@ -162,7 +162,7 @@ const renderRamp = () => {
     });
     remove.disabled = playgroundState.swatches.length <= playgroundLimits.min;
 
-    actions.append(grip, lock, remove);
+    actions.append(lock, remove);
 
     const label = document.createElement("button");
     label.type = "button";
@@ -171,7 +171,7 @@ const renderRamp = () => {
     label.title = t("playground.editColor");
     const hexLine = document.createElement("span");
     hexLine.className = "playground-swatch-hex";
-    hexLine.textContent = hex.replace("#", "");
+    hexLine.textContent = hex;
     const nameLine = document.createElement("span");
     nameLine.className = "playground-swatch-name";
     nameLine.textContent = swatch.name;
@@ -200,7 +200,9 @@ const renderRamp = () => {
       });
     });
 
-    column.append(actions, label, createInsertZone(index));
+    // Keep the same flat architecture as palette editing: handle, identity, then actions. CSS can
+    // turn that sequence into columns on wide screens without changing the mobile reading order.
+    column.append(grip, label, actions, createInsertZone(index));
     if (index === playgroundState.swatches.length - 1) {
       column.appendChild(createInsertZone(index + 1, true));
     }

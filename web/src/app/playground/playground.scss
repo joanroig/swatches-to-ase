@@ -84,6 +84,19 @@ button.playground-source-detach {
   touch-action: none;
 }
 
+.playground-swatch-grip {
+  order: 1;
+}
+
+.playground-swatch-actions {
+  order: 2;
+  margin-top: auto;
+}
+
+.playground-swatch-label {
+  order: 3;
+}
+
 /*
  * Locked shows the padlock and nothing else — no ring, no grip, no bin.
  *
@@ -127,8 +140,9 @@ button.playground-source-detach {
 button.playground-swatch-action {
   color: inherit;
   border-color: transparent;
-  background: transparent;
-  padding: 6px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  padding: 7px;
+  border-radius: 8px;
 
   &:hover:not(:disabled) {
     background: rgb(255 255 255 / 18%);
@@ -139,9 +153,9 @@ button.playground-swatch-action {
   }
 }
 
-/* The padlock carries the state on its own, so it needs no plate behind it. */
+/* The padlock carries the state on its own while retaining the same tap target as its siblings. */
 button.playground-swatch-action.is-on {
-  background: transparent;
+  background: color-mix(in srgb, currentColor 12%, transparent);
   opacity: 1;
 }
 
@@ -149,7 +163,9 @@ button.playground-swatch-action.is-on {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 7px;
+  border-radius: 8px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
   cursor: grab;
   color: inherit;
   opacity: 0.85;
@@ -165,7 +181,8 @@ button.playground-swatch-action.is-on {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
   min-width: 0;
   padding: 6px 4px;
   border: 0;
@@ -1338,10 +1355,28 @@ button.ui-cta {
   }
 
   .playground-swatch {
-    flex-direction: row-reverse;
-    justify-content: space-between;
+    flex-direction: row;
+    justify-content: flex-start;
     align-items: center;
+    gap: 10px;
     padding: 6px 10px;
+  }
+
+  .playground-swatch-grip {
+    order: 1;
+    flex: none;
+  }
+
+  .playground-swatch-label {
+    order: 2;
+    flex: 0 1 auto;
+  }
+
+  .playground-swatch-actions {
+    order: 3;
+    flex: none;
+    margin-top: 0;
+    margin-left: auto;
   }
 
   .playground-swatch:first-child {
@@ -1375,6 +1410,7 @@ button.ui-cta {
     justify-content: flex-start;
     gap: 10px;
     width: auto;
+    max-width: calc(100% - 112px);
   }
 
   .playground-preview .section-title {

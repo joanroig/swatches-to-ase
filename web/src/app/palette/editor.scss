@@ -231,7 +231,7 @@
 
 .color-list {
   /* Exposed so the insert affordance can centre itself in the gap. */
-  --color-gap: 8px;
+  --color-gap: 0px;
   display: grid;
   gap: var(--color-gap);
   flex: 1 1 auto;
@@ -264,9 +264,9 @@
   display: flex;
   gap: 10px;
   text-align: left;
-  border-radius: 16px;
+  border-radius: 0;
   background: var(--surface);
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  border: 0;
   min-height: 0;
   min-width: 0;
   height: 100%;
@@ -390,7 +390,9 @@ button.color-card-text {
   justify-content: flex-start;
   align-items: center;
   gap: 10px;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: 100%;
   min-width: 0;
   min-height: 0;
   padding: 0;
@@ -548,7 +550,7 @@ button.drag-handle {
   padding: 8px 12px;
 
   .color-card-text {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     flex-direction: row;
     align-items: baseline;
     gap: 10px;
@@ -557,6 +559,18 @@ button.drag-handle {
   .color-actions {
     margin-left: auto;
   }
+}
+
+#palette-editor[data-layout="horizontal"] .color-row:first-child {
+  border-radius: 16px 16px 0 0;
+}
+
+#palette-editor[data-layout="horizontal"] .color-row:last-child {
+  border-radius: 0 0 16px 16px;
+}
+
+#palette-editor[data-layout="horizontal"] .color-row:only-child {
+  border-radius: 16px;
 }
 
 /* ------------------------------------------------- vertical (columns) --- */
@@ -590,10 +604,10 @@ button.drag-handle {
   /* Coolors-style emphasis: the value is the headline, the name is the caption underneath. */
   .color-card-text {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     justify-content: flex-end;
     gap: 3px;
-    width: 100%;
+    width: fit-content;
     max-width: 100%;
     text-align: center;
   }
@@ -633,18 +647,32 @@ button.drag-handle {
   }
 }
 
+#palette-editor[data-layout="vertical"] .color-row:first-child {
+  border-radius: 16px 0 0 16px;
+}
+
+#palette-editor[data-layout="vertical"] .color-row:last-child {
+  border-radius: 0 16px 16px 0;
+}
+
+#palette-editor[data-layout="vertical"] .color-row:only-child {
+  border-radius: 16px;
+}
+
 /*
  * Narrow columns turn the label on its side instead of clipping it to a single glyph.
  * Container queries measure the *content* box, so these thresholds exclude the 12px of horizontal
  * column padding.
  */
 @container color-row (max-width: 88px) {
-  #palette-editor[data-layout="vertical"] .color-card-text {
-    /* `column-reverse` packs from the bottom, so the value sits at the base of the column and the
-       name stacks just above it. `flex: 1 1 auto` rather than `height: 100%`: the latter overflows
-       past the drag handle and the clipped edge silently ate the name. */
-    flex-direction: column-reverse;
-    justify-content: flex-start;
+  #palette-editor[data-layout="vertical"] .color-row .color-card-text {
+    /* Rotate the combined label rather than each child so the code and name share one centred
+       axis. The inline direction reads from the bottom: code first, then name. */
+    writing-mode: sideways-lr;
+    text-orientation: mixed;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: center;
     gap: 6px;
     /* Must not grow: otherwise it eats the free space that `margin-top: auto` on the actions needs
        in order to push the action stack down to the bottom of the column. */
@@ -653,17 +681,15 @@ button.drag-handle {
     padding-bottom: 2px;
   }
 
-  #palette-editor[data-layout="vertical"] .color-card-value,
-  #palette-editor[data-layout="vertical"] .color-card-name {
-    writing-mode: sideways-lr;
-    text-orientation: mixed;
+  #palette-editor[data-layout="vertical"] .color-row .color-card-value,
+  #palette-editor[data-layout="vertical"] .color-row .color-card-name {
     white-space: nowrap;
     line-height: 1;
     flex: 0 1 auto;
     min-height: 0;
   }
 
-  #palette-editor[data-layout="vertical"] .color-card-name {
+  #palette-editor[data-layout="vertical"] .color-row .color-card-name {
     font-size: 0.78rem;
     opacity: 0.92;
   }
@@ -671,11 +697,11 @@ button.drag-handle {
 
 /* Only when the column is genuinely too thin for two stacked labels. */
 @container color-row (max-width: 30px) {
-  #palette-editor[data-layout="vertical"] .color-card-name {
+  #palette-editor[data-layout="vertical"] .color-row .color-card-name {
     display: none;
   }
 
-  #palette-editor[data-layout="vertical"] .color-actions {
+  #palette-editor[data-layout="vertical"] .color-row .color-actions {
     gap: 6px;
   }
 }

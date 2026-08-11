@@ -12,7 +12,7 @@ const openPlayground = async (page) => {
   });
   await page.reload();
   await expect(page.locator("body")).toHaveClass(/is-ready/);
-  await page.locator('.sidebar-nav [data-view-target="playground"]').click();
+  await page.locator('[data-view-target="playground"]:visible').click();
   await expect(page.locator(".panel-playground")).toBeVisible();
   await expect(page.locator(SWATCH)).toHaveCount(5);
 };
@@ -132,7 +132,7 @@ test.describe("playground", () => {
 
     await page.reload();
     await expect(page.locator("body")).toHaveClass(/is-ready/);
-    await page.locator('.sidebar-nav [data-view-target="playground"]').click();
+    await page.locator('[data-view-target="playground"]:visible').click();
 
     expect(await hexes(page)).toEqual(before);
   });
@@ -183,7 +183,7 @@ test.describe("playground", () => {
     await page.locator('.palette-card [data-action-key="playground"]').click();
     await expect(page.locator(".panel-playground")).toBeVisible();
     // The palette's own colors, not a fresh random set.
-    expect(await hexes(page)).toEqual(["FF0000", "00FF00", "0000FF"]);
+    expect(await hexes(page)).toEqual(["#FF0000", "#00FF00", "#0000FF"]);
     await expect(page.locator("#playground-source")).toContainText("Sunset Ridge");
 
     await page.locator("#playground-shuffle").click();
@@ -218,7 +218,7 @@ test.describe("playground", () => {
     const colors = await hexes(page);
 
     await page.locator("#playground-save").click();
-    await page.locator('.sidebar-nav [data-view-target="library"]').click();
+    await page.locator('[data-view-target="library"]:visible').click();
 
     const card = page.locator(".palette-card").first();
     await expect(card).toBeVisible();
@@ -238,6 +238,31 @@ test.describe("playground", () => {
         .join("")
         .toUpperCase(),
     );
-    expect(saved).toEqual(colors);
+    expect(saved).toEqual(colors.map((color) => color.replace("#", "")));
+  });
+
+  test("mobile swatches use the editor control order without gaps", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPlayground(page);
+
+    const positions = await page.locator(SWATCH).evaluateAll((swatches) =>
+      swatches.slice(0, 2).map((swatch) => {
+        const grip = swatch.querySelector<HTMLElement>(".playground-swatch-grip")!.getBoundingClientRect();
+        const label = swatch.querySelector<HTMLElement>(".playground-swatch-label")!.getBoundingClientRect();
+        const actions = swatch.querySelector<HTMLElement>(".playground-swatch-actions")!.getBoundingClientRect();
+        const row = swatch.getBoundingClientRect();
+        return {
+          row: { top: row.top, bottom: row.bottom },
+          grip: { left: grip.left, right: grip.right },
+          label: { left: label.left, right: label.right },
+          actions: { left: actions.left, right: actions.right },
+        };
+      }),
+    );
+
+    expect(positions[0].grip.right).toBeLessThanOrEqual(positions[0].label.left + 1);
+    expect(positions[0].label.right).toBeLessThanOrEqual(positions[0].actions.left + 1);
+    expect(Math.abs(positions[0].row.bottom - positions[1].row.top)).toBeLessThanOrEqual(1);
+    await expect(page.locator(`${SWATCH} .playground-swatch-hex`).first()).toHaveText(/^#/);
   });
 });
