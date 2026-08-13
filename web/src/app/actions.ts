@@ -15,7 +15,6 @@ import {
 import { setupCloudAuthBindings } from "./cloud/auth-bindings";
 import { refreshDiscoveryFilters, setupDiscoveryFilters } from "./cloud/discovery-filters";
 import { createSelectChip } from "./ui/select-chip";
-import { resetRecaptcha, setupRecaptcha } from "./cloud/recaptcha";
 import {
   addBwToggle,
   addColorButton,
@@ -27,7 +26,6 @@ import {
   cloudEmailSignInButton,
   cloudEmailSignUpButton,
   cloudPasswordInput,
-  cloudRecaptcha,
   cloudSignInButton,
   cloudSignOutButton,
   cloudSyncButton,
@@ -211,14 +209,6 @@ export const setupActions = () => {
   applyActionLabels();
   hydrateExportActionIcons(exportActionIcons);
 
-  const activateRecaptchaOnInput = () => {
-    const hasValue = Boolean(cloudEmailInput?.value.trim() || cloudPasswordInput?.value.trim());
-    if (!hasValue) {
-      return;
-    }
-    void setupRecaptcha(cloudRecaptcha);
-  };
-
   openCloudButtons.forEach((button) => {
     button.addEventListener("click", () => {
       prefetchCloud();
@@ -229,10 +219,6 @@ export const setupActions = () => {
         setCloudAuthMode("signin");
       }
       setModalOpen(cloudModal, true);
-      if (cloudRecaptcha) {
-        cloudRecaptcha.classList.add("is-hidden");
-      }
-      resetRecaptcha();
     });
   });
 
@@ -242,8 +228,6 @@ export const setupActions = () => {
     cloudEmailInput?.focus();
   });
 
-  cloudEmailInput?.addEventListener("input", activateRecaptchaOnInput);
-  cloudPasswordInput?.addEventListener("input", activateRecaptchaOnInput);
   setCloudAuthMode("signin");
 
   let editorOverflowRow: ReturnType<typeof createOverflowRow> | null = null;

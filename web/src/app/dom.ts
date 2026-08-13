@@ -174,7 +174,6 @@ export const cloudSyncButton = document.querySelector<HTMLButtonElement>("#cloud
 export const cloudDeleteAccountButton = document.querySelector<HTMLButtonElement>("#cloud-delete-account");
 export const cloudEmailInput = document.querySelector<HTMLInputElement>("#cloud-email-input");
 export const cloudPasswordInput = document.querySelector<HTMLInputElement>("#cloud-password-input");
-export const cloudRecaptcha = document.querySelector<HTMLDivElement>("#cloud-recaptcha");
 export const cloudEmailSignInButton = document.querySelector<HTMLButtonElement>("#cloud-email-signin");
 export const cloudEmailSignUpButton = document.querySelector<HTMLButtonElement>("#cloud-email-signup");
 export const cloudPasswordResetButton = document.querySelector<HTMLButtonElement>("#cloud-password-reset");

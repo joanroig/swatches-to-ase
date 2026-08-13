@@ -10,11 +10,7 @@ import {
   signOut,
 } from "firebase/auth";
 
-import {
-  cloudEmailInput,
-  cloudPasswordInput,
-  cloudRecaptcha,
-} from "../dom";
+import { cloudEmailInput, cloudPasswordInput } from "../dom";
 import { t } from "../i18n";
 import { syncActivePalette } from "../palette/mutations";
 import { cloudState, state } from "../state";
@@ -24,7 +20,6 @@ import { setCloudAuthMode, type CloudAuthMode } from "./auth-mode";
 import { firebaseClient } from "./context";
 import { deleteCloudAccount } from "./delete";
 import { reportAuthError } from "./errors";
-import { getRecaptchaToken, hasRecaptchaLoadFailed, isRecaptchaEnabled, resetRecaptcha } from "./recaptcha";
 import { syncToCloud } from "./sync";
 
 /**
@@ -35,21 +30,6 @@ import { syncToCloud } from "./sync";
  * concern, and it was the last thing statically importing `firebase/auth` from the eager bundle —
  * so lifting it out is what lets the SDK load lazily.
  */
-
-const requireRecaptchaToken = () => {
-  if (!isRecaptchaEnabled()) {
-    return true;
-  }
-  if (hasRecaptchaLoadFailed()) {
-    showToast(t("toast.recaptchaLoadFailed"), "error");
-    return false;
-  }
-  if (getRecaptchaToken()) {
-    return true;
-  }
-  showToast(t("toast.recaptchaRequired"), "info");
-  return false;
-};
 
 export const signInWithGoogle = async () => {
   if (!firebaseClient) {
@@ -92,9 +72,6 @@ export const signInWithEmail = async () => {
   if (!payload) {
     return;
   }
-  if (!requireRecaptchaToken()) {
-    return;
-  }
   try {
     await signInWithEmailAndPassword(firebaseClient.auth, payload.email, payload.password);
     trackEvent("sign_in", { method: "password" });
@@ -103,8 +80,6 @@ export const signInWithEmail = async () => {
     }
   } catch (error) {
     reportAuthError("Email sign-in", error, "toast.signInFailed");
-  } finally {
-    resetRecaptcha();
   }
 };
 
@@ -115,9 +90,6 @@ export const signUpWithEmail = async () => {
   }
   const payload = resolveEmailAuthPayload();
   if (!payload) {
-    return;
-  }
-  if (!requireRecaptchaToken()) {
     return;
   }
   try {
@@ -134,8 +106,6 @@ export const signUpWithEmail = async () => {
     }
   } catch (error) {
     reportAuthError("Email sign-up", error, "toast.signUpFailed");
-  } finally {
-    resetRecaptcha();
   }
 };
 
@@ -210,10 +180,6 @@ const handleCloudSignOut = async (options: { prefillEmail?: string; nextAuthMode
     if (options.nextAuthMode) {
       setCloudAuthMode(options.nextAuthMode);
     }
-    if (cloudRecaptcha) {
-      cloudRecaptcha.classList.add("is-hidden");
-    }
-    resetRecaptcha();
   } catch (error) {
     reportAuthError("Sign out", error, "toast.signOutFailed");
   }
