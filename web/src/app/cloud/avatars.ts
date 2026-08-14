@@ -68,6 +68,26 @@ export const getCloudAvatarSrc = (value?: AvatarColors | null) => {
   return buildAvatarDataUrl(normalizeAvatarColors(value));
 };
 
+/*
+ * Point an avatar at a source, and leave it alone if it is already pointing there.
+ *
+ * These are data URLs holding an inline SVG, and assigning one to `src` starts the load again from
+ * scratch even when the string is identical — the image goes blank for a frame while it re-decodes.
+ * A signed-in reload refreshes the cloud UI twice, so the avatar blinked twice, which is the "user
+ * icon changes color" half of the flicker.
+ */
+export const setAvatarImage = (image: HTMLImageElement | null, src: string, alt: string) => {
+  if (!image) {
+    return;
+  }
+  if (image.getAttribute("src") !== src) {
+    image.src = src;
+  }
+  if (image.getAttribute("alt") !== alt) {
+    image.alt = alt;
+  }
+};
+
 export const generateAvatarColors = (): AvatarColors => {
   const hue = randomBetween(0, 360);
   const saturation = randomBetween(0.55, 0.9);
