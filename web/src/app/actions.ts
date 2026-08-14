@@ -131,6 +131,7 @@ import {
   renderPaletteList,
   renderViewModal,
   redoEditorChange,
+  runSharedImport,
   saveEditorChanges,
   setupEditorLayout,
   syncActivePalette,
@@ -489,6 +490,10 @@ export const setupActions = () => {
   });
 
   viewSaveButton?.addEventListener("click", () => {
+    // In a shared preview this button is the Import action, and there is no public record behind it.
+    if (runSharedImport()) {
+      return;
+    }
     const publicPalette = getViewedPublicPalette();
     if (!publicPalette) {
       return;

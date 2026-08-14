@@ -8,12 +8,7 @@ const resetStorage = async (page) => {
   });
 };
 
-test("shared palette URL imports after confirmation", async ({ page }) => {
-  await resetStorage(page);
-  page.on("dialog", async (dialog) => {
-    await dialog.accept();
-  });
-
+const sharedUrl = () => {
   const payload = {
     name: "Shared",
     colors: [
@@ -22,21 +17,55 @@ test("shared palette URL imports after confirmation", async ({ page }) => {
     ],
   };
   const encoded = Buffer.from(encodeURIComponent(JSON.stringify(payload)), "utf8").toString("base64");
+  return `/?import=${encodeURIComponent(encoded)}`;
+};
 
-  await page.goto(`/?import=${encodeURIComponent(encoded)}`);
+/* Shown before it is taken: the link used to raise a browser confirm naming colors you could not see. */
+test("a shared palette URL previews the palette instead of confirming", async ({ page }) => {
+  await resetStorage(page);
+  page.on("dialog", (dialog) => {
+    throw new Error(`Unexpected ${dialog.type()} dialog: ${dialog.message()}`);
+  });
 
+  await page.goto(sharedUrl());
+
+  const modal = page.locator("#view-modal");
+  await expect(modal).toHaveClass(/is-open/);
+  await expect(modal.locator("#view-title")).toHaveText("Shared palette");
+  await expect(modal.locator("#view-subtitle")).toContainText("Shared");
+  // Two swatches, so the colors are on screen before the decision.
+  await expect(modal.locator(".view-swatch")).toHaveCount(2);
+  // Nothing is in the library until Import is pressed.
+  await expect(page.locator(".palette-card")).toHaveCount(0);
+});
+
+test("importing from the preview adds the palette", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto(sharedUrl());
+  await expect(page.locator("#view-modal")).toHaveClass(/is-open/);
+
+  await page.locator("#view-save").click();
+
+  await expect(page.locator("#view-modal")).not.toHaveClass(/is-open/);
   const card = page.locator(".palette-card");
   await expect(card).toHaveCount(1);
   await expect(card.locator(".palette-title")).toHaveText("Shared");
-  await expect(card.locator(".palette-count")).toContainText("colors");
+});
+
+/* Closing the preview is the decline — there is no separate "no" to press. */
+test("closing the preview leaves the library untouched", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto(sharedUrl());
+  await expect(page.locator("#view-modal")).toHaveClass(/is-open/);
+
+  await page.keyboard.press("Escape");
+
+  await expect(page.locator("#view-modal")).not.toHaveClass(/is-open/);
+  await expect(page.locator(".palette-card")).toHaveCount(0);
 });
 
 test("public assets resolve from a shared URL with a trailing slash", async ({ page }) => {
   await resetStorage(page);
-  page.on("dialog", async (dialog) => {
-    await dialog.accept();
-  });
-
   await page.goto("/00aaff-f2c94c/");
 
   await expect(page.locator(".brand-logo").first()).toHaveJSProperty("complete", true);

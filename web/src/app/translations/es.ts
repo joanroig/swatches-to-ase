@@ -218,6 +218,7 @@ const es: TranslationMap = {
   "generate.emptyName": "Paleta vacía",
   "generate.preview.empty": "Previsualización de paleta vacía.",
   "view.title": "Vista rápida",
+  "view.titleShared": "Paleta compartida",
   "view.emptySubtitle": "Selecciona una paleta para previsualizar.",
   "view.empty": "Ninguna paleta seleccionada.",
   "view.emptyColors": "Paleta vacía. Añade colores para previsualizar.",

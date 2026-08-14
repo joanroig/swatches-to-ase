@@ -3,7 +3,7 @@ import { dropzone, fileInput, formatSelect } from "./dom";
 import { updateExportAvailability } from "./export/manager";
 import { getTargetFolderId } from "./palette/folders";
 import { nameColor, resolveNameFormat } from "./palette/naming";
-import { renderEditor, renderPaletteList, syncActivePalette } from "./palette/ui";
+import { openViewForSharedPalette, renderEditor, renderPaletteList, syncActivePalette } from "./palette/ui";
 import { persistPalettes, persistPreferences } from "./persistence";
 import { applyRemotePreferences, getOptions } from "./preferences";
 import { updateProcessingState } from "./processing";
@@ -14,6 +14,29 @@ import { t } from "./i18n";
 import { appendLog } from "./ui/notifications";
 import { hexToRgb, rgbToHex } from "./utils/color";
 import { createId } from "./utils/id";
+
+/*
+ * A shared palette is shown before it is taken, not after.
+ *
+ * This used to be a `window.confirm` naming the palette — which asked you to accept a set of colors
+ * you could not see, in a dialog the app has no say over. The preview is the one the library
+ * already uses, with its action row reduced to Import; closing it is the decline.
+ */
+const previewSharedPalette = (name: string, colors: Palette["colors"]) => {
+  const palette: Palette = {
+    id: createId(),
+    name,
+    colors,
+    lastModified: Date.now(),
+    // Into whichever collection is open, like everything else the app creates.
+    folderId: getTargetFolderId(),
+  };
+  openViewForSharedPalette(palette, () => {
+    state.palettes.unshift(palette);
+    syncActivePalette(palette.id);
+    appendLog(t("import.paletteImported"), "success");
+  });
+};
 
 export const handleFiles = async (fileList: FileList | null) => {
   if (!fileList || state.processing) {
@@ -220,19 +243,7 @@ export const importSharedPaletteFromUrl = () => {
       appendLog(t("import.sharedPaletteEmpty"), "error");
       return;
     }
-    const confirmed = window.confirm(t("import.confirmPalette", { name }));
-    if (!confirmed) {
-      return;
-    }
-    const palette: Palette = {
-      id: createId(),
-      name,
-      colors,
-      lastModified: Date.now(),
-    };
-    state.palettes.unshift(palette);
-    syncActivePalette(palette.id);
-    appendLog(t("import.paletteImported"), "success");
+    previewSharedPalette(name, colors);
     return;
   }
 
@@ -250,17 +261,5 @@ export const importSharedPaletteFromUrl = () => {
     appendLog(t("import.sharedPaletteEmpty"), "error");
     return;
   }
-  const confirmed = window.confirm(t("import.confirmPalette", { name }));
-  if (!confirmed) {
-    return;
-  }
-  const palette: Palette = {
-    id: createId(),
-    name,
-    colors,
-    lastModified: Date.now(),
-  };
-  state.palettes.unshift(palette);
-  syncActivePalette(palette.id);
-  appendLog(t("import.paletteImported"), "success");
+  previewSharedPalette(name, colors);
 };
