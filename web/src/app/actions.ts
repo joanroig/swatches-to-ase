@@ -25,7 +25,6 @@ import {
   cloudEmailInput,
   cloudEmailSignInButton,
   cloudEmailSignUpButton,
-  cloudPasswordInput,
   cloudSignInButton,
   cloudSignOutButton,
   cloudSyncButton,
