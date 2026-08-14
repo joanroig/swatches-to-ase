@@ -457,6 +457,14 @@ export const setupActions = () => {
     viewState.mode === "discover" ? (discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId) ?? null) : null;
 
   viewSaveEditButton?.addEventListener("click", () => {
+    // In a shared preview this is Save-and-edit too: the import has to land first, because the
+    // editor works on a palette in the library and the preview's palette is not one yet.
+    const importedId = runSharedImport();
+    if (importedId) {
+      openEditorForPalette(importedId);
+      return;
+    }
+
     const publicPalette = getViewedPublicPalette();
     if (publicPalette) {
       void savePublicPalette(publicPalette).then(({ copy }) => {

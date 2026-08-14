@@ -101,16 +101,20 @@ export const openViewForSharedPalette = (palette: Palette, onImport: () => void)
   setModalOpen(viewModal, true);
 };
 
-/** Runs the import the link handler handed over, then closes. `null` outside a shared preview. */
+/**
+ * Runs the import the link handler handed over, then closes, and reports the id of the palette that
+ * now exists in the library — so the caller can go on to open it. `null` outside a shared preview.
+ */
 export const runSharedImport = () => {
   if (viewState.mode !== "shared" || !onImportShared) {
-    return false;
+    return null;
   }
   const run = onImportShared;
+  const importedId = viewState.sharedPalette?.id ?? null;
   clearSharedPreview();
   setModalOpen(viewModal, false);
   run();
-  return true;
+  return importedId;
 };
 
 const clearSharedPreview = () => {
@@ -209,7 +213,14 @@ const renderSharedActions = () => {
     setHidden(viewLikeCount, true);
   }
   setHidden(viewLikeButton, true);
-  setHidden(viewSaveEditButton, true);
+  if (viewSaveEditButton) {
+    // The same pair Discover offers, and for the same reason: taking the palette and opening it are
+    // one intent, and having to save, dismiss, then hunt for it in the library is three steps for
+    // something the button can do outright. It saves first — you cannot edit what you do not own.
+    setButtonContent(viewSaveEditButton, "edit", t("action.saveEdit"), true);
+    viewSaveEditButton.disabled = false;
+    setHidden(viewSaveEditButton, false);
+  }
   if (viewSaveButton) {
     // The same bookmark a Discover palette offers: taking a stranger's palette into your library
     // is the same act whether it arrived by feed or by link, so it should not look like two things.
