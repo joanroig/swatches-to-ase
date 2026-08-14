@@ -53,8 +53,7 @@ import {
   editorUndoButton,
   exportActionButtons,
   exportActionIcons,
-  exportAllButton,
-  exportFormatOptions,
+  exportFormatButtons,
   exportModal,
   formatSelect,
   generateFormatSelect,
@@ -105,7 +104,7 @@ import {
   viewSaveEditButton,
   viewModal,
 } from "./dom";
-import { exportPalettesSmart, getExportTargets, handleExportAction, setExportMode, setSelectedExportFormat } from "./export/manager";
+import { exportPalettesSmart, getExportTargets, handleExportAction, setExportMode } from "./export/manager";
 import {
   randomizeGeneratedPalettePreview,
   saveGeneratedPaletteFromPreview,
@@ -192,7 +191,6 @@ export const applyActionLabels = () => {
   setButtonContent(editorUndoButton, "undo", t("action.undo"), true);
   setButtonContent(editorRedoButton, "redo", t("action.redo"), true);
   setButtonContent(addColorButton, "plus", t("action.addColor"));
-  setButtonContent(exportAllButton, "download", t("action.download"));
   setButtonContent(generateHistoryBackButton, "undo", t("action.back"), true);
   setButtonContent(generateHistoryForwardButton, "redo", t("action.forward"), true);
   setButtonContent(confirmGenerateButton, "generate", t("action.generatePalette"));
@@ -336,7 +334,6 @@ export const setupActions = () => {
       return;
     }
     setExportMode("batch");
-    setSelectedExportFormat("all");
     setModalOpen(exportModal, true);
   });
 
@@ -437,13 +434,20 @@ export const setupActions = () => {
     setModalOpen(generateModal, false);
   });
 
-  exportAllButton?.addEventListener("click", () => {
-    const targets = getExportTargets();
-    if (targets.length === 0) {
-      appendLog(t("log.noPalettesToExport"), "error");
-      return;
-    }
-    void exportPalettesSmart(targets);
+  /*
+   * The format tile is the button. There used to be a radio group and a Download button under it,
+   * which made choosing a format and asking for the file two separate acts — and the second one was
+   * easy to miss, since the tile already looked like something you had pressed.
+   */
+  exportFormatButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const targets = getExportTargets();
+      if (targets.length === 0) {
+        appendLog(t("log.noPalettesToExport"), "error");
+        return;
+      }
+      void exportPalettesSmart(targets, button.dataset.exportFormat ?? "all");
+    });
   });
 
   exportActionButtons.forEach((button) => {
@@ -538,7 +542,6 @@ export const setupActions = () => {
     syncGeneratedPalettePreviewName();
   });
   addBwToggle?.addEventListener("change", persistPreferences);
-  exportFormatOptions.forEach((option) => option.addEventListener("change", persistPreferences));
   colorNotationSelect?.addEventListener("change", () => applyColorNotation(colorNotationSelect.value));
   colorNotationEditorSelect?.addEventListener("change", () => applyColorNotation(colorNotationEditorSelect.value));
   themeSelect?.addEventListener("change", () => {

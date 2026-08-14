@@ -191,44 +191,35 @@
           <h4 data-i18n="export.formats.title">File formats</h4>
           <p class="hint" data-i18n="export.formats.hint">Choose a format and the palettes to export.</p>
         </div>
-        <div
-          class="export-grid export-grid--formats"
-          role="radiogroup"
-          aria-label="Export format"
-          data-i18n-aria-label="export.formats.title"
-        >
-          <label class="export-tile">
-            <input type="radio" name="export-format" value="ase" />
+        <div class="export-grid export-grid--formats" aria-label="Export format" data-i18n-aria-label="export.formats.title">
+          <button class="export-tile" type="button" data-export-format="ase">
             <span class="tile-content">
               <span class="tile-icon">ASE</span>
               <span class="tile-title">ASE</span>
               <span class="tile-subtitle" data-i18n="export.format.ase.subtitle">Adobe Swatch Exchange</span>
             </span>
-          </label>
-          <label class="export-tile">
-            <input type="radio" name="export-format" value="swatches" />
+          </button>
+          <button class="export-tile" type="button" data-export-format="swatches">
             <span class="tile-content">
               <span class="tile-icon">SWA</span>
               <span class="tile-title" data-i18n="export.format.swatches.title">Swatches</span>
               <span class="tile-subtitle" data-i18n="export.format.swatches.subtitle">Procreate .swatches</span>
             </span>
-          </label>
-          <label class="export-tile">
-            <input type="radio" name="export-format" value="gpl" />
+          </button>
+          <button class="export-tile" type="button" data-export-format="gpl">
             <span class="tile-content">
               <span class="tile-icon">GPL</span>
               <span class="tile-title" data-i18n="export.format.gimp.title">GIMP</span>
               <span class="tile-subtitle" data-i18n="export.format.gimp.subtitle">GIMP palette</span>
             </span>
-          </label>
-          <label class="export-tile">
-            <input type="radio" name="export-format" value="all" checked />
+          </button>
+          <button class="export-tile" type="button" data-export-format="all">
             <span class="tile-content">
               <span class="tile-icon">ALL</span>
               <span class="tile-title" data-i18n="export.format.all.title">All formats</span>
               <span class="tile-subtitle" data-i18n="export.format.all.subtitle">ASE + Swatches + GPL</span>
             </span>
-          </label>
+          </button>
         </div>
       </div>
 
@@ -282,11 +273,6 @@
             <span class="action-icon" data-icon="pinterest"></span>
             <span data-i18n="export.action.pinterest">Pinterest</span>
           </button>
-        </div>
-      </div>
-      <div class="export-controls">
-        <div class="export-actions">
-          <button class="primary" id="export-all" data-i18n="action.download">Download</button>
         </div>
       </div>
     </div>

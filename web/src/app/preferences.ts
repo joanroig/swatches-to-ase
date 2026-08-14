@@ -11,7 +11,6 @@ import {
   themeSelect,
 } from "./dom";
 import { getColorNotationLabel, normalizeLanguagePreference, setLanguagePreference } from "./i18n";
-import { getSelectedExportFormat, setSelectedExportFormat } from "./export/manager";
 import { persistPreferences } from "./persistence";
 import type { Preferences } from "./types";
 
@@ -41,7 +40,12 @@ export const getPreferencesPayload = (): Preferences => ({
   motion: normalizeMotionPreference(motionSelect?.value),
   colorNameFormat: formatSelect?.value ?? generateFormatSelect?.value ?? "pantone",
   addBlackWhite: addBwToggle?.checked ?? false,
-  exportFormat: getSelectedExportFormat(),
+  /*
+   * Nothing chooses an export format any more — the format tile in the export dialog is the button
+   * that exports. The field stays in the payload because older clients validate it as a required
+   * string and reject the whole preferences blob without it, which would stop their sync dead.
+   */
+  exportFormat: "all",
   colorNotation: getColorNotation(),
   generateStyle: resolveGenerateStylePreference(generateStyleSelect?.value),
   language: normalizeLanguagePreference(languageSelect?.value),
@@ -123,9 +127,6 @@ export const applyRemotePreferences = (prefs: Preferences) => {
     addBwToggle.checked = prefs.addBlackWhite ?? false;
   }
   applyLanguagePreference(prefs.language ?? languageSelect?.value ?? "system", false);
-  if (prefs.exportFormat) {
-    setSelectedExportFormat(prefs.exportFormat);
-  }
   if (prefs.colorNotation) {
     applyColorNotation(prefs.colorNotation, false);
   }
