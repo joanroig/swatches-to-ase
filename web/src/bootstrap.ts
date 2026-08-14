@@ -5,6 +5,7 @@ import loadingMarkup from "./app/markup/loading-screen.html?raw";
 import accountModalsMarkup from "./app/markup/modals/account.html?raw";
 import legalModalsMarkup from "./app/markup/modals/legal.html?raw";
 import workflowModalsMarkup from "./app/markup/modals/workflow.html?raw";
+import { mountIconSprite } from "./app/ui/icons";
 
 const modalsMarkup = [workflowModalsMarkup, accountModalsMarkup, legalModalsMarkup].join("\n");
 
@@ -13,6 +14,9 @@ const appRoot = document.querySelector<HTMLDivElement>("#app-root");
 if (!appRoot) {
   throw new Error("Missing #app-root container in index.html");
 }
+
+// Before the markup, so the `<use href="#icon-…">` tags inside it resolve on their first paint.
+mountIconSprite();
 
 appRoot.innerHTML = `${loadingMarkup}\n${appShellMarkup}`;
 
