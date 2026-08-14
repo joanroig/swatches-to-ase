@@ -52,6 +52,25 @@ test("importing from the preview adds the palette", async ({ page }) => {
   await expect(card.locator(".palette-title")).toHaveText("Shared");
 });
 
+/*
+ * Save and edit is one intent, so it is one button: the import has to land first — the editor works
+ * on a palette in the library — and then the editor opens on it without a trip through the library.
+ */
+test("save and edit imports the palette and opens it in the editor", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto(sharedUrl());
+  await expect(page.locator("#view-modal")).toHaveClass(/is-open/);
+
+  await page.locator("#view-save-edit").click();
+
+  await expect(page.locator("#view-modal")).not.toHaveClass(/is-open/);
+  await expect(page.locator("#editor-modal")).toHaveAttribute("aria-hidden", "false");
+  await expect(page.locator("#palette-name")).toHaveValue("Shared");
+  // Kept, so the edits have somewhere to persist to — and not reported as a dismissal.
+  await expect(page.locator(".palette-card")).toHaveCount(1);
+  await expect(page.locator(".toast", { hasText: "not imported" })).toHaveCount(0);
+});
+
 /* Closing the preview is the decline — there is no separate "no" to press, so it has to say so. */
 test("closing the preview leaves the library untouched and says why", async ({ page }) => {
   await resetStorage(page);
