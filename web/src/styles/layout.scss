@@ -140,7 +140,13 @@
    * left a band of empty page under the preview. The 160px was a guess at the chrome above it,
    * which is now two variables that say what they are.
    */
-  min-height: min(820px, calc(100dvh - var(--frame-padding-top) - var(--frame-padding-bottom) - var(--bottom-nav-height)));
+  /*
+   * `svh`, not `dvh`. The dynamic unit tracks the browser's chrome, so on a phone it *grows* as the
+   * URL bar retracts on scroll — and the playground, being sized from it, grew with it: scrolling
+   * down made the preview taller, which moved the thing you were scrolling towards. The small unit
+   * is the viewport with the chrome showing, and it does not move.
+   */
+  min-height: min(820px, calc(100svh - var(--frame-padding-top) - var(--frame-padding-bottom) - var(--bottom-nav-height)));
 }
 
 /*
