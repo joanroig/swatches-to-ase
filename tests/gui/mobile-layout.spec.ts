@@ -203,6 +203,32 @@ test("opening the palette editor does not focus the title field", async ({ page 
   await expect(page.locator("#editor-modal [data-autofocus]")).toBeFocused();
 });
 
+/*
+ * The editor's close button sits in the flow beside the color count rather than pinned to the
+ * corner, and it once kept the `translateY(-50%)` that belonged to the pinned version — which lifted
+ * it 19px, half its height, above the title it belongs beside.
+ */
+test("the editor close button sits level with its header", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedPalette(page);
+
+  await page.locator(".palette-card").getByRole("button", { name: "Edit" }).click();
+  await expect(page.locator("#editor-modal")).toHaveAttribute("aria-hidden", "false");
+
+  const offsets = await page.locator("#editor-modal .editor-header").evaluate((header) => {
+    const close = header.querySelector<HTMLElement>("[data-close]")!;
+    const headerBox = header.getBoundingClientRect();
+    const closeBox = close.getBoundingClientRect();
+    return {
+      centerGap: Math.abs((closeBox.top + closeBox.bottom) / 2 - (headerBox.top + headerBox.bottom) / 2),
+      aboveHeader: headerBox.top - closeBox.top,
+    };
+  });
+
+  expect(offsets.centerGap).toBeLessThanOrEqual(1);
+  expect(offsets.aboveHeader).toBeLessThanOrEqual(1);
+});
+
 test("editor actions stay on one row and overflow by available width", async ({ page }) => {
   await page.setViewportSize({ width: 824, height: 900 });
   await seedPalette(page);

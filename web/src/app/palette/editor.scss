@@ -46,6 +46,13 @@
   > .close-button {
     position: static;
     flex: 0 0 auto;
+    /*
+     * And the centring that comes with the absolute version has to go with it. `top: 50%` is inert
+     * on a static box, but `translateY(-50%)` is not: it kept lifting the button half its own height
+     * — 19px — clear of the title it sits beside, which on a phone read as the ✕ floating above the
+     * dialog's name.
+     */
+    transform: none;
   }
 }
 
