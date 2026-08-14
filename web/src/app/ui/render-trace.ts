@@ -82,6 +82,42 @@ export const startRenderTrace = () => {
       }
     });
     ready.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+
+    /*
+     * The icons are all `currentColor`, so anything that repaints them without touching the DOM has
+     * to be a color change — a theme applied twice, a class landing late. This samples the color the
+     * rail is actually painting and logs it whenever it moves, alongside the theme it came from.
+     */
+    let lastPaint = "";
+    const samplePaint = () => {
+      const icon = document.querySelector<SVGElement>(".nav-item svg.icon");
+      if (icon) {
+        const paint = [
+          getComputedStyle(icon).color,
+          document.documentElement.dataset.theme ?? "-",
+          document.body.dataset.theme ?? "-",
+          document.body.dataset.motion ?? "-",
+        ].join(" | ");
+        if (paint !== lastPaint) {
+          lastPaint = paint;
+          push("paint", paint);
+        }
+      }
+      if (performance.now() < 12_000) {
+        requestAnimationFrame(samplePaint);
+      }
+    };
+    requestAnimationFrame(samplePaint);
+
+    const attributes = new MutationObserver((records) => {
+      records.forEach((record) => {
+        const target = record.target as HTMLElement;
+        const name = target === document.documentElement ? "html" : "body";
+        push("attribute", `${name}.${record.attributeName} = ${target.getAttribute(record.attributeName ?? "") ?? ""}`);
+      });
+    });
+    attributes.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-motion", "class"] });
+    attributes.observe(document.body, { attributes: true, attributeFilter: ["data-theme", "data-motion"] });
   };
 
   if (document.body) {
@@ -94,5 +130,10 @@ export const startRenderTrace = () => {
     console.table(entries);
     return entries;
   };
-  console.info("[render-trace] recording. Reload signed in, wait a few seconds, then run __renderTrace()");
+  // Prints itself, so the whole procedure is: open the page, wait, screenshot the console.
+  window.setTimeout(() => {
+    console.info(`[render-trace] ${entries.length} events`);
+    console.table(entries);
+  }, 12_000);
+  console.info("[render-trace] recording — the table prints itself in 12s, or run __renderTrace() sooner");
 };
