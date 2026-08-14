@@ -132,6 +132,7 @@ import {
   renderViewModal,
   redoEditorChange,
   runSharedImport,
+  dismissSharedPreview,
   saveEditorChanges,
   setupEditorLayout,
   syncActivePalette,
@@ -144,7 +145,7 @@ import { persistPreferences } from "./persistence";
 import { applyColorNotation, applyLanguagePreference, applyMotionPreference, applyTheme, syncNameFormat } from "./preferences";
 import { cloudState, discoveryState, libraryState, state, viewState } from "./state";
 import { hydrateExportActionIcons, setButtonContent } from "./ui/icons";
-import { closeOpenModals, setModalOpen, setupModal } from "./ui/modals";
+import { closeOpenModals, onModalClosed, setModalOpen, setupModal } from "./ui/modals";
 import { setupPopover } from "./ui/popover";
 import { createOverflowRow } from "./ui/overflow-row";
 import { appendLog, showToast } from "./ui/notifications";
@@ -596,6 +597,8 @@ export const setupActions = () => {
   setupModal(editorModal, { onBeforeClose: confirmEditorClose });
   setupModal(exportModal);
   setupModal(viewModal);
+  // The shared preview has to know it was declined, whichever way the dialog was closed.
+  onModalClosed(viewModal, dismissSharedPreview);
   setupModal(discoverProfileModal);
   setupEditorLayout();
   if (editorOverflow && editorToolbar && editorToolbarSpacer && editorToolsPrimary && editorToolsPanel && editorToolsTrigger) {

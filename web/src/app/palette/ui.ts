@@ -21,4 +21,11 @@ export {
   updatePalette,
   updatePaletteName,
 } from "./mutations";
-export { openViewForPalette, openViewForPublicPalette, openViewForSharedPalette, renderViewModal, runSharedImport } from "./view";
+export {
+  dismissSharedPreview,
+  openViewForPalette,
+  openViewForPublicPalette,
+  openViewForSharedPalette,
+  renderViewModal,
+  runSharedImport,
+} from "./view";

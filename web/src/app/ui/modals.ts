@@ -35,6 +35,21 @@ const syncBodyScrollLock = () => {
   setBodyScrollLocked(hasOpenModal);
 };
 
+/*
+ * Run when a modal closes, however it closed.
+ *
+ * Registered against the element rather than passed to `setupModal`, because that only sees clicks
+ * on a `[data-close]` control — Escape and `closeOpenModals` go straight to `setModalOpen`, and a
+ * dialog whose dismissal means something must hear about all three.
+ */
+const closeHandlers = new WeakMap<HTMLDivElement, () => void>();
+
+export const onModalClosed = (modal: HTMLDivElement | null, handler: () => void) => {
+  if (modal) {
+    closeHandlers.set(modal, handler);
+  }
+};
+
 export const setModalOpen = (modal: HTMLDivElement | null, open: boolean) => {
   if (!modal) {
     return;
@@ -52,8 +67,12 @@ export const setModalOpen = (modal: HTMLDivElement | null, open: boolean) => {
       modal.querySelector<HTMLElement>("[data-autofocus]") ?? modal.querySelector<HTMLElement>("button, input, select, textarea");
     target?.focus();
   } else {
+    const wasOpen = modal.getAttribute("aria-hidden") === "false";
     modal.setAttribute("aria-hidden", "true");
     modal.classList.remove("is-open");
+    if (wasOpen) {
+      closeHandlers.get(modal)?.();
+    }
   }
   syncBodyScrollLock();
 };

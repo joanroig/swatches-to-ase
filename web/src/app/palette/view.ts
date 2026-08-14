@@ -18,6 +18,7 @@ import { cloudState, discoveryState, state, viewState } from "../state";
 import type { Palette, PublicPalette } from "../types";
 import { setButtonContent } from "../ui/icons";
 import { setModalOpen } from "../ui/modals";
+import { showToast } from "../ui/notifications";
 import type { QuickViewLayout } from "../types";
 import { getColorMetrics, getContrastColor, rgbToHex } from "../utils/color";
 import { readStoredText, writeStoredText } from "../utils/storage";
@@ -106,12 +107,32 @@ export const runSharedImport = () => {
     return false;
   }
   const run = onImportShared;
-  onImportShared = null;
-  viewState.sharedPalette = null;
-  viewState.mode = "local";
+  clearSharedPreview();
   setModalOpen(viewModal, false);
   run();
   return true;
+};
+
+const clearSharedPreview = () => {
+  onImportShared = null;
+  viewState.sharedPalette = null;
+  viewState.mode = "local";
+};
+
+/*
+ * Closing a shared preview is the decline, and it should say so.
+ *
+ * Nothing was taken and nothing changed, so there is nothing on screen afterwards to tell you which
+ * way the choice went — the dialog simply disappears, exactly as it would have if the import had
+ * worked. A line confirming the palette was not kept is the difference between a decision and a
+ * dialog that got away from you.
+ */
+export const dismissSharedPreview = () => {
+  if (viewState.mode !== "shared" || !onImportShared) {
+    return;
+  }
+  clearSharedPreview();
+  showToast(t("import.sharedDismissed"), "info");
 };
 
 export const openViewForPublicPalette = (palette: PublicPalette) => {
@@ -190,7 +211,9 @@ const renderSharedActions = () => {
   setHidden(viewLikeButton, true);
   setHidden(viewSaveEditButton, true);
   if (viewSaveButton) {
-    setButtonContent(viewSaveButton, "import", t("action.import"), true);
+    // The same bookmark a Discover palette offers: taking a stranger's palette into your library
+    // is the same act whether it arrived by feed or by link, so it should not look like two things.
+    setButtonContent(viewSaveButton, "bookmark", t("action.save"), true);
     viewSaveButton.disabled = false;
     viewSaveButton.classList.remove("is-active");
     setHidden(viewSaveButton, false);
