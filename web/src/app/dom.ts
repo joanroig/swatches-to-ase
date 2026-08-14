@@ -126,6 +126,7 @@ export const viewSubtitle = document.querySelector<HTMLParagraphElement>("#view-
 export const viewPublicMeta = document.querySelector<HTMLDivElement>("#view-public-meta");
 export const viewLikeButton = document.querySelector<HTMLButtonElement>("#view-like");
 export const viewLikeCount = document.querySelector<HTMLSpanElement>("#view-like-count");
+export const viewTitle = document.querySelector<HTMLHeadingElement>("#view-title");
 export const viewSaveButton = document.querySelector<HTMLButtonElement>("#view-save");
 export const viewSaveEditButton = document.querySelector<HTMLButtonElement>("#view-save-edit");
 export const playgroundRamp = document.querySelector<HTMLDivElement>("#playground-ramp");

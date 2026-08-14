@@ -27,8 +27,13 @@ export const exportState = {
 export const viewState = {
   paletteId: null as string | null,
   colorId: null as string | null,
-  mode: "local" as "local" | "discover",
+  mode: "local" as "local" | "discover" | "shared",
   publicPaletteId: null as string | null,
+  /**
+   * A palette decoded from a share link, which exists nowhere else yet — not in the library and not
+   * in the public feed — so it has to be carried here rather than looked up by id.
+   */
+  sharedPalette: null as Palette | null,
   layout: "details" as QuickViewLayout,
 };
 

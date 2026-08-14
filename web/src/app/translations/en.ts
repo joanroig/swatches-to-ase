@@ -218,6 +218,7 @@ const en: TranslationMap = {
   "generate.emptyName": "Empty Palette",
   "generate.preview.empty": "Empty palette preview.",
   "view.title": "Quick view",
+  "view.titleShared": "Shared palette",
   "view.emptySubtitle": "Select a palette to preview.",
   "view.empty": "No palette selected.",
   "view.emptyColors": "Empty palette. Add colors to preview.",

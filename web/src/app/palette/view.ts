@@ -10,11 +10,12 @@ import {
   viewSaveEditButton,
   viewStrip,
   viewSubtitle,
+  viewTitle,
   viewValues,
 } from "../dom";
 import { t } from "../i18n";
 import { cloudState, discoveryState, state, viewState } from "../state";
-import type { PublicPalette } from "../types";
+import type { Palette, PublicPalette } from "../types";
 import { setButtonContent } from "../ui/icons";
 import { setModalOpen } from "../ui/modals";
 import type { QuickViewLayout } from "../types";
@@ -74,8 +75,43 @@ export const openViewForPalette = (paletteId: string) => {
   viewState.colorId = null;
   viewState.mode = "local";
   viewState.publicPaletteId = null;
+  viewState.sharedPalette = null;
   renderViewModal();
   setModalOpen(viewModal, true);
+};
+
+/*
+ * Someone else's palette, arriving by link.
+ *
+ * It is shown before it is imported rather than after: a share link used to raise a browser confirm
+ * naming the palette, which asked you to accept colors you could not see. The preview is the one
+ * the app already has, with the action row reduced to the only choice that makes sense here.
+ */
+let onImportShared: (() => void) | null = null;
+
+export const openViewForSharedPalette = (palette: Palette, onImport: () => void) => {
+  viewState.paletteId = null;
+  viewState.colorId = null;
+  viewState.mode = "shared";
+  viewState.publicPaletteId = null;
+  viewState.sharedPalette = palette;
+  onImportShared = onImport;
+  renderViewModal();
+  setModalOpen(viewModal, true);
+};
+
+/** Runs the import the link handler handed over, then closes. `null` outside a shared preview. */
+export const runSharedImport = () => {
+  if (viewState.mode !== "shared" || !onImportShared) {
+    return false;
+  }
+  const run = onImportShared;
+  onImportShared = null;
+  viewState.sharedPalette = null;
+  viewState.mode = "local";
+  setModalOpen(viewModal, false);
+  run();
+  return true;
 };
 
 export const openViewForPublicPalette = (palette: PublicPalette) => {
@@ -83,6 +119,7 @@ export const openViewForPublicPalette = (palette: PublicPalette) => {
   viewState.colorId = null;
   viewState.mode = "discover";
   viewState.publicPaletteId = palette.id;
+  viewState.sharedPalette = null;
   renderViewModal();
   setModalOpen(viewModal, true);
 };
@@ -144,14 +181,35 @@ const renderLocalActions = (hasPalette: boolean) => {
   }
 };
 
+/** Import or dismiss, and nothing else: a palette you do not have yet cannot be liked or edited. */
+const renderSharedActions = () => {
+  if (viewLikeCount) {
+    viewLikeCount.textContent = "";
+    setHidden(viewLikeCount, true);
+  }
+  setHidden(viewLikeButton, true);
+  setHidden(viewSaveEditButton, true);
+  if (viewSaveButton) {
+    setButtonContent(viewSaveButton, "import", t("action.import"), true);
+    viewSaveButton.disabled = false;
+    viewSaveButton.classList.remove("is-active");
+    setHidden(viewSaveButton, false);
+  }
+};
+
 export const renderViewModal = () => {
   if (!viewDisplay || !viewValues || !viewStrip || !viewBlocks || !viewSubtitle) {
     return;
   }
   ensureViewLayout();
+  const isSharedView = viewState.mode === "shared" && Boolean(viewState.sharedPalette);
   const isDiscoverView = viewState.mode === "discover" && Boolean(viewState.publicPaletteId);
   const publicPalette = isDiscoverView ? discoveryState.palettes.find((palette) => palette.id === viewState.publicPaletteId) : null;
-  const palette = isDiscoverView ? null : getPaletteById(viewState.paletteId ?? state.activePaletteId);
+  const palette = isSharedView
+    ? viewState.sharedPalette
+    : isDiscoverView
+      ? null
+      : getPaletteById(viewState.paletteId ?? state.activePaletteId);
 
   viewValues.innerHTML = "";
   viewStrip.innerHTML = "";
@@ -160,7 +218,14 @@ export const renderViewModal = () => {
   if (viewPublicMeta) {
     setHidden(viewPublicMeta, !(publicPalette || (!isDiscoverView && palette)));
   }
-  if (isDiscoverView && publicPalette) {
+  // The heading says whose palette this is. "Quick view" is right for your own and for one you are
+  // browsing; a link from someone else is a different situation and should say so.
+  if (viewTitle) {
+    viewTitle.textContent = t(isSharedView ? "view.titleShared" : "view.title");
+  }
+  if (isSharedView) {
+    renderSharedActions();
+  } else if (isDiscoverView && publicPalette) {
     renderDiscoverActions(publicPalette);
   } else {
     renderLocalActions(Boolean(palette));
