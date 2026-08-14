@@ -110,6 +110,9 @@
   gap: 12px;
   position: relative;
   padding-right: 48px;
+  /* At least as tall as the close button it holds. A title alone makes a 22px row, and a 38px
+     button pinned to the top of it hung 8px below the words it belongs beside. */
+  min-height: var(--control-md);
 }
 
 .modal-header--top {
@@ -129,8 +132,17 @@
 .modal-header > .close-button,
 .modal-header-actions .close-button {
   position: absolute;
-  top: 0;
+  top: 50%;
   right: 0;
+  transform: translateY(-50%);
+}
+
+/* Except where the header is deliberately tall and top-aligned — a title with a subtitle under it.
+   Centring in that box would float the button halfway down the block. */
+.modal-header--top > .close-button,
+.modal-card.modal-view .modal-header > .close-button {
+  top: 0;
+  transform: none;
 }
 
 .modal-header.editor-header {
@@ -146,10 +158,39 @@
   display: grid;
   gap: 16px;
   overflow: auto;
-  padding-right: 4px;
   min-height: 0;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+  /*
+   * Padding for the scroll box to clip against, given straight back as margin so the content still
+   * lines up with the header above it. A selected export tile carries a ring and a drop shadow that
+   * reach past its own border, and with the scroll edge flush to the tiles those were sliced off
+   * down the side of the dialog.
+   */
+  padding-inline: 6px;
+  margin-inline: -6px;
+  /*
+   * A visible scrollbar rather than a reserved strip of nothing. `scrollbar-gutter: stable` keeps
+   * the layout from jumping when the content grows, but the platform default draws almost nothing
+   * on the dark themes, so the gap read as a gutter the dialog had forgotten to fill.
+   */
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ink) 30%, transparent) transparent;
+
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--ink) 30%, transparent);
+    background-clip: content-box;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
 
 .modal-actions {
@@ -169,7 +210,6 @@
 
 #generate-modal .modal-body {
   gap: 14px;
-  padding-right: 2px;
 }
 
 .generate-layout {
