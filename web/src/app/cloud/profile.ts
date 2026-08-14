@@ -11,7 +11,7 @@ import {
 import { cloudState } from "../state";
 import { t } from "../i18n";
 import { showToast } from "../ui/notifications";
-import { areAvatarColorsEqual, DEFAULT_AVATAR_COLORS, getCloudAvatarSrc, normalizeAvatarColors } from "./avatars";
+import { areAvatarColorsEqual, DEFAULT_AVATAR_COLORS, getCloudAvatarSrc, normalizeAvatarColors, setAvatarImage } from "./avatars";
 import { firebaseClient } from "./context";
 import { upsertPublicProfile } from "./follow";
 import { saveUserAvatar } from "./profile-store";
@@ -59,8 +59,7 @@ export const syncCloudProfileForm = () => {
   const user = cloudState.user;
   if (!user) {
     pendingAvatar = null;
-    cloudProfileAvatar.src = getCloudAvatarSrc(null);
-    cloudProfileAvatar.alt = t("cloud.profile.defaultAlt");
+    setAvatarImage(cloudProfileAvatar, getCloudAvatarSrc(null), t("cloud.profile.defaultAlt"));
     cloudProfileNameInput.value = "";
     cloudProfileNameInput.placeholder = t("cloud.profile.signInPlaceholder");
     cloudProfileAvatarBackgroundInput.value = DEFAULT_AVATAR_COLORS.background;
@@ -72,8 +71,7 @@ export const syncCloudProfileForm = () => {
   cloudProfileNameInput.value = user.name ?? "";
   cloudProfileNameInput.placeholder = isCloudUserVerified() ? t("cloud.profile.name.placeholder") : t("cloud.profile.verifyPlaceholder");
   const currentAvatar = normalizeAvatarColors(pendingAvatar ?? user.avatar ?? DEFAULT_AVATAR_COLORS);
-  cloudProfileAvatar.src = getCloudAvatarSrc(currentAvatar);
-  cloudProfileAvatar.alt = user.name ?? t("cloud.profile.cloudAlt");
+  setAvatarImage(cloudProfileAvatar, getCloudAvatarSrc(currentAvatar), user.name ?? t("cloud.profile.cloudAlt"));
   cloudProfileAvatarBackgroundInput.value = currentAvatar.background;
   cloudProfileAvatarForegroundInput.value = currentAvatar.foreground;
   setProfileDisabled(!isCloudUserVerified());
@@ -95,9 +93,7 @@ export const setupCloudProfileControls = () => {
       return;
     }
     pendingAvatar = draft;
-    if (cloudProfileAvatar) {
-      cloudProfileAvatar.src = getCloudAvatarSrc(draft);
-    }
+    setAvatarImage(cloudProfileAvatar, getCloudAvatarSrc(draft), cloudProfileAvatar?.alt ?? "");
   };
 
   cloudProfileAvatarBackgroundInput.addEventListener("input", handleAvatarInput);
