@@ -151,9 +151,6 @@
     min-height: 0;
   }
 
-  .export-controls {
-    justify-content: stretch;
-  }
 }
 
 @media (max-width: 720px) {
@@ -291,7 +288,6 @@
     grid-template-columns: 1fr;
   }
 
-  .export-actions,
   .modal-actions,
   .panel-actions {
     flex-direction: column;

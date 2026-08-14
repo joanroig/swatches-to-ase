@@ -1,7 +1,6 @@
 import {
   exportActionButtons,
-  exportAllButton,
-  exportFormatOptions,
+  exportFormatButtons,
   exportModal,
   fabExportButton,
   openExportButton,
@@ -151,9 +150,8 @@ const openPinterestLink = (url: string, description: string) => {
   window.open(pinUrl, "_blank");
 };
 
-const exportSinglePalette = async (palette: Palette, formatOverride?: string) => {
+const exportSinglePalette = async (palette: Palette, format: string) => {
   const { exportPaletteToAse, exportPaletteToGpl, exportPaletteToSwatches } = await loadPaletteTools();
-  const format = formatOverride ?? getSelectedExportFormat();
   const cleanName = sanitizeFileName(palette.name);
   const payload = {
     name: palette.name,
@@ -184,13 +182,12 @@ const exportSinglePalette = async (palette: Palette, formatOverride?: string) =>
   downloadBlob(`${cleanName}.ase`, data, "application/octet-stream");
 };
 
-const exportPalettes = async (palettes: Palette[]) => {
+const exportPalettes = async (palettes: Palette[], format: string) => {
   if (palettes.length === 0) {
     appendLog(t("log.noPalettesToExport"), "error");
     return;
   }
   updateProcessingState(true);
-  const format = getSelectedExportFormat();
   appendLog(t("log.exporting", { count: palettes.length }), "info");
 
   try {
@@ -260,16 +257,6 @@ const getPrimaryExportPalette = () => {
   return selectPrimaryExportPalette(targets, state.palettes, state.activePaletteId);
 };
 
-export const getSelectedExportFormat = () => exportFormatOptions.find((option) => option.checked)?.value ?? "all";
-
-export const setSelectedExportFormat = (format: string) => {
-  const normalized = format.toLowerCase();
-  const match = exportFormatOptions.find((option) => option.value === normalized);
-  if (match) {
-    match.checked = true;
-  }
-};
-
 export const setExportMode = (mode: ExportMode) => {
   exportState.mode = mode;
   if (exportModal) {
@@ -305,9 +292,9 @@ export const updateExportAvailability = () => {
   if (removeAllButton) {
     removeAllButton.disabled = !hasPalettes;
   }
-  if (exportAllButton) {
-    exportAllButton.disabled = !hasPalettes;
-  }
+  exportFormatButtons.forEach((button) => {
+    button.disabled = !hasPalettes;
+  });
   exportActionButtons.forEach((button) => {
     button.disabled = !hasPalettes || exportState.mode === "batch";
   });
@@ -315,18 +302,18 @@ export const updateExportAvailability = () => {
 
 export const getExportTargets = () => selectExportTargets(exportState.mode, getExportScope(), state.activePaletteId);
 
-export const exportPalettesSmart = async (palettes: Palette[]) => {
+export const exportPalettesSmart = async (palettes: Palette[], format: string) => {
   if (palettes.length === 0) {
     appendLog(t("log.noPalettesToExport"), "error");
     return;
   }
-  const format = getSelectedExportFormat();
   trackEvent("palette_exported", { format, count: palettes.length });
+  // More than one palette, or more than one file each, and it has to be a zip.
   if (palettes.length > 1 || format === "all") {
-    await exportPalettes(palettes);
+    await exportPalettes(palettes, format);
     return;
   }
-  await exportSinglePalette(palettes[0]);
+  await exportSinglePalette(palettes[0], format);
 };
 
 export const handleExportAction = async (action: string | undefined) => {
