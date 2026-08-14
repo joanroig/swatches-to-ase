@@ -152,8 +152,15 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
+      # Two attempts, because this step talks to the API and the runners' DNS occasionally is not
+      # there: a macOS leg of v4.1.4 built its zip fine and then lost the whole release job to
+      # `getaddrinfo ENOTFOUND api.github.com`. The action has no retry of its own, and there is no
+      # step-level retry in Actions, so the second attempt is a second step. Keep the two `with:`
+      # blocks identical.
       - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v1
+        id: upload
+        uses: softprops/action-gh-release@v3
+        continue-on-error: true
         with:
           tag_name: ${{ needs.version.outputs.tag }}
           name: Release ${{ needs.version.outputs.tag }}
@@ -162,5 +169,17 @@ jobs:
           prerelease: false
           generate_release_notes: true
           fail_on_unmatched_files: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload to GitHub Release (retry)
+        if: steps.upload.outcome == 'failure'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          name: Release ${{ needs.version.outputs.tag }}
+          files: release/palette-studio-v${{ needs.version.outputs.version }}-${{ matrix.artifact_suffix }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
