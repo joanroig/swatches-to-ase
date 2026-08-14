@@ -456,6 +456,7 @@ const es: TranslationMap = {
   "import.confirmPalette": '¿Importar la paleta compartida "{name}"?',
   "import.workspaceImported": "Espacio de trabajo compartido importado.",
   "import.paletteImported": "Paleta compartida importada.",
+  "import.sharedDismissed": "La paleta compartida no se importó.",
   "log.generated": "Se generó una nueva paleta.",
   "log.generatedEmpty": "Se generó una paleta vacía.",
   "log.noPalettesToExport": "Aún no hay paletas para exportar.",

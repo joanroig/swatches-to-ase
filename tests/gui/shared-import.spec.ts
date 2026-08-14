@@ -52,8 +52,8 @@ test("importing from the preview adds the palette", async ({ page }) => {
   await expect(card.locator(".palette-title")).toHaveText("Shared");
 });
 
-/* Closing the preview is the decline — there is no separate "no" to press. */
-test("closing the preview leaves the library untouched", async ({ page }) => {
+/* Closing the preview is the decline — there is no separate "no" to press, so it has to say so. */
+test("closing the preview leaves the library untouched and says why", async ({ page }) => {
   await resetStorage(page);
   await page.goto(sharedUrl());
   await expect(page.locator("#view-modal")).toHaveClass(/is-open/);
@@ -62,6 +62,31 @@ test("closing the preview leaves the library untouched", async ({ page }) => {
 
   await expect(page.locator("#view-modal")).not.toHaveClass(/is-open/);
   await expect(page.locator(".palette-card")).toHaveCount(0);
+  await expect(page.locator(".toast").last()).toContainText("not imported");
+});
+
+/* Escape, the backdrop and the close button all mean the same thing. */
+test("dismissing by the close button also reports it", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto(sharedUrl());
+  await expect(page.locator("#view-modal")).toHaveClass(/is-open/);
+
+  await page.locator('#view-modal [data-close="true"].close-button').click();
+
+  await expect(page.locator(".toast").last()).toContainText("not imported");
+  await expect(page.locator(".palette-card")).toHaveCount(0);
+});
+
+/* Importing is not a dismissal: the notice must not fire on the way out. */
+test("importing does not report a dismissal", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto(sharedUrl());
+  await expect(page.locator("#view-modal")).toHaveClass(/is-open/);
+
+  await page.locator("#view-save").click();
+
+  await expect(page.locator(".palette-card")).toHaveCount(1);
+  await expect(page.locator(".toast", { hasText: "not imported" })).toHaveCount(0);
 });
 
 test("public assets resolve from a shared URL with a trailing slash", async ({ page }) => {
