@@ -111,7 +111,23 @@ const toggleFab = () => {
   setFabOpen(next);
 };
 
-const syncViewState = (view: AppView) => {
+/*
+ * The entering panel's animation, applied by class rather than by the panel merely being active.
+ *
+ * It used to be on `.view-section.panel` outright, which meant it also played on first paint — the
+ * panel started at opacity 0 and faded up *after* the app was revealed, under a loading screen that
+ * was still dissolving. Two things appearing one after the other, on every reload.
+ */
+const playEntrance = (section: HTMLElement) => {
+  section.classList.remove("is-entering");
+  // Reading the layout flushes the removal, so re-adding restarts the animation rather than being
+  // coalesced away when you switch views faster than 0.28s.
+  void section.offsetWidth;
+  section.classList.add("is-entering");
+  section.addEventListener("animationend", () => section.classList.remove("is-entering"), { once: true });
+};
+
+const syncViewState = (view: AppView, { animate = true } = {}) => {
   /*
    * Which way the tabs moved, so the incoming panel can come from the side you left.
    *
@@ -132,6 +148,11 @@ const syncViewState = (view: AppView) => {
     const isActive = section.dataset.viewSection === view;
     section.classList.toggle("is-active", isActive);
     section.setAttribute("aria-hidden", isActive ? "false" : "true");
+    if (isActive && animate) {
+      playEntrance(section);
+    } else if (!isActive) {
+      section.classList.remove("is-entering");
+    }
   });
   viewToggleButtons.forEach((button) => {
     const isActive = button.dataset.viewTarget === view;
@@ -243,10 +264,12 @@ export const setupShell = () => {
 
   const storedView = appShell?.dataset.view;
   const initialView: AppView = isAppView(storedView) ? storedView : "library";
+  // The first sync only says which panel is the open one. The app is revealed already rendered, so
+  // there is nothing for it to arrive from.
   if (initialView === "discover" && !ensureDiscoverReady()) {
-    syncViewState("library");
+    syncViewState("library", { animate: false });
   } else {
-    syncViewState(initialView);
+    syncViewState(initialView, { animate: false });
   }
   const storedSidebar = readSidebarCollapsed();
   const initialSidebar = typeof storedSidebar === "boolean" ? storedSidebar : appShell?.dataset.sidebar === "collapsed";
