@@ -7,7 +7,7 @@ import { openViewForSharedPalette, renderEditor, renderPaletteList, syncActivePa
 import { persistPalettes, persistPreferences } from "./persistence";
 import { applyRemotePreferences, getOptions } from "./preferences";
 import { updateProcessingState } from "./processing";
-import { decodeSharedPalette, decodeSharedWorkspace, parsePaletteHexSlug } from "./share";
+import { decodeSharedPalette, decodeSharedWorkspace, parsePaletteHexSlug, takeSharedPaletteDetails, type SharedPaletteAuthor } from "./share";
 import { state } from "./state";
 import type { Palette } from "./types";
 import { t } from "./i18n";
@@ -22,7 +22,7 @@ import { createId } from "./utils/id";
  * you could not see, in a dialog the app has no say over. The preview is the one the library
  * already uses, with its action row reduced to Import; closing it is the decline.
  */
-const previewSharedPalette = (name: string, colors: Palette["colors"]) => {
+const previewSharedPalette = (name: string, colors: Palette["colors"], author?: SharedPaletteAuthor | null) => {
   const palette: Palette = {
     id: createId(),
     name,
@@ -31,7 +31,7 @@ const previewSharedPalette = (name: string, colors: Palette["colors"]) => {
     // Into whichever collection is open, like everything else the app creates.
     folderId: getTargetFolderId(),
   };
-  openViewForSharedPalette(palette, () => {
+  openViewForSharedPalette(palette, author ?? null, () => {
     state.palettes.unshift(palette);
     syncActivePalette(palette.id);
     appendLog(t("import.paletteImported"), "success");
@@ -252,8 +252,10 @@ export const importSharedPaletteFromUrl = () => {
     return;
   }
   url.pathname = pathPayload.basePath;
+  // Read before the rewrite, since taking them off the URL is how they stop being in the address bar.
+  const details = takeSharedPaletteDetails(url);
   window.history.replaceState({}, "", url.toString());
-  const name = t("import.sharedPaletteName");
+  const name = details.name || t("import.sharedPaletteName");
   const colors = pathPayload.hexes
     .map((hex, index) => buildSharedColor(hex, index))
     .filter((color): color is NonNullable<typeof color> => !!color);
@@ -261,5 +263,5 @@ export const importSharedPaletteFromUrl = () => {
     appendLog(t("import.sharedPaletteEmpty"), "error");
     return;
   }
-  previewSharedPalette(name, colors);
+  previewSharedPalette(name, colors, { id: details.authorId, name: details.authorName });
 };

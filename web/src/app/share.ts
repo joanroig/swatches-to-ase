@@ -2,6 +2,10 @@ import { SHARE_BASE_URL } from "./config";
 import type { Palette, Preferences, SharedPalettePayload, SharedWorkspacePayload } from "./types";
 import { rgbToHex } from "./utils/color";
 
+export const SHARE_NAME_PARAM = "name";
+export const SHARE_AUTHOR_PARAM = "by";
+export const SHARE_AUTHOR_ID_PARAM = "uid";
+
 const encodePayload = (payload: unknown) => btoa(encodeURIComponent(JSON.stringify(payload)));
 
 const decodePayload = <T>(encoded: string): T | null => {
@@ -110,9 +114,47 @@ export const decodeSharedWorkspace = (encoded: string) => {
   return payload;
 };
 
-export const buildSharedPaletteUrl = (palette: Palette) => {
+/*
+ * The colors are the path, and who made it and what they called it ride alongside as query.
+ *
+ * The slug alone is a fine link — it is readable, and it is what the app has always produced — but
+ * it says nothing, so every shared palette arrived at the other end titled "Shared palette" by
+ * nobody. Keeping the name and owner out of the path leaves the old links working and the new ones
+ * still legible.
+ */
+export type SharedPaletteAuthor = { id?: string | null; name?: string | null };
+
+export const buildSharedPaletteUrl = (palette: Palette, author?: SharedPaletteAuthor | null) => {
   const slug = palette.colors.map((color) => rgbToHex(color.rgb).replace("#", "").toLowerCase()).join("-");
-  return joinShareUrl(slug);
+  const url = new URL(joinShareUrl(slug));
+  const name = palette.name?.trim();
+  if (name) {
+    url.searchParams.set(SHARE_NAME_PARAM, name);
+  }
+  const authorName = author?.name?.trim();
+  if (authorName) {
+    url.searchParams.set(SHARE_AUTHOR_PARAM, authorName);
+  }
+  const authorId = author?.id?.trim();
+  if (authorId) {
+    url.searchParams.set(SHARE_AUTHOR_ID_PARAM, authorId);
+  }
+  return url.toString();
+};
+
+/** Reads back what `buildSharedPaletteUrl` wrote, and takes the parameters off the URL. */
+export const takeSharedPaletteDetails = (url: URL) => {
+  const read = (param: string) => {
+    const value = url.searchParams.get(param)?.trim() ?? "";
+    url.searchParams.delete(param);
+    // Someone else's link, so cap what is shown rather than letting a title run off the dialog.
+    return value.slice(0, 120);
+  };
+  return {
+    name: read(SHARE_NAME_PARAM),
+    authorName: read(SHARE_AUTHOR_PARAM),
+    authorId: read(SHARE_AUTHOR_ID_PARAM),
+  };
 };
 
 export const buildCompleteShareUrl = (payload: SharedWorkspacePayload) =>
