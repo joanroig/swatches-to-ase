@@ -87,6 +87,14 @@ export const syncCloudProfileForm = () => run((cloud) => cloud.syncCloudProfileF
 /* -- discovery ------------------------------------------------------------- */
 
 export const renderDiscovery = () => run((cloud) => cloud.renderDiscovery());
+
+/**
+ * Open someone's profile from an id and whatever else we happen to know.
+ *
+ * A shared link carries a sender but no palette record, so this takes the parts. It loads the cloud
+ * layer on demand, which is the point of going through here.
+ */
+export const openProfile = (owner: { id: string; name?: string | null }) => run((cloud) => cloud.openProfileFor(owner));
 export const listenToDiscovery = () => run((cloud) => cloud.listenToDiscovery());
 const DISCOVERY_SORT_OPTIONS: DiscoverySort[] = ["recent", "likes-desc", "likes-asc", "saves-desc", "saves-asc"];
 

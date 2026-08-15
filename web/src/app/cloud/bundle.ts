@@ -27,6 +27,7 @@ export {
   setDiscoverySearch,
   setDiscoverySort,
   setDiscoveryStyle,
+  openProfileFor,
   setupDiscoveryProfileControls,
   sortDiscoveryPalettes,
   toggleLikePublicPalette,

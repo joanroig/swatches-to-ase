@@ -234,5 +234,5 @@ export const stopListeningToDiscovery = () => {
   discoveryUnsubscribe = null;
 };
 
-export { setupDiscoveryProfileControls } from "./discovery-profile";
+export { setupDiscoveryProfileControls, openProfileFor } from "./discovery-profile";
 export { fetchUserInteractions, savePublicPalette, toggleLikePublicPalette } from "./interactions";

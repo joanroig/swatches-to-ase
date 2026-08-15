@@ -13,6 +13,7 @@ import {
   viewTitle,
   viewValues,
 } from "../dom";
+import { openProfile } from "../cloud/lazy";
 import { t } from "../i18n";
 import { cloudState, discoveryState, state, viewState } from "../state";
 import type { Palette, PublicPalette } from "../types";
@@ -236,6 +237,46 @@ const renderSharedActions = () => {
   }
 };
 
+/*
+ * The subtitle with the author as a control rather than a run of text.
+ *
+ * The author is a button when there is a profile behind it, so the name you can see is the name you
+ * can press — the Discover cards have worked that way for a while, and the dialog you reach from
+ * them did not. The label is built from the same translated template, split on a placeholder so the
+ * pieces stay in whatever order the language puts them.
+ */
+const AUTHOR_SLOT = " ";
+
+const renderSubtitleWithAuthor = (
+  paletteName: string,
+  colorCountLabel: string,
+  authorLabel: string,
+  owner: { id: string; name?: string | null } | null,
+) => {
+  if (!viewSubtitle) {
+    return;
+  }
+  const template = t("view.subtitleAuthor", { name: paletteName, colors: colorCountLabel, author: AUTHOR_SLOT });
+  const [before, after = ""] = template.split(AUTHOR_SLOT);
+  viewSubtitle.textContent = "";
+  viewSubtitle.append(before);
+
+  if (!owner) {
+    viewSubtitle.append(authorLabel, after);
+    return;
+  }
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "discover-author-button view-author-button";
+  button.textContent = authorLabel;
+  const openLabel = t("discover.profile.open", { name: owner.name?.trim() || owner.id });
+  button.setAttribute("aria-label", openLabel);
+  button.title = openLabel;
+  button.addEventListener("click", () => openProfile(owner));
+  viewSubtitle.append(button, after);
+};
+
 export const renderViewModal = () => {
   if (!viewDisplay || !viewValues || !viewStrip || !viewBlocks || !viewSubtitle) {
     return;
@@ -299,17 +340,19 @@ export const renderViewModal = () => {
 
   if (isDiscoverView && publicPalette) {
     const authorLabel = publicPalette.ownerName ? t("discover.by", { name: publicPalette.ownerName }) : t("discover.shared");
-    viewSubtitle.textContent = t("view.subtitleAuthor", {
-      name: viewPaletteName,
-      colors: colorCountLabel,
-      author: authorLabel,
-    });
+    renderSubtitleWithAuthor(
+      viewPaletteName,
+      colorCountLabel,
+      authorLabel,
+      publicPalette.ownerId ? { id: publicPalette.ownerId, name: publicPalette.ownerName } : null,
+    );
   } else if (sharedAuthorName) {
-    viewSubtitle.textContent = t("view.subtitleAuthor", {
-      name: viewPaletteName,
-      colors: colorCountLabel,
-      author: t("discover.by", { name: sharedAuthorName }),
-    });
+    renderSubtitleWithAuthor(
+      viewPaletteName,
+      colorCountLabel,
+      t("discover.by", { name: sharedAuthorName }),
+      sharedAuthor?.id ? { id: sharedAuthor.id, name: sharedAuthor.name } : null,
+    );
   } else {
     viewSubtitle.textContent = t("view.subtitle", {
       name: viewPaletteName,

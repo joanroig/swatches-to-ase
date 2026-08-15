@@ -560,3 +560,16 @@ button.discover-filter-option {
     right: -4px;
   }
 }
+
+/*
+ * The author inside the preview's subtitle. It borrows the card's author button for its behaviour
+ * but not its size: the subtitle is one line of running text, so the name has to sit in it rather
+ * than take a column of its own.
+ */
+.view-author-button {
+  color: inherit;
+  font-size: inherit;
+  white-space: normal;
+  text-align: inherit;
+  min-width: 0;
+}

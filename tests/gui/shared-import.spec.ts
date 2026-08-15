@@ -156,3 +156,27 @@ test("a shared link falls back to the sender's id", async ({ page }) => {
 
   await expect(page.locator("#view-modal #view-subtitle")).toContainText("uid-123");
 });
+
+/*
+ * The Discover cards have let you press an author's name for a while; the dialog you reach from them
+ * did not, and neither did a shared link. The name you can see should be the name you can press.
+ */
+test("the sender's name in the preview is a button", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto("/00aaff-f2c94c?name=Dusk&by=Joan&uid=uid-123");
+
+  const author = page.locator("#view-subtitle .view-author-button");
+  await expect(author).toHaveText(/Joan/);
+  await expect(author).toHaveAttribute("title", /Joan/);
+  // The rest of the subtitle is still there, either side of it.
+  await expect(page.locator("#view-subtitle")).toContainText("Dusk");
+});
+
+/* Nothing to open, nothing to press: an old link has no sender behind the text. */
+test("a sender with no id is plain text", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto("/00aaff-f2c94c?name=Dusk&by=Joan");
+
+  await expect(page.locator("#view-subtitle")).toContainText("Joan");
+  await expect(page.locator("#view-subtitle .view-author-button")).toHaveCount(0);
+});
