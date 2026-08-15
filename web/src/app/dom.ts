@@ -33,6 +33,7 @@ export const openCloudButtons = Array.from(document.querySelectorAll<HTMLButtonE
 export const shellAvatarImages = Array.from(document.querySelectorAll<HTMLImageElement>("[data-cloud-avatar]"));
 export const sidebarToggleButton = document.querySelector<HTMLButtonElement>('[data-action="toggle-sidebar"]');
 export const paletteList = document.querySelector<HTMLDivElement>("#palette-list");
+export const brandHomeButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-home]"));
 export const librarySearchInput = document.querySelector<HTMLInputElement>("#library-search");
 export const libraryEmptySearch = document.querySelector<HTMLParagraphElement>("#library-empty-search");
 export const createFolderButton = document.querySelector<HTMLButtonElement>("#create-folder");

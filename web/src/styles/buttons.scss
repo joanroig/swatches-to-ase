@@ -137,11 +137,12 @@ button {
    * inside it — a wide lozenge floating around two words of text. Each of them already declares an
    * underline or a color change on hover, which is the whole feedback a link needs. They are
    * listed by name because there is no selector for "styled as a link"; anything else that strips
-   * button chrome belongs in this list too.
+   * button chrome belongs in this list too — the wordmark included, which is a lockup of a logo and
+   * two lines of type and would take the tint as a rectangle drawn around all three.
    */
   &:hover:not(:disabled):not(.primary):not(.danger):not(.text-link):not(.footer-link):not(.discover-author-button):not(
       .playground-source-detach
-    ) {
+    ):not(.brand) {
     background: color-mix(in srgb, var(--ink) 8%, transparent);
   }
 

@@ -5,6 +5,7 @@ const es: TranslationMap = {
   "loading.subtitle": "Cargando espacio de trabajo...",
   "panel.palettes.title": "Paletas",
   "panel.palettes.hint": "Selecciona una paleta para previsualizar o editar.",
+  "nav.home": "Palette Studio, volver a tu biblioteca",
   "nav.library": "Biblioteca",
   "nav.user": "Usuario",
   "action.openInPlayground": "Abrir en el Laboratorio",

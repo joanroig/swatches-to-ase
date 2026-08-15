@@ -5,6 +5,7 @@ const en: TranslationMap = {
   "loading.subtitle": "Loading workspace...",
   "panel.palettes.title": "Palettes",
   "panel.palettes.hint": "Select a palette to preview or edit.",
+  "nav.home": "Palette Studio, back to your library",
   "nav.library": "Library",
   "nav.user": "User",
   "action.openInPlayground": "Open in Playground",
