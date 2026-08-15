@@ -672,6 +672,13 @@
   padding: var(--panel-pad);
   box-shadow: var(--shadow);
   backdrop-filter: blur(12px);
+  /* Short, and no stagger. `--delay` exists to cascade the panels on first paint, but a view
+     section replays the whole animation every time you switch tab, and 600ms plus a 200ms delay
+     made changing tab feel like waiting for something to load. */
+  animation: rise 0.28s ease forwards;
+  opacity: 0;
+  transform: translateY(8px);
+  animation-delay: var(--delay);
   align-content: start;
 }
 
@@ -680,23 +687,14 @@
  * travel. Phones use a fade below: translating a full-width panel briefly widened the root scroll
  * area and made the fixed navigation look as though it shifted.
  */
-/*
- * Only while entering, and only on an actual change of view — the class is put on by the view
- * switcher and taken off when the animation ends.
- *
- * This used to apply to every active panel, which meant it also ran on first paint: the panel sat
- * at opacity 0 and faded up after the app had already been revealed, while the loading screen was
- * still dissolving over it. Two separate arrivals on every reload, and the icons, being the
- * highest-contrast thing in the panel, were what you noticed doing it.
- */
-.view-section.panel.is-entering {
+.view-section.panel {
   --view-from: 10px;
 
   animation: view-enter 0.28s ease both;
   animation-delay: 0s;
 }
 
-.app-shell[data-view-direction="back"] .view-section.panel.is-entering {
+.app-shell[data-view-direction="back"] .view-section.panel {
   --view-from: -10px;
 }
 
@@ -714,7 +712,7 @@
 
 /* A transform-free phone transition keeps the viewport geometry fixed while content changes. */
 @media (max-width: 959.98px) {
-  .view-section.panel.is-entering {
+  .view-section.panel {
     animation-name: view-enter-mobile;
     transform: none;
   }
@@ -867,4 +865,11 @@
 .section-header h4 {
   margin: 0;
   font-size: 1rem;
+}
+
+@keyframes rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
