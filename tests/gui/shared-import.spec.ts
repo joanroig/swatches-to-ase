@@ -120,3 +120,39 @@ test("public assets resolve from a shared URL with a trailing slash", async ({ p
     .poll(() => page.evaluate(() => new URL("icons/settings.svg", document.baseURI).pathname))
     .toBe("/icons/settings.svg");
 });
+
+/*
+ * The link carries the palette's name and whoever sent it, so the preview can say both. Before, the
+ * colors were the whole of the URL and every shared palette arrived titled "Shared palette", from
+ * nobody.
+ */
+test("a shared link shows the palette name and who sent it", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto("/00aaff-f2c94c?name=Sunset%20Ridge&by=Joan&uid=uid-123");
+
+  const modal = page.locator("#view-modal");
+  await expect(modal).toHaveClass(/is-open/);
+  await expect(modal.locator("#view-subtitle")).toContainText("Sunset Ridge");
+  await expect(modal.locator("#view-subtitle")).toContainText("Joan");
+
+  // Read once and taken off, so a reload is not a second invitation.
+  await expect.poll(() => page.evaluate(() => window.location.search)).toBe("");
+});
+
+/* No name on the link is the old link, and it still works. */
+test("a link without details still previews", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto("/00aaff-f2c94c");
+
+  await expect(page.locator("#view-modal")).toHaveClass(/is-open/);
+  await expect(page.locator("#view-modal #view-title")).toHaveText("Shared palette");
+  await expect(page.locator("#view-modal .view-swatch")).toHaveCount(2);
+});
+
+/* Falls back to the id when the account has no name to show. */
+test("a shared link falls back to the sender's id", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto("/00aaff-f2c94c?name=Dusk&uid=uid-123");
+
+  await expect(page.locator("#view-modal #view-subtitle")).toContainText("uid-123");
+});

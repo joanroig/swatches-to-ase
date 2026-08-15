@@ -21,6 +21,7 @@ import { setModalOpen } from "../ui/modals";
 import { showToast } from "../ui/notifications";
 import type { QuickViewLayout } from "../types";
 import { getColorMetrics, getContrastColor, rgbToHex } from "../utils/color";
+import type { SharedPaletteAuthor } from "../share";
 import { readStoredText, writeStoredText } from "../utils/storage";
 import { resolveActiveNameFormat } from "./format";
 import { getPaletteById, syncActivePalette } from "./mutations";
@@ -89,8 +90,11 @@ export const openViewForPalette = (paletteId: string) => {
  * the app already has, with the action row reduced to the only choice that makes sense here.
  */
 let onImportShared: (() => void) | null = null;
+/** Who sent the link, when the link says. */
+let sharedAuthor: SharedPaletteAuthor | null = null;
 
-export const openViewForSharedPalette = (palette: Palette, onImport: () => void) => {
+export const openViewForSharedPalette = (palette: Palette, author: SharedPaletteAuthor | null, onImport: () => void) => {
+  sharedAuthor = author;
   viewState.paletteId = null;
   viewState.colorId = null;
   viewState.mode = "shared";
@@ -119,6 +123,7 @@ export const runSharedImport = () => {
 
 const clearSharedPreview = () => {
   onImportShared = null;
+  sharedAuthor = null;
   viewState.sharedPalette = null;
   viewState.mode = "local";
 };
@@ -285,12 +290,25 @@ export const renderViewModal = () => {
   const viewPaletteColors = (isDiscoverView && publicPalette ? publicPalette.colors : palette?.colors) ?? [];
   const colorCountLabel = t("palette.colors", { count: viewPaletteColors.length });
 
+  /*
+   * A shared link now carries the palette's name and whoever sent it, so the preview can say both
+   * instead of "Shared palette" by nobody. The id is the fallback: a link made before there was a
+   * name to put on it, or by an account that has not set one.
+   */
+  const sharedAuthorName = isSharedView ? sharedAuthor?.name?.trim() || sharedAuthor?.id?.trim() || "" : "";
+
   if (isDiscoverView && publicPalette) {
     const authorLabel = publicPalette.ownerName ? t("discover.by", { name: publicPalette.ownerName }) : t("discover.shared");
     viewSubtitle.textContent = t("view.subtitleAuthor", {
       name: viewPaletteName,
       colors: colorCountLabel,
       author: authorLabel,
+    });
+  } else if (sharedAuthorName) {
+    viewSubtitle.textContent = t("view.subtitleAuthor", {
+      name: viewPaletteName,
+      colors: colorCountLabel,
+      author: t("discover.by", { name: sharedAuthorName }),
     });
   } else {
     viewSubtitle.textContent = t("view.subtitle", {

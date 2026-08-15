@@ -9,7 +9,7 @@ import {
 import { getOpenFolderId, resolveFolderId } from "../palette/folders";
 import { updateProcessingState } from "../processing";
 import { buildSharedPaletteUrl } from "../share";
-import { exportState, state } from "../state";
+import { cloudState, exportState, state } from "../state";
 import type { ExportMode, Palette } from "../types";
 import { t } from "../i18n";
 import { trackEvent } from "../cloud/analytics";
@@ -431,7 +431,9 @@ export const handleExportAction = async (action: string | undefined) => {
   trackEvent("palette_shared", { action });
   const cleanName = sanitizeFileName(palette.name);
   const coolorsUrl = `https://coolors.co/${getPaletteHexes(palette).join("-")}`;
-  const shareUrl = buildSharedPaletteUrl(palette);
+  // Signed in, the link says who sent it. Signed out there is nobody to name, and it stays a plain
+  // list of colors.
+  const shareUrl = buildSharedPaletteUrl(palette, cloudState.user ? { id: cloudState.user.uid, name: cloudState.user.name } : null);
 
   switch (action) {
     case "url":
