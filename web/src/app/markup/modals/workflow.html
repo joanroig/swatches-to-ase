@@ -186,12 +186,12 @@
       <button class="ghost" data-close="true" data-i18n="common.close">Close</button>
     </div>
     <div class="modal-body">
-      <div class="export-section">
+      <div class="export-section export-section--download">
         <div class="export-section-header">
-          <h4 data-i18n="export.formats.title">File formats</h4>
-          <p class="hint" data-i18n="export.formats.hint">Choose a format and the palettes to export.</p>
+          <h4 data-i18n="export.download.title">Download</h4>
+          <p class="hint" data-i18n="export.download.hint">Pick a format to download it.</p>
         </div>
-        <div class="export-grid export-grid--formats" aria-label="Export format" data-i18n-aria-label="export.formats.title">
+        <div class="export-grid export-grid--formats" aria-label="File formats" data-i18n-aria-label="export.formats.title">
           <button class="export-tile" type="button" data-export-format="ase">
             <span class="tile-content">
               <span class="tile-icon">ASE</span>
@@ -221,18 +221,12 @@
             </span>
           </button>
         </div>
-      </div>
-
-      <div class="export-section export-section--actions">
-        <div class="export-section-header">
-          <h4 data-i18n="export.actions.title">Quick exports</h4>
-          <p class="hint" data-i18n="export.actions.hint">Share or open this palette in other tools.</p>
-        </div>
-        <div class="export-grid export-grid--actions" aria-label="Quick export" data-i18n-aria-label="export.actions.title">
-          <button class="export-action" type="button" data-export-action="url">
-            <span class="action-icon" data-icon="link"></span>
-            <span data-i18n="export.action.url">URL</span>
-          </button>
+        <!-- The rest of the things that land in the Downloads folder, under the formats they belong with. -->
+        <div
+          class="export-grid export-grid--actions export-single-only"
+          aria-label="Other downloads"
+          data-i18n-aria-label="export.download.extras"
+        >
           <button class="export-action" type="button" data-export-action="pdf">
             <span class="action-icon" data-icon="pdf"></span>
             <span data-i18n="export.action.pdf">PDF</span>
@@ -241,25 +235,43 @@
             <span class="action-icon" data-icon="image"></span>
             <span data-i18n="export.action.image">Image</span>
           </button>
-          <button class="export-action" type="button" data-export-action="css">
-            <span class="action-icon" data-icon="css"></span>
-            <span data-i18n="export.action.css">CSS</span>
-          </button>
           <button class="export-action" type="button" data-export-action="svg">
             <span class="action-icon" data-icon="svg"></span>
             <span data-i18n="export.action.svg">SVG</span>
           </button>
-          <button class="export-action" type="button" data-export-action="code">
-            <span class="action-icon" data-icon="code"></span>
-            <span data-i18n="export.action.code">Code</span>
+          <button class="export-action" type="button" data-export-action="css">
+            <span class="action-icon" data-icon="css"></span>
+            <span data-i18n="export.action.css">CSS</span>
           </button>
           <button class="export-action" type="button" data-export-action="tailwind">
             <span class="action-icon" data-icon="tailwind"></span>
             <span data-i18n="export.action.tailwind">Tailwind</span>
           </button>
+          <button class="export-action" type="button" data-export-action="code">
+            <span class="action-icon" data-icon="code"></span>
+            <span data-i18n="export.action.code">Code</span>
+          </button>
           <button class="export-action" type="button" data-export-action="embed">
             <span class="action-icon" data-icon="embed"></span>
             <span data-i18n="export.action.embed">Embed</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="export-section export-section--share export-single-only">
+        <div class="export-section-header">
+          <h4 data-i18n="export.share.title">Share</h4>
+          <p class="hint" data-i18n="export.share.hint">Copy a link or send this palette somewhere else.</p>
+        </div>
+        <div class="export-grid export-grid--actions" aria-label="Share" data-i18n-aria-label="export.share.title">
+          <button class="export-action" type="button" data-export-action="url">
+            <span class="action-icon" data-icon="link"></span>
+            <span data-i18n="export.action.url">URL</span>
+          </button>
+          <!-- Hidden by setupActions where the browser has no share sheet to open. -->
+          <button class="export-action" type="button" data-export-action="share" hidden>
+            <span class="action-icon" data-icon="share"></span>
+            <span data-i18n="export.action.share">Share</span>
           </button>
           <button class="export-action" type="button" data-export-action="coolors">
             <span class="action-icon" data-icon="coolors"></span>

@@ -104,7 +104,7 @@ import {
   viewSaveEditButton,
   viewModal,
 } from "./dom";
-import { exportPalettesSmart, getExportTargets, handleExportAction, setExportMode } from "./export/manager";
+import { canUseNativeShare, exportPalettesSmart, getExportTargets, handleExportAction, setExportMode } from "./export/manager";
 import {
   randomizeGeneratedPalettePreview,
   saveGeneratedPaletteFromPreview,
@@ -207,6 +207,15 @@ export const applyActionLabels = () => {
 export const setupActions = () => {
   applyActionLabels();
   hydrateExportActionIcons(exportActionIcons);
+
+  /*
+   * The share sheet is the OS's, and plenty of desktop browsers have none. The button ships hidden
+   * and only appears where pressing it would actually open something.
+   */
+  const nativeShareButton = exportActionButtons.find((button) => button.dataset.exportAction === "share");
+  if (nativeShareButton) {
+    nativeShareButton.hidden = !canUseNativeShare();
+  }
 
   openCloudButtons.forEach((button) => {
     button.addEventListener("click", () => {

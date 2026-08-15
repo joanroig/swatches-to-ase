@@ -14,9 +14,10 @@ import type { ExportMode, Palette } from "../types";
 import { t } from "../i18n";
 import { trackEvent } from "../cloud/analytics";
 import { appendLog, showToast } from "../ui/notifications";
-import { rgbToHex } from "../utils/color";
-import { sanitizeFileName } from "../utils/text";
-import { buildCodeExport, buildCssExport, buildEmbedExport, buildSvgExport, buildTailwindExport } from "./builders";
+import { getContrastColor, getRgb255, rgbToHex } from "../utils/color";
+import { escapeMarkup, sanitizeFileName } from "../utils/text";
+import type { PaletteSheet } from "./builders";
+import { buildCodeExport, buildCssExport, buildEmbedExport, buildPaletteSheet, buildSvgExport, buildTailwindExport } from "./builders";
 import { getPaletteHexes, selectExportTargets, selectPrimaryExportPalette } from "./helpers";
 
 let paletteToolsPromise: Promise<typeof import("@core/palette")> | null = null;
@@ -78,21 +79,72 @@ const downloadText = (fileName: string, content: string, mime: string) => {
   appendLog(t("log.downloaded", { file: fileName }), "success");
 };
 
+/** The header and footer text the three picture exports share. */
+const getSheetLabels = (palette: Palette) => ({
+  subtitle: t("palette.colors", { count: palette.colors.length }),
+  footer: t("export.print.generatedFrom"),
+});
+
+/** Retina-ish, so the hex labels are not a blur when the image is opened at full size. */
+const PNG_SCALE = 2;
+
+const roundedRectPath = (context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) => {
+  context.beginPath();
+  if (typeof context.roundRect === "function") {
+    context.roundRect(x, y, width, height, radius);
+    return;
+  }
+  context.rect(x, y, width, height);
+};
+
+const drawPaletteSheet = (context: CanvasRenderingContext2D, sheet: PaletteSheet) => {
+  const write = (value: string, x: number, y: number, size: number, fill: string, weight = "400", align: CanvasTextAlign = "center") => {
+    context.font = `${weight} ${size}px ${sheet.fontFamily}`;
+    context.fillStyle = fill;
+    context.textAlign = align;
+    context.fillText(value, x, y);
+  };
+
+  context.fillStyle = sheet.background;
+  context.fillRect(0, 0, sheet.width, sheet.height);
+  context.textBaseline = "alphabetic";
+
+  write(sheet.title, sheet.padding, sheet.headerBaseline, 26, sheet.titleColor, "bold", "left");
+  if (sheet.subtitle) {
+    write(sheet.subtitle, sheet.width - sheet.padding, sheet.headerBaseline, 14, sheet.mutedColor, "normal", "right");
+  }
+
+  sheet.cells.forEach((cell) => {
+    const center = cell.x + sheet.swatchWidth / 2;
+    roundedRectPath(context, cell.x, cell.y, sheet.swatchWidth, sheet.swatchHeight, sheet.radius);
+    context.fillStyle = cell.hex;
+    context.fill();
+    context.strokeStyle = sheet.strokeColor;
+    context.lineWidth = 1;
+    context.stroke();
+
+    write(cell.hex, center, cell.y + sheet.swatchHeight - 18, 16, cell.contrast, "bold");
+    write(cell.name, center, cell.y + sheet.swatchHeight + 22, 13, sheet.nameColor, "bold");
+    write(cell.rgb, center, cell.y + sheet.swatchHeight + 41, 11, sheet.mutedColor);
+  });
+
+  if (sheet.footer) {
+    write(sheet.footer, sheet.width / 2, sheet.footerBaseline, 12, sheet.mutedColor);
+  }
+};
+
 const downloadPng = async (palette: Palette) => {
-  const width = Math.max(1, palette.colors.length) * 160;
-  const height = 160;
+  const sheet = buildPaletteSheet(palette, getSheetLabels(palette));
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = sheet.width * PNG_SCALE;
+  canvas.height = sheet.height * PNG_SCALE;
   const context = canvas.getContext("2d");
   if (!context) {
     appendLog(t("log.imageRenderFailed"), "error");
     return;
   }
-  palette.colors.forEach((color, index) => {
-    context.fillStyle = rgbToHex(color.rgb);
-    context.fillRect(index * 160, 0, 160, height);
-  });
+  context.scale(PNG_SCALE, PNG_SCALE);
+  drawPaletteSheet(context, sheet);
   canvas.toBlob((blob) => {
     if (!blob) {
       appendLog(t("log.imageGenerateFailed"), "error");
@@ -105,25 +157,54 @@ const downloadPng = async (palette: Palette) => {
 
 const openPrintExport = (palette: Palette) => {
   const pageTitle = t("export.print.title", { name: palette.name });
-  const footerLabel = t("export.print.generatedFrom");
+  const labels = getSheetLabels(palette);
+  const swatches = palette.colors
+    .map((color) => {
+      const hex = rgbToHex(color.rgb).toUpperCase();
+      const [r, g, b] = getRgb255(color.rgb);
+      return `
+          <figure class="swatch">
+            <div class="chip" style="background:${hex};color:${getContrastColor(color.rgb)}"><span>${hex}</span></div>
+            <figcaption>
+              <span class="name">${escapeMarkup(color.name)}</span>
+              <span class="value">${r}, ${g}, ${b}</span>
+            </figcaption>
+          </figure>`;
+    })
+    .join("");
   const html = `
     <html>
       <head>
-        <title>${pageTitle}</title>
+        <meta charset="utf-8" />
+        <title>${escapeMarkup(pageTitle)}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 32px; }
-          h1 { font-size: 20px; }
-          .row { display: flex; gap: 6px; margin-top: 20px; }
-          .swatch { flex: 1 1 0; height: 90px; border-radius: 8px; }
-          .label { margin-top: 12px; font-size: 12px; color: #555; }
+          /* Browsers drop background colors when printing unless asked not to — which for a palette
+             is the entire document. */
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          body { font-family: Arial, Helvetica, sans-serif; margin: 32px; color: #0f172a; }
+          header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+                   border-bottom: 1px solid rgba(15, 23, 42, 0.14); padding-bottom: 12px; }
+          h1 { font-size: 22px; margin: 0; }
+          .count { font-size: 13px; color: #64748b; }
+          .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                  gap: 16px; margin: 24px 0 0; }
+          .swatch { margin: 0; break-inside: avoid; }
+          .chip { height: 110px; border-radius: 12px; border: 1px solid rgba(15, 23, 42, 0.14);
+                  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px;
+                  font-size: 14px; font-weight: 700; letter-spacing: 0.04em; }
+          figcaption { display: grid; gap: 2px; margin-top: 8px; text-align: center; }
+          .name { font-size: 13px; font-weight: 700; }
+          .value { font-size: 11px; color: #64748b; }
+          footer { margin-top: 28px; font-size: 12px; color: #94a3b8; text-align: center; }
         </style>
       </head>
       <body>
-        <h1>${palette.name}</h1>
-        <div class="row">
-          ${palette.colors.map((color) => `<div class="swatch" style="background:${rgbToHex(color.rgb).toUpperCase()}"></div>`).join("")}
-        </div>
-        <div class="label">${footerLabel}</div>
+        <header>
+          <h1>${escapeMarkup(palette.name)}</h1>
+          <span class="count">${escapeMarkup(labels.subtitle)}</span>
+        </header>
+        <div class="grid">${swatches}</div>
+        <footer>${escapeMarkup(labels.footer)}</footer>
       </body>
     </html>
   `;
@@ -136,6 +217,32 @@ const openPrintExport = (palette: Palette) => {
   printWindow.document.close();
   printWindow.focus();
   printWindow.print();
+};
+
+export const canUseNativeShare = () => typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+/*
+ * The OS share sheet, where there is one — on the phone builds that is the only way a palette
+ * reaches the app someone actually wants to send it to. Everywhere else the button is hidden rather
+ * than falling back silently to something the URL button already does.
+ */
+const shareNatively = async (palette: Palette, url: string) => {
+  if (!canUseNativeShare()) {
+    await copyToClipboard(url, t("toast.exportShareUrlCopied"));
+    return;
+  }
+  try {
+    await navigator.share({ title: palette.name, text: t("export.share.palette", { name: palette.name }), url });
+    appendLog(t("log.shareOpened"), "success");
+  } catch (error) {
+    // Dismissing the sheet rejects with AbortError. That is not a failure worth shouting about.
+    if ((error as Error).name === "AbortError") {
+      return;
+    }
+    const message = t("log.shareCanceled", { message: (error as Error).message });
+    appendLog(message, "error");
+    showToast(message, "error");
+  }
 };
 
 const openShareLink = (url: string, text: string) => {
@@ -330,6 +437,9 @@ export const handleExportAction = async (action: string | undefined) => {
     case "url":
       await copyToClipboard(shareUrl, t("toast.exportShareUrlCopied"));
       break;
+    case "share":
+      await shareNatively(palette, shareUrl);
+      break;
     case "pdf":
       openPrintExport(palette);
       break;
@@ -343,7 +453,7 @@ export const handleExportAction = async (action: string | undefined) => {
       break;
     }
     case "svg": {
-      const svg = buildSvgExport(palette);
+      const svg = buildSvgExport(palette, getSheetLabels(palette));
       downloadText(`${cleanName}.svg`, svg, "image/svg+xml");
       await copyToClipboard(svg, t("toast.exportSvgCopied"));
       break;
