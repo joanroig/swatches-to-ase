@@ -1,17 +1,25 @@
+import { getImportablePaletteFormats } from "@core/formats";
+
 import { trackEvent } from "./cloud/analytics";
 import { dropzone, fileInput, formatSelect } from "./dom";
 import { updateExportAvailability } from "./export/manager";
-import { getTargetFolderId } from "./palette/folders";
+import { getTargetFolderId, replaceLibrary } from "./palette/folders";
 import { nameColor, resolveNameFormat } from "./palette/naming";
 import { openViewForSharedPalette, renderEditor, renderPaletteList, syncActivePalette } from "./palette/ui";
 import { persistPalettes, persistPreferences } from "./persistence";
 import { applyRemotePreferences, getOptions } from "./preferences";
 import { updateProcessingState } from "./processing";
-import { decodeSharedPalette, decodeSharedWorkspace, parsePaletteHexSlug, takeSharedPaletteDetails, type SharedPaletteAuthor } from "./share";
+import {
+  decodeSharedPalette,
+  decodeSharedWorkspace,
+  parsePaletteHexSlug,
+  takeSharedPaletteDetails,
+  type SharedPaletteAuthor,
+} from "./share";
 import { state } from "./state";
 import type { Palette } from "./types";
 import { t } from "./i18n";
-import { appendLog } from "./ui/notifications";
+import { appendLog, showToast } from "./ui/notifications";
 import { hexToRgb, rgbToHex } from "./utils/color";
 import { createId } from "./utils/id";
 
@@ -38,18 +46,32 @@ const previewSharedPalette = (name: string, colors: Palette["colors"], author?: 
   });
 };
 
+/** Kept in step with what the core can actually parse, rather than restated here. */
+export const IMPORT_FILE_EXTENSIONS = getImportablePaletteFormats().map((format) => `.${format}`);
+
 export const handleFiles = async (fileList: FileList | null) => {
   if (!fileList || state.processing) {
     return;
   }
-  const files = Array.from(fileList).filter((file) => [".swatches", ".ase", ".gpl"].some((ext) => file.name.toLowerCase().endsWith(ext)));
+  const files = Array.from(fileList).filter((file) => IMPORT_FILE_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext)));
   if (files.length === 0) {
     appendLog(t("import.noSupported"), "error");
+    showToast(t("import.noSupported"), "error");
     return;
   }
 
   updateProcessingState(true);
   appendLog(t("import.importing", { count: files.length }), "info");
+
+  /*
+   * Failures are collected and reported once at the end.
+   *
+   * The log holds the detail — which file, and why — but the log is a panel you have to be looking
+   * at, and a drop that quietly produced nothing looked like the app ignoring you. A toast per file
+   * would bury the screen when a folder of the wrong thing gets dropped in, so the toast is a count
+   * and names the file only when there is exactly one.
+   */
+  const failed: string[] = [];
 
   try {
     const { readPaletteFile } = await import("@core/palette");
@@ -75,9 +97,20 @@ export const handleFiles = async (fileList: FileList | null) => {
         appendLog(t("import.loadedFile", { file: file.name }), "success");
       } catch (error) {
         appendLog(t("import.failedFile", { file: file.name, message: (error as Error).message }), "error");
+        failed.push(file.name);
       }
     }
+  } catch (error) {
+    // The reader module itself failed to load, so no file got as far as being tried.
+    appendLog(t("import.failedFile", { file: files[0].name, message: (error as Error).message }), "error");
+    failed.push(...files.map((file) => file.name));
   } finally {
+    if (failed.length > 0) {
+      showToast(
+        failed.length === 1 ? t("toast.importFailedFile", { file: failed[0] }) : t("toast.importFailed", { count: failed.length }),
+        "error",
+      );
+    }
     updateProcessingState(false);
     if (!state.activePaletteId && state.palettes.length > 0) {
       syncActivePalette(state.palettes[0].id);
@@ -94,6 +127,9 @@ export const setupDropzone = () => {
   if (!dropzone || !fileInput) {
     return;
   }
+
+  // Set here rather than in the markup so the picker and the filter can never disagree.
+  fileInput.accept = IMPORT_FILE_EXTENSIONS.join(",");
 
   dropzone.addEventListener("click", () => {
     if (!state.processing) {
@@ -171,6 +207,20 @@ const extractPaletteHexesFromPath = (pathname: string) => {
   return { hexes, basePath };
 };
 
+/**
+ * A share link that cannot be opened.
+ *
+ * Worth a toast rather than only a log line: the link is the whole reason the page was opened, so
+ * arriving at an ordinary empty library with an explanation filed away in a panel reads as the app
+ * having lost the palette.
+ */
+const reportShareFailure = (
+  key: "import.completeShareInvalid" | "import.completeShareEmpty" | "import.sharedPaletteInvalid" | "import.sharedPaletteEmpty",
+) => {
+  appendLog(t(key), "error");
+  showToast(t(key), "error");
+};
+
 export const importSharedPaletteFromUrl = () => {
   let url: URL;
   try {
@@ -184,7 +234,7 @@ export const importSharedPaletteFromUrl = () => {
     window.history.replaceState({}, "", url.toString());
     const payload = decodeSharedWorkspace(fullShare);
     if (!payload || !payload.preferences) {
-      appendLog(t("import.completeShareInvalid"), "error");
+      reportShareFailure("import.completeShareInvalid");
       return;
     }
     const palettes = (payload.palettes ?? [])
@@ -205,19 +255,19 @@ export const importSharedPaletteFromUrl = () => {
       })
       .filter((palette): palette is Palette => !!palette);
     if (palettes.length === 0) {
-      appendLog(t("import.completeShareEmpty"), "error");
+      reportShareFailure("import.completeShareEmpty");
       return;
     }
     const ownerName = payload.user?.name?.trim() || t("import.workspaceOwner");
-    const confirmed = window.confirm(
-      t("import.confirmWorkspace", { count: palettes.length, owner: ownerName }),
-    );
+    const confirmed = window.confirm(t("import.confirmWorkspace", { count: palettes.length, owner: ownerName }));
     if (!confirmed) {
       return;
     }
     applyRemotePreferences(payload.preferences);
     persistPreferences();
-    state.palettes = palettes;
+    // The share carries palettes and settings but no folders, and it replaces the library rather
+    // than adding to it — so the folders it replaces go with it.
+    replaceLibrary({ palettes });
     const activeIndex = payload.activePaletteIndex ?? -1;
     const activePalette = activeIndex >= 0 ? palettes[activeIndex] : palettes[0];
     syncActivePalette(activePalette?.id ?? null);
@@ -231,7 +281,7 @@ export const importSharedPaletteFromUrl = () => {
     window.history.replaceState({}, "", url.toString());
     const payload = decodeSharedPalette(encoded);
     if (!payload) {
-      appendLog(t("import.sharedPaletteInvalid"), "error");
+      reportShareFailure("import.sharedPaletteInvalid");
       return;
     }
     const name = payload.name?.trim() || t("import.sharedPaletteName");
@@ -240,7 +290,7 @@ export const importSharedPaletteFromUrl = () => {
       .map((color, index) => buildSharedColor(color.hex.trim(), index))
       .filter((color): color is NonNullable<typeof color> => !!color);
     if (colors.length === 0) {
-      appendLog(t("import.sharedPaletteEmpty"), "error");
+      reportShareFailure("import.sharedPaletteEmpty");
       return;
     }
     previewSharedPalette(name, colors);
@@ -260,7 +310,7 @@ export const importSharedPaletteFromUrl = () => {
     .map((hex, index) => buildSharedColor(hex, index))
     .filter((color): color is NonNullable<typeof color> => !!color);
   if (colors.length === 0) {
-    appendLog(t("import.sharedPaletteEmpty"), "error");
+    reportShareFailure("import.sharedPaletteEmpty");
     return;
   }
   previewSharedPalette(name, colors, { id: details.authorId, name: details.authorName });

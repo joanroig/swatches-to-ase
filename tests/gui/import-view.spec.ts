@@ -31,6 +31,20 @@ test("importing a swatches file populates the palette list and view", async ({ p
   await expect(page.locator("#view-subtitle")).toContainText("colors");
 });
 
+test("a stylesheet and a hex list import like any other palette file", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto("/");
+  await page.click("#open-import");
+  await page.setInputFiles("#file-input", [
+    { name: "theme.css", mimeType: "text/css", buffer: Buffer.from(":root {\n  --brand-blue: #0af;\n  --brand-ink: #0f172a;\n}\n") },
+    { name: "coolors.hex", mimeType: "text/plain", buffer: Buffer.from("#FF0000\n#00FF00\n#0000FF\n") },
+  ]);
+
+  await expect(page.locator(".palette-card")).toHaveCount(2);
+  await expect(page.locator(".palette-card", { hasText: "theme" }).locator(".palette-count")).toHaveText("2 colors");
+  await expect(page.locator(".palette-card", { hasText: "coolors" }).locator(".palette-count")).toHaveText("3 colors");
+});
+
 test("quick view switches to joined blocks and remembers the choice", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => {
@@ -64,7 +78,9 @@ test("quick view switches to joined blocks and remembers the choice", async ({ p
   const blocks = page.locator('[data-view-layout="blocks"]');
   const headerGap = await page.locator(".modal-card.modal-view").evaluate((modal) => {
     const header = modal.querySelector<HTMLElement>(".modal-header")!.getBoundingClientRect();
-    const preview = modal.querySelector<HTMLElement>(".view-display:not(.is-hidden), .view-blocks:not(.is-hidden)")!.getBoundingClientRect();
+    const preview = modal
+      .querySelector<HTMLElement>(".view-display:not(.is-hidden), .view-blocks:not(.is-hidden)")!
+      .getBoundingClientRect();
     return preview.top - header.bottom;
   });
   expect(headerGap).toBeLessThanOrEqual(10);
@@ -93,4 +109,29 @@ test("quick view switches to joined blocks and remembers the choice", async ({ p
   await page.locator(".palette-card").click();
   await expect(blocks).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#view-blocks")).toBeVisible();
+});
+
+/*
+ * A failed import used to reach only the activity log, which is a panel you have to be looking at.
+ * A drop that produced nothing looked like the app ignoring you.
+ */
+test("a file that cannot be read says so in a toast", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto("/");
+  await page.click("#open-import");
+
+  await page.setInputFiles("#file-input", {
+    name: "broken.aco",
+    mimeType: "application/octet-stream",
+    buffer: Buffer.from("not a palette at all"),
+  });
+  await expect(page.locator(".toast.error", { hasText: "broken.aco" })).toBeVisible();
+  await expect(page.locator(".palette-card")).toHaveCount(0);
+
+  await page.setInputFiles("#file-input", {
+    name: "holiday.raw",
+    mimeType: "application/octet-stream",
+    buffer: Buffer.from("x"),
+  });
+  await expect(page.locator(".toast.error", { hasText: "No supported palette files" })).toBeVisible();
 });

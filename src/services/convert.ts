@@ -6,6 +6,7 @@ import {
   exportPaletteToAse,
   exportPaletteToGpl,
   exportPaletteToSwatches,
+  getImportablePaletteFormats,
   getSupportedPaletteFormats,
   readPaletteFile,
 } from "../core/palette.js";
@@ -21,6 +22,8 @@ type Config = {
 
 const SUPPORTED_FORMATS = getSupportedPaletteFormats();
 const SUPPORTED_FORMAT_SET = new Set<PaletteFormat>(SUPPORTED_FORMATS);
+/* More formats can be read than written, so what the input folder accepts is its own list. */
+const READABLE_EXTENSIONS = new Set(getImportablePaletteFormats());
 
 const normalizeOutFormats = (value: Config["outFormats"]): PaletteFormat[] => {
   if (!value) {
@@ -75,7 +78,7 @@ export class ColorConverter {
 
     for (const file of files) {
       const ext = path.extname(file).slice(1).toLowerCase();
-      if (!SUPPORTED_FORMAT_SET.has(ext as PaletteFormat)) {
+      if (!READABLE_EXTENSIONS.has(ext)) {
         continue;
       }
 
