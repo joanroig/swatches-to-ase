@@ -112,23 +112,35 @@ export const renderDiscoveryProfile = () => {
   });
 };
 
-export const openDiscoveryProfile = (palette: PublicPalette) => {
-  if (!discoverProfileModal || !palette.ownerId) {
+/*
+ * The profile panel needs an id and, if we have them, a name and avatar to show while the rest is
+ * fetched. A Discover palette carries all three; a shared link carries an id and maybe a name, so
+ * the opener takes the parts rather than a whole palette.
+ */
+export const openProfileFor = (owner: { id: string; name?: string | null; avatar?: AvatarColors | null }) => {
+  if (!discoverProfileModal || !owner.id) {
     return;
   }
-  activeProfile.ownerId = palette.ownerId;
-  activeProfile.ownerName = palette.ownerName ?? null;
-  activeProfile.ownerAvatar = palette.ownerAvatar ?? null;
+  activeProfile.ownerId = owner.id;
+  activeProfile.ownerName = owner.name ?? null;
+  activeProfile.ownerAvatar = owner.avatar ?? null;
   renderDiscoveryProfile();
   setModalOpen(discoverProfileModal, true);
   // The follower count is not carried on the palettes, so fetch it once the panel is up.
-  void fetchPublicProfile(palette.ownerId).then((profile) => {
+  void fetchPublicProfile(owner.id).then((profile) => {
     if (profile && activeProfile.ownerId === profile.uid) {
       activeProfile.ownerName = activeProfile.ownerName ?? profile.name;
       activeProfile.ownerAvatar = activeProfile.ownerAvatar ?? profile.avatar;
       renderDiscoveryProfile();
     }
   });
+};
+
+export const openDiscoveryProfile = (palette: PublicPalette) => {
+  if (!palette.ownerId) {
+    return;
+  }
+  openProfileFor({ id: palette.ownerId, name: palette.ownerName, avatar: palette.ownerAvatar });
 };
 
 export const setupDiscoveryProfileControls = () => {
