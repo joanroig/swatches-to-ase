@@ -131,8 +131,8 @@ export type LibrarySnapshot = { palettes: Palette[]; folders: Folder[]; libraryO
  * normalised it.
  */
 export const mergeLibraries = (local: LibrarySnapshot, remote: LibrarySnapshot): LibrarySnapshot => {
-  const { folders, remap } = mergeFolders(local.folders, remote.folders);
-  const known = new Set(folders.map((folder) => folder.id));
+  const { folders: candidateFolders, remap } = mergeFolders(local.folders, remote.folders);
+  const known = new Set(candidateFolders.map((folder) => folder.id));
 
   const relocatedLocal = local.palettes.map((palette) => ({
     ...palette,
@@ -145,6 +145,22 @@ export const mergeLibraries = (local: LibrarySnapshot, remote: LibrarySnapshot):
     // Drafts rather than disappearing.
     folderId: palette.folderId && known.has(palette.folderId) ? palette.folderId : null,
   }));
+
+  /*
+   * A folder that held palettes going in and holds none coming out is residue, not a folder.
+   *
+   * It happens when the same palette exists on both sides under different ids: the local copy is
+   * dropped as a duplicate, and the folder it was filed in is left standing with nothing in it.
+   * Which is exactly the empty collection people found after signing in.
+   *
+   * A folder that was already empty on both sides survives, because you made it that way — an empty
+   * folder waiting to be filled is not the same thing as one the merge emptied.
+   */
+  const occupied = new Set(palettes.map((palette) => palette.folderId).filter((folderId): folderId is string => !!folderId));
+  const wasOccupied = new Set(
+    [...relocatedLocal, ...remote.palettes].map((palette) => palette.folderId).filter((folderId): folderId is string => !!folderId),
+  );
+  const folders = candidateFolders.filter((folder) => occupied.has(folder.id) || !wasOccupied.has(folder.id));
 
   const remappedLocalOrder = local.libraryOrder.map((key) => {
     if (!key.startsWith("folder:")) {

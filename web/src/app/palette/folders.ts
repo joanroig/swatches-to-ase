@@ -77,6 +77,54 @@ export const deleteFolder = (folderId: string) => {
   persistPalettes();
 };
 
+/*
+ * Replacing the library wholesale.
+ *
+ * A folder belongs to the library that holds it. Clearing the palettes used to leave every folder
+ * standing, so signing out of an account and choosing to delete the local palettes left a shelf of
+ * empty collections nobody had made — and the next sign-in merged those ghosts into the other
+ * library. Everything that swaps the whole library out goes through here, so the two can no longer
+ * drift apart, and the per-device view state is pruned to match.
+ *
+ * This is the only place folders are dropped for being empty. A folder you emptied yourself stays:
+ * making one before there is anything to put in it is a normal way to start.
+ */
+export const replaceLibrary = (next: { palettes: Palette[]; folders?: Folder[]; libraryOrder?: readonly string[] }) => {
+  state.palettes = next.palettes;
+  state.folders = next.folders ?? [];
+  state.libraryOrder = reconcileLibraryOrder(next.libraryOrder ?? [], state.palettes, state.folders);
+  forgetVanishedFolders();
+};
+
+/** Empty the library completely: no palettes, no folders, nothing left browsing a folder. */
+export const clearLibrary = () => {
+  replaceLibrary({ palettes: [], folders: [], libraryOrder: [] });
+};
+
+/**
+ * Drop per-device folder state for folders that no longer exist.
+ *
+ * Collapsed ids are kept in local storage and would otherwise accumulate for the lifetime of the
+ * browser, and a folder open on screen when the library is replaced has to close or the view is
+ * left pointing at nothing.
+ */
+const forgetVanishedFolders = () => {
+  const known = new Set(state.folders.map((folder) => folder.id));
+  let changed = false;
+  libraryState.collapsedFolderIds.forEach((folderId) => {
+    if (!known.has(folderId)) {
+      libraryState.collapsedFolderIds.delete(folderId);
+      changed = true;
+    }
+  });
+  if (changed) {
+    persistCollapsedFolders();
+  }
+  if (libraryState.openFolderId && libraryState.openFolderId !== UNFILED_FOLDER_ID && !known.has(libraryState.openFolderId)) {
+    libraryState.openFolderId = null;
+  }
+};
+
 const syncArrayOrderFromLibrary = () => {
   const orderIndex = new Map(state.libraryOrder.map((key, index) => [key, index]));
   state.folders = [...state.folders].sort(
@@ -95,20 +143,14 @@ const syncArrayOrderFromLibrary = () => {
 
 /** Commit the mixed DOM order; filtered-out items retain their existing slots. */
 export const commitRootLibraryOrder = (visibleOrder: string[]) => {
-  const visiblePaletteIds = visibleOrder
-    .filter((key) => key.startsWith("palette:"))
-    .map((key) => key.slice("palette:".length));
+  const visiblePaletteIds = visibleOrder.filter((key) => key.startsWith("palette:")).map((key) => key.slice("palette:".length));
   state.palettes.forEach((palette) => {
     if (visiblePaletteIds.includes(palette.id)) {
       palette.folderId = null;
     }
   });
   const reconciled = reconcileLibraryOrder(state.libraryOrder, state.palettes, state.folders);
-  state.libraryOrder = reconcileLibraryOrder(
-    mergeVisibleLibraryOrder(reconciled, visibleOrder),
-    state.palettes,
-    state.folders,
-  );
+  state.libraryOrder = reconcileLibraryOrder(mergeVisibleLibraryOrder(reconciled, visibleOrder), state.palettes, state.folders);
   syncArrayOrderFromLibrary();
   persistPalettes();
 };

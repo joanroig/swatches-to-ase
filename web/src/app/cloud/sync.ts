@@ -25,6 +25,7 @@ import {
   cloudVerificationSection,
 } from "../dom";
 import { t } from "../i18n";
+import { replaceLibrary } from "../palette/folders";
 import { renderPaletteList, syncPaletteColorNames } from "../palette/ui";
 import { persistPreferences } from "../persistence";
 import { applyRemotePreferences, getPreferencesPayload } from "../preferences";
@@ -330,9 +331,9 @@ const applyRemoteLibrary = (payload: SyncPayload, library: LibrarySnapshot, acti
   cloudState.applyingRemote = true;
   try {
     cloudState.lastRevision = payload.revision;
-    state.palettes = library.palettes;
-    state.folders = library.folders;
-    state.libraryOrder = library.libraryOrder;
+    // Through `replaceLibrary` so a folder that did not survive the remote state also stops being
+    // collapsed and stops being the folder on screen.
+    replaceLibrary(library);
     state.activePaletteId = activePaletteId;
     applyRemotePreferences(payload.preferences);
     persistPreferences();
