@@ -54,20 +54,140 @@
   }
 }
 
+/*
+ * Selects.
+ *
+ * The browser's own arrow sits a handful of pixels from the edge, which on a control this rounded
+ * put it inside the corner's curve. The arrow is ours now, in its own lane, and the text stops
+ * before it rather than running underneath.
+ */
 select {
+  appearance: none;
+  -webkit-appearance: none;
   border-radius: var(--radius-md);
   border: 1px solid var(--stroke);
-  background: var(--bg-elevated);
+  background-color: var(--bg-elevated);
   min-height: var(--control-md);
-  padding: 0 12px;
+  /* Left inset matches the text inputs; the right one is the chevron's lane. */
+  padding: 0 36px 0 14px;
   font-size: 0.92rem;
+  font-family: inherit;
   color: inherit;
   outline: none;
+  cursor: pointer;
   box-shadow: inset 0 0 0 1px transparent;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
     background 0.2s ease;
+
+  /*
+   * The chevron is drawn rather than imported: every theme has its own muted ink, and an image —
+   * data URI or file — cannot read a custom property, so a bundled arrow would be the wrong grey in
+   * five of the seven themes.
+   */
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    right 20px center,
+    right 15px center;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+
+  &:hover:not(:disabled) {
+    border-color: var(--stroke-strong);
+  }
+}
+
+/*
+ * Where the browser will let the list itself be styled, it is styled: the same surface, stroke and
+ * radius as every other panel in the app, with the options as rows rather than a system menu
+ * pasted over the page. Everywhere else this block simply does not apply and the native list is
+ * used, which is why the closed control above is styled on its own terms.
+ */
+@supports (appearance: base-select) {
+  select,
+  ::picker(select) {
+    appearance: base-select;
+  }
+
+  select {
+    /* The drawn chevron steps aside for the real one, which can rotate on open. */
+    background-image: none;
+    padding-right: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    &::picker-icon {
+      color: var(--muted);
+      transition: transform 0.2s ease;
+    }
+
+    &:open::picker-icon {
+      transform: rotate(180deg);
+    }
+  }
+
+  ::picker(select) {
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow);
+    padding: 6px;
+    /* Clear of the control, so the two read as separate surfaces. */
+    margin-top: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--ink);
+    font-size: 0.92rem;
+    cursor: pointer;
+
+    /* Tinted with the accent rather than a surface step: the surfaces sit close together in the
+       dark themes, and a row you are pointing at has to be unmistakable in all seven. */
+    &:hover,
+    &:focus {
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
+      outline: none;
+    }
+
+    &:checked {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* The tick keeps its slot whether or not it is filled, so the labels stay in one column. */
+    &::checkmark {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: currentcolor;
+      opacity: 0;
+      flex-shrink: 0;
+    }
+
+    &:checked::checkmark {
+      opacity: 1;
+    }
+  }
+}
+
+/* The native list, at least wearing the app's colors rather than the system's. */
+@supports not (appearance: base-select) {
+  option {
+    background-color: var(--bg-elevated);
+    color: var(--ink);
+  }
 }
 
 input[type="text"],
