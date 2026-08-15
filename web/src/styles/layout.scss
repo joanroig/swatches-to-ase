@@ -1,3 +1,5 @@
+@use "sass:list";
+
 .page {
   /* Room for four generous palette columns on a large display. */
   max-width: 1800px;
@@ -166,6 +168,15 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
+  /*
+   * The radius has to be reset along with the rest of it.
+   *
+   * Every button gets `--radius-pill`, which is invisible on something with no background — until
+   * the rail clips the row to it on collapse. Then the lockup is cropped to a 140x44 pill: the left
+   * curve takes the corners off the mark, the right curve takes them off "STUDIO". That is the
+   * rounding that appeared to be cutting the logo, and it was never on the logo at all.
+   */
+  border-radius: 0;
 
   display: flex;
   align-items: center;
@@ -192,12 +203,66 @@
   transition:
     width 0.25s ease,
     height 0.25s ease;
-  border-radius: 12px;
-  border: 1px solid var(--stroke);
-  background: var(--bg-elevated);
+  /*
+   * The mark's own corner, a quarter of its edge, exactly as the artwork is drawn.
+   *
+   * Not decoration: the bands are parallelograms that stop short of the four corners, so a square
+   * crop shows their diagonal ends as chamfers. The rounded corner is what the artwork is composed
+   * against, and it is the shape of `favicon.svg` and of the app icon. What was cutting the logo
+   * was never this — it was the pill radius the rail was clipping the whole lockup to.
+   */
+  border-radius: 25%;
+  overflow: hidden;
+  /*
+   * No border and no fill behind it either. The mark is opaque edge to edge, so a stroke around it
+   * does not frame the artwork — it is drawn over the outermost pixel of it and leaves a grey ring.
+   * The shadow stays: that lifts the mark off the page rather than drawing a line around it.
+   */
   box-shadow: 0 12px 24px rgba(28, 26, 22, 0.12);
   flex-shrink: 0;
   align-self: center;
+  display: block;
+}
+
+/*
+ * Pressing the wordmark slides the colors across it.
+ *
+ * The bands repeat every 389.033 user units, so travelling exactly that far leaves the mark showing
+ * the same picture it started with — every stripe has taken the place of the one before it, and the
+ * loop closes with nothing to snap back. It moves as one continuous glide rather than in five
+ * steps: the point is a run of colour crossing the mark, and a stepped version reads as five
+ * separate flashes.
+ *
+ * Eased at both ends. Linear over this distance looks like a loop that was cut off rather than one
+ * that arrived, because the motion stops at full speed.
+ */
+$brand-bands: #658af1, #61e0c5, #f2ca64, #f6a26a, #e64548;
+$brand-band-cycle: 389.033px;
+
+@for $band from 1 through 5 {
+  .brand-band:nth-child(#{$band}) {
+    fill: list.nth($brand-bands, $band);
+  }
+}
+
+@keyframes brand-bands-slide {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-#{$brand-band-cycle});
+  }
+}
+
+.brand.is-cycling .brand-bands {
+  animation: brand-bands-slide 900ms cubic-bezier(0.45, 0.05, 0.25, 1) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand.is-cycling .brand-bands {
+    animation: none;
+  }
 }
 
 .brand-title {
@@ -236,17 +301,20 @@
 }
 
 /* The one affordance it gets: the mark lifts a little under the pointer. Nothing moves in the
-   layout, because the wordmark sitting still is what makes the header feel fixed. */
+   layout, because the wordmark sitting still is what makes the header feel fixed. The glow is a
+   shadow rather than a border, so it sits around the mark instead of inside its edge. */
 .brand:hover .brand-logo,
 .brand:focus-visible .brand-logo {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--stroke));
-  box-shadow: 0 12px 24px color-mix(in srgb, var(--accent) 24%, transparent);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent),
+    0 12px 24px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
+/* No radius here either: an outline follows the element's own corners, so rounding it for the ring's
+   sake would crop the lockup again for as long as it held focus. A square mark takes a square ring. */
 .brand:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
-  border-radius: 14px;
 }
 
 .avatar-button.ghost {
@@ -276,6 +344,15 @@
   gap: 16px;
   align-content: start;
   padding: 12px;
+  /*
+   * The rail is what keeps its contents inside it while it closes.
+   *
+   * This used to be done a level down, by clipping the brand row — but the mark sits flush against
+   * that row's left edge, so the clip took a slice out of everything the mark painted outside
+   * itself, the hover ring included. Up here the rail's own padding stands between the mark and the
+   * edge, so the ring has room and the wordmark still cannot cross onto the panel.
+   */
+  overflow: hidden;
   flex: 1 1 auto;
   transition:
     padding 0.25s ease,
@@ -517,10 +594,15 @@
  * them, which is why the icon does not step sideways at the end.
  *
  * The clipping was the same cause seen from the other side: a nowrap label in a rail narrower than
- * the text has to go somewhere, and with nothing clipping it, it went over the panel. Each item
- * clips its own overflow, and the brand row clips the wordmark, so nothing escapes the rail
- * mid-transition. The clip sits on the row rather than on `.brand-text`, whose subtitle overhangs
- * its box by design to line "STUDIO" up with "Palette".
+ * the text has to go somewhere, and with nothing clipping it, it went over the panel. Every label
+ * clips its own overflow, so nothing escapes the rail mid-transition.
+ *
+ * The wordmark's clip sits on `.brand-text` and not on the row, and that placement matters twice
+ * over. The row also holds the mark, flush against its left edge, so clipping the row cuts anything
+ * the mark paints outside itself — the hover ring came out sliced down one side. And the text is
+ * the only part of the lockup that can spill in the first place. "STUDIO" overhangs this box by the
+ * trailing letter-space its tracking adds, which is empty: the ink of the final letter lands a
+ * couple of pixels inside the edge, so the clip has nothing of it to take.
  */
 .sidebar .nav-item span,
 .sidebar-actions .nav-item span,
@@ -535,8 +617,7 @@
 }
 
 .sidebar .nav-item,
-.sidebar-actions .nav-item,
-.brand--sidebar {
+.sidebar-actions .nav-item {
   overflow: hidden;
 }
 

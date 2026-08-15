@@ -219,8 +219,31 @@ const goHome = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
+/**
+ * The colors slide across the mark and land back where they were.
+ *
+ * The class is what the stylesheet animates; it is taken off again on `animationend` so a second
+ * press starts the run over instead of doing nothing. A press during a run restarts it: the class
+ * comes off and goes back on across a reflow, which is the one way to retrigger a CSS animation.
+ */
+const playBrandFlourish = (button: HTMLElement) => {
+  button.classList.remove("is-cycling");
+  void button.offsetWidth;
+  button.classList.add("is-cycling");
+};
+
 export const setupShell = () => {
-  brandHomeButtons.forEach((button) => button.addEventListener("click", goHome));
+  brandHomeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      playBrandFlourish(button);
+      goHome();
+    });
+    button.addEventListener("animationend", (event) => {
+      if ((event as AnimationEvent).animationName === "brand-bands-slide") {
+        button.classList.remove("is-cycling");
+      }
+    });
+  });
   setPlaygroundViewSwitcher(() => setActiveView("playground"));
 
   viewToggleButtons.forEach((button) => {

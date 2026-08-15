@@ -65,12 +65,11 @@ body.is-ready .loading-card {
   gap: 12px;
 }
 
-.loading-logo {
+/* The same mark the header wears, at the splash's own size — square, unframed, and cropped to its
+   own edges, so the logo does not change shape when the app arrives. */
+.loading-brand .brand-logo {
   width: 46px;
   height: 46px;
-  border-radius: 14px;
-  border: 1px solid var(--stroke);
-  background: var(--bg-elevated);
   box-shadow: 0 10px 20px rgba(20, 22, 39, 0.12);
 }
 
