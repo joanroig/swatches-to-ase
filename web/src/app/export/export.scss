@@ -13,6 +13,12 @@
   margin: 6px 0 0;
 }
 
+/* The formats and the extra downloads are one group, so they sit closer to each other than the
+   Download and Share groups do to one another. */
+.export-section--download {
+  gap: 16px;
+}
+
 .export-grid {
   display: grid;
   gap: 16px;
@@ -154,6 +160,12 @@
     border-color 0.2s ease;
 }
 
+/* `display: grid` above outranks the UA's `[hidden] { display: none }`, so the share button shipping
+   hidden would have shown up anyway on every browser without a share sheet. */
+.export-action[hidden] {
+  display: none;
+}
+
 .export-action > span:not(.action-icon) {
   display: flex;
   align-items: center;
@@ -190,10 +202,6 @@
 
 .export-action[data-export-action="share"] {
   --action-color: #8b5cf6;
-}
-
-.export-action[data-export-action="share-full"] {
-  --action-color: #0ea5e9;
 }
 
 .export-action[data-export-action="pdf"] {
@@ -258,7 +266,8 @@
   flex-direction: column;
 }
 
-#export-modal[data-export-mode="batch"] .export-section--actions {
+/* A batch export is the whole library at once, and everything here acts on one palette. */
+#export-modal[data-export-mode="batch"] .export-single-only {
   display: none;
 }
 
