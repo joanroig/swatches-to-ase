@@ -3,18 +3,14 @@ body:not(.is-ready) {
   overflow-y: scroll;
 }
 
-/*
- * Hidden, not transparent, and revealed without a fade of its own.
- *
- * The app is fully rendered before `is-ready` lands — `waitForAppReady` is called at the end of
- * main.ts, after every icon and card is in the DOM — so it has nothing to ease in from. Fading it
- * up over 0.4s while the loading screen faded out over 0.45s meant 400ms of two translucent layers
- * composited over each other, and thin high-contrast strokes are exactly what shows that worst: the
- * icons appeared to shimmer at the handover. Now one layer moves, the loading screen, and the app
- * is simply there underneath it.
- */
 body:not(.is-ready) .page {
-  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.is-ready .page {
+  opacity: 1;
+  transition: opacity 0.4s ease;
 }
 
 .loading-screen {
@@ -111,6 +107,7 @@ body.is-ready .loading-card {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body:not([data-motion="on"]).is-ready .page,
   body:not([data-motion="on"]).is-ready .loading-screen,
   body:not([data-motion="on"]).is-ready .loading-card {
     transition: none;
@@ -121,6 +118,7 @@ body.is-ready .loading-card {
   }
 }
 
+body[data-motion="off"].is-ready .page,
 body[data-motion="off"].is-ready .loading-screen,
 body[data-motion="off"].is-ready .loading-card {
   transition: none;
