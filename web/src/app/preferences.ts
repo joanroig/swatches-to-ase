@@ -10,7 +10,7 @@ import {
   motionSelect,
   themeSelect,
 } from "./dom";
-import { getColorNotationLabel, getLanguagePreference, normalizeLanguagePreference, setLanguagePreference } from "./i18n";
+import { getColorNotationLabel, normalizeLanguagePreference, setLanguagePreference } from "./i18n";
 import { persistPreferences } from "./persistence";
 import type { Preferences } from "./types";
 
@@ -116,11 +116,6 @@ export const applyColorNotation = (value: string, persist = true) => {
  */
 export const applyLanguagePreference = (value: string | null | undefined, persist = true, notify = true) => {
   const normalized = normalizeLanguagePreference(value);
-  // Nothing asked for, nothing to do. A sync re-applies the same language on every payload, and
-  // running the translation pass for it is work the screen cannot tell apart from doing nothing.
-  if (!notify && normalized === getLanguagePreference()) {
-    return;
-  }
   if (languageSelect) {
     languageSelect.value = normalized;
   }

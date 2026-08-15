@@ -6,7 +6,6 @@ import accountModalsMarkup from "./app/markup/modals/account.html?raw";
 import legalModalsMarkup from "./app/markup/modals/legal.html?raw";
 import workflowModalsMarkup from "./app/markup/modals/workflow.html?raw";
 import { mountIconSprite } from "./app/ui/icons";
-import { startRenderTrace } from "./app/ui/render-trace";
 
 const modalsMarkup = [workflowModalsMarkup, accountModalsMarkup, legalModalsMarkup].join("\n");
 
@@ -15,9 +14,6 @@ const appRoot = document.querySelector<HTMLDivElement>("#app-root");
 if (!appRoot) {
   throw new Error("Missing #app-root container in index.html");
 }
-
-// Ahead of everything, so it sees the first render too. Off unless the URL asks for it.
-startRenderTrace();
 
 // Before the markup, so the `<use href="#icon-…">` tags inside it resolve on their first paint.
 mountIconSprite();

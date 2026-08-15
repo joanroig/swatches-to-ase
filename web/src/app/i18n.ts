@@ -133,36 +133,6 @@ export const t = (key: string, params?: Record<string, string | number>) => {
   return formatTemplate(template, params);
 };
 
-/*
- * Write a label without demolishing the control it belongs to.
- *
- * Several buttons are described twice: `data-i18n` says what they read, and `setButtonContent` gives
- * them an icon and a label span. `textContent = ...` here would throw the icon away and leave bare
- * text behind — which is what happened to New folder, Import, Export all and New whenever a
- * translation pass ran without a relabel behind it to build them back.
- *
- * It also only writes when the text actually differs, so a pass that changes nothing costs nothing.
- */
-const setLocalizedText = (element: HTMLElement, text: string) => {
-  const icon = element.firstElementChild;
-  if (icon instanceof SVGElement && icon.classList.contains("icon")) {
-    const label = icon.nextElementSibling;
-    if (label instanceof HTMLSpanElement && label.textContent !== text) {
-      label.textContent = text;
-    }
-    if (element.getAttribute("aria-label") !== null) {
-      element.setAttribute("aria-label", text);
-    }
-    if (element.title) {
-      element.title = text;
-    }
-    return;
-  }
-  if (element.textContent !== text) {
-    element.textContent = text;
-  }
-};
-
 export const applyTranslations = (root: ParentNode | null = typeof document !== "undefined" ? document : null) => {
   if (!root || typeof (root as Document).querySelectorAll !== "function") {
     return;
@@ -173,7 +143,7 @@ export const applyTranslations = (root: ParentNode | null = typeof document !== 
   elements.forEach((element) => {
     const textKey = element.dataset.i18n;
     if (textKey) {
-      setLocalizedText(element, t(textKey));
+      element.textContent = t(textKey);
     }
     const placeholderKey = element.dataset.i18nPlaceholder;
     if (placeholderKey) {
