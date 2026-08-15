@@ -1,5 +1,5 @@
-import type { Rgb255 } from "./quantize";
-import { mergeSimilar, quantize } from "./quantize";
+import type { Rgb255, WeightedColor } from "./quantize";
+import { mergeSimilarWeighted, quantizeWeighted, sortByLightness } from "./quantize";
 
 /**
  * Reads pixels out of an image so colors can be extracted from it.
@@ -12,6 +12,15 @@ import { mergeSimilar, quantize } from "./quantize";
 const MAX_SAMPLE_EDGE = 240;
 /** Pixels this transparent carry no useful color. */
 const MIN_ALPHA = 128;
+/**
+ * How many candidates the image is reduced to before the sliders get to work.
+ *
+ * Fixed, deliberately. It used to be derived from the requested count, which meant asking for ten
+ * colors quantised the image differently than asking for six: the swatches you already had changed
+ * under you, and the total could go up or down for no reason you could see. With one pool behind
+ * both sliders the count is a true ceiling — raising it only ever appends.
+ */
+const CANDIDATE_POOL = 64;
 
 export type ImageSampler = {
   width: number;
@@ -46,6 +55,22 @@ export const loadImageSampler = async (source: Blob): Promise<ImageSampler> => {
       return [data[offset], data[offset + 1], data[offset + 2]];
     };
 
+    // Quantising is the expensive half and the sliders do not change its answer, so it happens once
+    // per image rather than on every drag.
+    let candidates: WeightedColor[] | null = null;
+    const candidatePool = () => {
+      if (!candidates) {
+        const pixels: Rgb255[] = [];
+        for (let offset = 0; offset < data.length; offset += 4) {
+          if (data[offset + 3] >= MIN_ALPHA) {
+            pixels.push([data[offset], data[offset + 1], data[offset + 2]]);
+          }
+        }
+        candidates = quantizeWeighted(pixels, CANDIDATE_POOL);
+      }
+      return candidates;
+    };
+
     return {
       width: bitmap.width,
       height: bitmap.height,
@@ -57,17 +82,11 @@ export const loadImageSampler = async (source: Blob): Promise<ImageSampler> => {
         return pixelAt(px, py);
       },
       extract: (count, similarity) => {
-        const pixels: Rgb255[] = [];
-        for (let offset = 0; offset < data.length; offset += 4) {
-          if (data[offset + 3] >= MIN_ALPHA) {
-            pixels.push([data[offset], data[offset + 1], data[offset + 2]]);
-          }
-        }
-        // Over-quantise first so merging has candidates to choose between, then merge, then trim.
-        // `count` is a ceiling, not a quota: if the image genuinely holds four colors, asking for
-        // sixteen should still give four rather than fourteen shades of the same blue.
-        const raw = quantize(pixels, Math.min(64, Math.max(count * 3, count)));
-        return mergeSimilar(raw, similarity).slice(0, count);
+        // Merge the pool, then keep whichever survivors cover most of the picture. `count` is a
+        // ceiling, not a quota: if the image genuinely holds four colors, asking for sixteen gives
+        // four rather than fourteen shades of the same blue.
+        const merged = mergeSimilarWeighted(candidatePool(), similarity);
+        return sortByLightness(merged.slice(0, Math.max(0, count)).map((entry) => entry.rgb));
       },
     };
   } finally {

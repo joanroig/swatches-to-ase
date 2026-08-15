@@ -35,7 +35,13 @@ import { loadImageSampler, type ImageSampler } from "./sampler";
 type Mode = "auto" | "points";
 type SamplePoint = { id: string; x: number; y: number; rgb: Rgb255 };
 
-const SUPPORTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+/*
+ * Raster only, by allowlist rather than by rejection.
+ *
+ * SVG is the one deliberately left out: it is a document the browser would run, and all this wants
+ * is pixels. The rest are formats a phone or a camera actually hands you.
+ */
+const SUPPORTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif", "image/avif", "image/bmp", "image/x-ms-bmp"]);
 
 const toUnitRgb = (rgb: Rgb255): [number, number, number] => [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255];
 
@@ -58,6 +64,9 @@ const setMode = (mode: Mode) => {
   imageAutoControls?.classList.toggle("is-hidden", mode !== "auto");
   imagePointsHint?.classList.toggle("is-hidden", mode !== "points");
   imageCanvas?.classList.toggle("is-picking", mode === "points");
+  // The markers belong to manual picking, so they leave with it. They are kept rather than
+  // discarded: switching back to picking should find the points you already placed.
+  renderPoints();
   renderColors();
 };
 
@@ -217,6 +226,12 @@ export const setupImageImport = () => {
         setMode(option.value === "points" ? "points" : "auto");
       }
     });
+  });
+
+  // The palette-file dropzone has always opened the picker on click; dropping was the only way into
+  // this one, which leaves anyone without a file manager open with nothing to do.
+  imageDropzone.addEventListener("click", () => {
+    imageInput.click();
   });
 
   imageInput.addEventListener("change", () => {

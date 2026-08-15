@@ -78,6 +78,52 @@ test("merging similar colors reduces near-duplicates", async ({ page }) => {
   expect(merged.length).toBeLessThanOrEqual(4);
 });
 
+test("the dropzone opens the file picker when clicked", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("body")).toHaveClass(/is-ready/);
+  await page.locator("#open-import").click();
+  const imageSource = page.locator('input[name="import-source"][value="image"]');
+  await page.locator(".segmented-option", { has: imageSource }).click();
+
+  const chooser = page.waitForEvent("filechooser");
+  await page.locator("#image-dropzone").click();
+  await expect(page.locator("#image-stage")).not.toBeVisible();
+  await (await chooser).setFiles(IMAGE);
+  await expect(page.locator("#image-stage")).toBeVisible();
+});
+
+test("raising the color count only ever adds to the palette", async ({ page }) => {
+  await openImageImport(page);
+  await page.locator("#image-similarity").fill("6");
+
+  let previous: string[] = [];
+  for (const count of ["2", "4", "6", "10", "16"]) {
+    await page.locator("#image-count").fill(count);
+    await expect.poll(() => stripHexes(page).then((hexes) => hexes.length)).toBeGreaterThanOrEqual(previous.length);
+    const hexes = await stripHexes(page);
+    // A swatch you already had must not vanish or turn into a different color when the ceiling rises.
+    previous.forEach((hex) => expect(hexes).toContain(hex));
+    expect(new Set(hexes).size).toBe(hexes.length);
+    previous = hexes;
+  }
+});
+
+test("picked points leave the image when automatic takes over", async ({ page }) => {
+  await openImageImport(page);
+  await page.locator('input[name="image-mode"][value="points"]').check({ force: true });
+  const box = (await page.locator("#image-canvas").boundingBox())!;
+  await page.mouse.click(box.x + box.width * 0.25, box.y + box.height * 0.25);
+  await expect(page.locator(".image-point")).toHaveCount(1);
+
+  await page.locator('input[name="image-mode"][value="auto"]').check({ force: true });
+  await expect(page.locator(".image-point")).toBeHidden();
+
+  // Going back finds the point still there, rather than making you place it again.
+  await page.locator('input[name="image-mode"][value="points"]').check({ force: true });
+  await expect(page.locator(".image-point")).toHaveCount(1);
+  expect(await stripHexes(page)).toEqual(["E0C79C"]);
+});
+
 test("picked points sample exactly where they are placed", async ({ page }) => {
   await openImageImport(page);
   await page.locator('input[name="image-mode"][value="points"]').check({ force: true });
