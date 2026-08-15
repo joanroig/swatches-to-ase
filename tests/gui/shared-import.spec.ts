@@ -112,13 +112,18 @@ test("public assets resolve from a shared URL with a trailing slash", async ({ p
   await resetStorage(page);
   await page.goto("/00aaff-f2c94c/");
 
-  await expect(page.locator(".brand-logo").first()).toHaveJSProperty("complete", true);
+  // The avatar is the probe: a public asset referenced by a relative src, so it only loads if a
+  // deep share path still resolves against the site root.
+  await expect(page.locator(".user-avatar").first()).toHaveJSProperty("complete", true);
   await expect
-    .poll(() => page.locator(".brand-logo").first().evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .poll(() =>
+      page
+        .locator(".user-avatar")
+        .first()
+        .evaluate((image: HTMLImageElement) => image.naturalWidth),
+    )
     .toBeGreaterThan(0);
-  await expect
-    .poll(() => page.evaluate(() => new URL("icons/settings.svg", document.baseURI).pathname))
-    .toBe("/icons/settings.svg");
+  await expect.poll(() => page.evaluate(() => new URL("icons/settings.svg", document.baseURI).pathname)).toBe("/icons/settings.svg");
 });
 
 /*

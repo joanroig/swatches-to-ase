@@ -1,0 +1,40 @@
+<!--
+  The wordmark's mark, inline rather than <img src="favicon.svg">, so its bands can be animated.
+
+  It is favicon.svg's five diagonal bands with three changes. The fills are set from the stylesheet
+  rather than written on the paths, so the press animation can drive them. The rounded corner is not
+  here: the file carries its own clip path because a favicon has no stylesheet to crop it, but
+  `.brand-logo` is a box that crops itself, and two rounded rectangles a fraction apart chamfered
+  the corners where they disagreed. And the bands run five times their drawn length and are laid out
+  three times across, which is what makes the press slide rather than step.
+
+  The lengthening matters as much as the repetition. In the file each band is a parallelogram sized
+  to just cover the icon, so the top-left band does not reach the top edge at all — nothing above it
+  needs filling, because a band further along covers that corner. Slide the row sideways and those
+  ends come into view as wedges of bare background. Run each band well past the artboard in its own
+  direction and the five together behave as an unbroken diagonal strip; none of the added length is
+  inside the viewBox, so the mark at rest is unchanged.
+
+  The bands then repeat every 389.033 units across — five slots of the spacing they are drawn to —
+  so sliding by exactly that distance lands on a picture identical to the one it started from. Ids
+  are placeholders because the page carries three marks and no two elements may share one;
+  `bootstrap.ts` stamps a distinct id into each.
+
+  Keep the band geometry in step with `web/public/favicon.svg`.
+-->
+<svg class="brand-logo" viewBox="0 0 267 267" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <defs>
+    <g id="__BRAND_ID__" fill-rule="evenodd">
+      <path class="brand-band" d="M-478 -456l82 -57 955 1365 -82 57z" />
+      <path class="brand-band" d="M-421 -495l77 -54 955 1365 -77 54z" />
+      <path class="brand-band" d="M-370 -531l77 -54 955 1365 -77 54z" />
+      <path class="brand-band" d="M-319 -567l77 -54 955 1365 -77 54z" />
+      <path class="brand-band" d="M-268 -603l57 -40 955 1365 -57 40z" />
+    </g>
+  </defs>
+  <g class="brand-bands">
+    <use href="#__BRAND_ID__" x="-389.033" />
+    <use href="#__BRAND_ID__" />
+    <use href="#__BRAND_ID__" x="389.033" />
+  </g>
+</svg>

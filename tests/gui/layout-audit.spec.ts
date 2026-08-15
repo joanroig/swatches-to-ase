@@ -53,6 +53,10 @@ const AUDIT = `() => {
   };
   document.body.querySelectorAll("*").forEach((el) => {
     if (!el.getClientRects().length) return;
+    // Geometry inside an <svg> is painted into its viewport, not laid out on the page: the brand
+    // mark's bands are drawn well past the viewBox on purpose and are cropped by it. The <svg>
+    // element itself is still audited, which is the box that occupies space.
+    if (el.ownerSVGElement) return;
     const cs = getComputedStyle(el);
     if (cs.visibility === "hidden" || cs.opacity === "0") return;
     // Screen-reader text is clipped on purpose, and anything inside a scroll strip is reachable.
