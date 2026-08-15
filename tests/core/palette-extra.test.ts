@@ -124,7 +124,8 @@ test("readPaletteFile converts ASE models to RGB", async () => {
 });
 
 test("readPaletteFile rejects unsupported formats", async () => {
-  await assert.rejects(() => readPaletteFile("data", "palette.txt", options), /Unsupported palette format/);
+  // `.txt` reads as a hex list now, so this needs an extension nothing claims.
+  await assert.rejects(() => readPaletteFile("data", "palette.psd", options), /Unsupported palette format/);
 });
 
 test("readPaletteFile validates name formats for swatches", async () => {

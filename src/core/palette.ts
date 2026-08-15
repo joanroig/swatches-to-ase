@@ -4,8 +4,9 @@ import { createSwatchesFile, readSwatchesFile } from "procreate-swatches";
 
 import { AseColor, decodeAse, encodeAse } from "./ase.js";
 import { VALID_NAME_FORMATS } from "./formats.js";
+import { EXTRA_PALETTE_READERS } from "./readers.js";
 
-export { getSupportedPaletteFormats, getValidFormats } from "./formats.js";
+export { getImportablePaletteFormats, getSupportedPaletteFormats, getValidFormats } from "./formats.js";
 
 export type PaletteColor = {
   name: string;
@@ -198,6 +199,14 @@ export const readPaletteFile = async (
   if (ext === "gpl") {
     const text = typeof data === "string" ? data : new TextDecoder().decode(data);
     const palette = parseGpl(text);
+    return withBlackWhite(palette, options);
+  }
+  const reader = ext ? EXTRA_PALETTE_READERS[ext] : undefined;
+  if (reader) {
+    const palette = reader(data, fileName);
+    if (palette.colors.length === 0) {
+      throw new Error("No colors found in this file.");
+    }
     return withBlackWhite(palette, options);
   }
   throw new Error("Unsupported palette format.");

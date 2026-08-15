@@ -33,7 +33,8 @@
 
 ## Highlights
 
-- Import `.swatches`, `.ase`, and `.gpl` palettes.
+- Import `.swatches`, `.ase`, `.gpl`, `.aco`, `.act`, `.pal`, `.sketchpalette`, `.json`, `.css`, `.scss`, `.less`, `.hex` and `.txt` palettes.
+- Pull a palette out of any image, automatically or by picking points yourself.
 - Generate palettes by style (analogous, complementary, triadic, etc.) with optional base colors.
 - Edit colors, rename, reorder by drag-and-drop, and switch between HEX/RGB/HSB/HSL/CMYK/LAB views.
 - Export single or batch palettes to ASE, Swatches, and GIMP GPL (zip downloads for multi-export).
@@ -68,7 +69,7 @@ Hosting) and as a desktop app for Windows, macOS, and Linux.
 - Start the dev server with `npm run dev:web`.
 - Build a static site with `npm run build:web` (output: `dist-web`).
 - Preview the static build with `npm run preview:web`.
-- Upload `.swatches`, `.ase`, or `.gpl` palette files.
+- Upload palette files (`.swatches`, `.ase`, `.gpl`, `.aco`, `.act`, `.pal`, `.sketchpalette`, `.json`, `.css`, `.scss`, `.less`, `.hex`, `.txt`) or an image to take the colors from.
 - Generate new palettes, edit names/colors, and reorder swatches.
 - Export single palettes or batch export as ASE/Swatches/GPL.
 - Use quick exports for images, PDF, CSS, Tailwind, SVG, JSON, embed snippets, or share URLs.
@@ -180,7 +181,7 @@ Be sure to have [Node.js](https://nodejs.org/en/download/) 22.22+ installed, the
 
 - [Download](https://github.com/joanroig/palette-studio/archive/refs/heads/main.zip) or clone the repo.
 - Run `npm install` in the root folder to install dependencies.
-- Add your palette files (`.swatches`, `.ase`, `.gpl`) in the `palette-in` folder.
+- Add your palette files in the `palette-in` folder. Anything the app reads works here: `.swatches`, `.ase`, `.gpl`, `.aco`, `.act`, `.pal`, `.sketchpalette`, `.json`, `.css`, `.scss`, `.less`, `.hex` and `.txt`.
 - Run `npm run convert` to convert the palettes into the formats you choose.
 - The converted files should be in the `palette-out` folder.
 
