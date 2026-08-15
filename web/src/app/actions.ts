@@ -119,7 +119,7 @@ import {
 } from "./generation";
 import { onLanguageChange, t } from "./i18n";
 import { ensureLicenseLoaded, ensureLicensesLoaded } from "./licenses";
-import { createFolder, getOpenFolderName, getTargetFolderId } from "./palette/folders";
+import { clearLibrary, createFolder, getOpenFolderName, getTargetFolderId } from "./palette/folders";
 import { nameColor, resolveNameFormat } from "./palette/naming";
 import {
   confirmEditorClose,
@@ -320,7 +320,8 @@ export const setupActions = () => {
   });
 
   removeAllButton?.addEventListener("click", async () => {
-    if (state.palettes.length === 0) {
+    // Folders count: a library of nothing but empty folders is still something to clear.
+    if (state.palettes.length === 0 && state.folders.length === 0) {
       return;
     }
     const confirmed = window.confirm(t("palette.removeAllConfirm"));
@@ -334,7 +335,8 @@ export const setupActions = () => {
         showToast(t("toast.paletteUnpublishFailed"), "error");
       }
     }
-    state.palettes = [];
+    // Folders go with the palettes; leaving them would be a library of empty collections.
+    clearLibrary();
     syncActivePalette(null);
   });
 
@@ -599,7 +601,6 @@ export const setupActions = () => {
     libraryState.collapsedFolderIds.delete(folder.id);
     renderPaletteList();
   });
-
 
   setupModal(importModal);
   setupModal(settingsModal);

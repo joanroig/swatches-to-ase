@@ -196,3 +196,50 @@ test("a backup keeps the folder its original was in", () => {
   const backup = merged.palettes.find((entry) => entry.name.startsWith("(BACKUP)"));
   assert.equal(backup?.folderId, "remote-1");
 });
+
+/*
+ * Folders left standing with nothing in them.
+ *
+ * The complaint was empty collections appearing after signing in. They came from a palette that
+ * exists on both sides under different ids: the local copy is dropped as a duplicate, and the
+ * folder it was filed in survives holding nothing.
+ */
+test("a folder emptied by the merge is dropped", () => {
+  const merged = mergeLibraries(
+    {
+      palettes: [palette("local-p", "Shared", [0, 0, 1], 1000, "local-1")],
+      folders: [folder("local-1", "Scratch")],
+      libraryOrder: [],
+    },
+    // Same name and colors, different id: a duplicate, so the local copy does not survive.
+    { palettes: [palette("remote-p", "Shared", [0, 0, 1], 2000)], folders: [], libraryOrder: [] },
+  );
+  assert.equal(merged.palettes.length, 1);
+  assert.deepEqual(merged.folders, []);
+  assert.deepEqual(merged.libraryOrder, ["palette:remote-p"]);
+});
+
+test("a folder that was already empty is kept", () => {
+  // Making a folder before there is anything to put in it is a normal way to start, on either side.
+  const merged = mergeLibraries(
+    { palettes: [], folders: [folder("local-1", "Scratch")], libraryOrder: [] },
+    { palettes: [], folders: [folder("remote-1", "Brand")], libraryOrder: [] },
+  );
+  assert.deepEqual(merged.folders.map((entry) => entry.name).sort(), ["Brand", "Scratch"]);
+});
+
+test("a folder that still holds something survives", () => {
+  const merged = mergeLibraries(
+    {
+      palettes: [palette("p1", "Mine", [0, 0, 1], 1000, "local-1")],
+      folders: [folder("local-1", "Scratch")],
+      libraryOrder: [],
+    },
+    { palettes: [palette("r1", "Theirs", [1, 0, 0], 1000)], folders: [], libraryOrder: [] },
+  );
+  assert.deepEqual(
+    merged.folders.map((entry) => entry.id),
+    ["local-1"],
+  );
+  assert.equal(merged.palettes.find((entry) => entry.name === "Mine")?.folderId, "local-1");
+});

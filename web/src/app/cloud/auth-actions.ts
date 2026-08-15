@@ -12,6 +12,7 @@ import {
 
 import { cloudEmailInput, cloudPasswordInput } from "../dom";
 import { t } from "../i18n";
+import { clearLibrary } from "../palette/folders";
 import { syncActivePalette } from "../palette/mutations";
 import { cloudState, state } from "../state";
 import { showToast } from "../ui/notifications";
@@ -159,7 +160,9 @@ const handleCloudSignOut = async (options: { prefillEmail?: string; nextAuthMode
       const clearLocal = window.confirm(t("cloud.signOutClearLocalConfirm", { count: state.palettes.length }));
       cloudState.applyingRemote = true;
       if (clearLocal) {
-        state.palettes = [];
+        // Folders too: keeping them left a shelf of empty collections behind, which the next
+        // sign-in then merged into whatever library it found.
+        clearLibrary();
         syncActivePalette(null);
       } else {
         state.palettes.forEach((palette) => {
