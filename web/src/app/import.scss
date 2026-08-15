@@ -4,6 +4,8 @@
   padding: 32px 20px;
   text-align: center;
   background: var(--bg-elevated);
+  /* Clicking it opens the file picker, so it should not read as a passive target. */
+  cursor: pointer;
   transition:
     border-color 0.2s ease,
     background 0.2s ease;
