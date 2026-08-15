@@ -1,13 +1,13 @@
 <div class="page app-shell" data-view="library" data-sidebar="expanded">
   <div class="app-frame">
     <header class="topbar">
-      <div class="brand">
+      <button class="brand" type="button" data-home data-i18n-aria-label="nav.home">
         <img class="brand-logo" src="favicon.svg" alt="Palette Studio" />
         <div class="brand-text">
           <span class="brand-title">Palette</span>
           <span class="brand-subtitle">Studio</span>
         </div>
-      </div>
+      </button>
       <div class="topbar-actions">
         <button class="ghost icon-only" data-action="open-settings" data-context="topbar" type="button"></button>
         <button
@@ -213,13 +213,13 @@
 
       <div class="sidebar-stack">
         <aside class="sidebar">
-          <div class="brand brand--sidebar">
+          <button class="brand brand--sidebar" type="button" data-home data-i18n-aria-label="nav.home">
             <img class="brand-logo" src="favicon.svg" alt="Palette Studio" />
             <div class="brand-text">
               <span class="brand-title">Palette</span>
               <span class="brand-subtitle">Studio</span>
             </div>
-          </div>
+          </button>
           <nav class="sidebar-nav" aria-label="Primary">
             <button class="nav-item" type="button" data-view-target="library"></button>
             <button class="nav-item" type="button" data-view-target="playground"></button>

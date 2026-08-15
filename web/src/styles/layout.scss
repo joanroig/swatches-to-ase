@@ -158,6 +158,15 @@
 .brand {
   --brand-size: 38px;
 
+  /* A button now, and it should carry none of a button's chrome — the lockup is the whole of its
+     appearance. */
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+
   display: flex;
   align-items: center;
   gap: 12px;
@@ -224,6 +233,20 @@
 
 .brand--sidebar {
   --brand-size: 44px;
+}
+
+/* The one affordance it gets: the mark lifts a little under the pointer. Nothing moves in the
+   layout, because the wordmark sitting still is what makes the header feel fixed. */
+.brand:hover .brand-logo,
+.brand:focus-visible .brand-logo {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--stroke));
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.brand:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 14px;
 }
 
 .avatar-button.ghost {

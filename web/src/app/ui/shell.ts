@@ -1,6 +1,7 @@
 import { trackEvent } from "../cloud/analytics";
 import { fetchUserInteractions, listenToDiscovery, renderDiscovery } from "../cloud/lazy";
 import {
+  brandHomeButtons,
   appShell,
   actionDock,
   fabActionButtons,
@@ -11,6 +12,8 @@ import {
   viewSections,
   viewToggleButtons,
 } from "../dom";
+import { getOpenFolderId, openFolder } from "../palette/folders";
+import { renderPaletteList } from "../palette/ui";
 import { t } from "../i18n";
 import { setPlaygroundActive, setPlaygroundViewSwitcher } from "../playground/ui";
 import { cloudState, discoveryState } from "../state";
@@ -198,7 +201,26 @@ export const setActiveView = (view: AppView) => {
   closeFab();
 };
 
+/*
+ * The wordmark is the way back.
+ *
+ * It looked like a control and did nothing, which is its own small annoyance — and having pressed it
+ * you are usually somewhere you want to leave: three levels into a collection, or on Discover. So it
+ * means the library at the top level, scrolled to the top. It deliberately leaves a search alone;
+ * that is text you typed, and throwing it away is a bigger thing than going home.
+ */
+const goHome = () => {
+  const wasInsideFolder = getOpenFolderId() !== null;
+  setActiveView("library");
+  if (wasInsideFolder) {
+    openFolder(null);
+    renderPaletteList();
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
 export const setupShell = () => {
+  brandHomeButtons.forEach((button) => button.addEventListener("click", goHome));
   setPlaygroundViewSwitcher(() => setActiveView("playground"));
 
   viewToggleButtons.forEach((button) => {

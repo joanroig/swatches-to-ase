@@ -497,3 +497,33 @@ test("no collection can be created from inside a collection", async ({ page }) =
   await page.locator(".collection-preview").first().click();
   await expect(page.locator("#create-folder")).toBeHidden();
 });
+
+/*
+ * The wordmark looked like a control and did nothing. Pressing it means the library at the top
+ * level: having pressed it you are usually somewhere you wanted to leave.
+ */
+test("the logo goes back to the library at the top level", async ({ page }) => {
+  await seed(page, ["Alpha", "Beta"], [{ id: "f1", name: "Work" }], { Alpha: "f1" });
+
+  // Somewhere to come back from: inside a collection, on another view.
+  await page.locator(".collection-preview").first().click();
+  await expect(page.locator(".library-crumb").first()).toBeVisible();
+  await page.locator(".nav-item[data-view-target='playground']").first().click();
+  await expect(page.locator(".panel-playground")).toHaveClass(/is-active/);
+
+  await page.locator(".brand[data-home]:visible").first().click();
+
+  await expect(page.locator(".panel-palettes")).toHaveClass(/is-active/);
+  // Out of the collection, not just back on the tab.
+  await expect(page.locator(".library-crumb")).toHaveCount(0);
+});
+
+/* A search is text you typed; going home should not throw it away. */
+test("the logo leaves an active search alone", async ({ page }) => {
+  await seed(page, ["Alpha"], [{ id: "f1", name: "Work" }]);
+
+  await page.locator("#library-search").fill("zzz");
+  await page.locator(".brand[data-home]:visible").first().click();
+
+  await expect(page.locator("#library-search")).toHaveValue("zzz");
+});
