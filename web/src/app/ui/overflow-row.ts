@@ -46,6 +46,27 @@ const widthOf = (item: HTMLElement, cache: WeakMap<HTMLElement, number>) => {
   return width;
 };
 
+/*
+ * Rows that could not be measured when they were built, waiting for someone to put them in the
+ * document.
+ *
+ * A card is assembled detached and appended afterwards, so the row's width is 0 at construction and
+ * the first `apply()` gives up — leaving `data-overflow-ready="false"`, which is `visibility:
+ * hidden`. The `ResizeObserver` then fixes it in the *next* animation frame, so the frame in between
+ * paints the row blank. On one render that is a 16ms blink nobody catches; a signed-in reload
+ * re-renders the library twice after the app is on screen, which is two.
+ *
+ * Whoever attaches the rows calls `flushOverflowRows()` once afterwards, which measures them in the
+ * same task and marks them ready before anything is painted.
+ */
+const unmeasured = new Set<() => void>();
+
+export const flushOverflowRows = () => {
+  const pending = [...unmeasured];
+  unmeasured.clear();
+  pending.forEach((apply) => apply());
+};
+
 export const createOverflowRow = ({
   row,
   primary,
@@ -70,8 +91,11 @@ export const createOverflowRow = ({
     }
     const available = availableWidth();
     if (available === 0 || items.length === 0) {
+      // Nothing to measure against yet. Hold the row until it is in the document.
+      unmeasured.add(apply);
       return;
     }
+    unmeasured.delete(apply);
     /*
      * The gap comes from the row, never from `primary`. `primary` is `display: contents` — it lays
      * nothing out, so its own `column-gap` computes to `normal` and reads as zero, which made the
@@ -118,7 +142,11 @@ export const createOverflowRow = ({
       onCollapse?.();
     }
     onChange?.();
-    row.dataset.overflowReady = "true";
+    // Only on a change: an attribute written again is still an attribute written, and this one
+    // gates `visibility` for the whole row.
+    if (row.dataset.overflowReady !== "true") {
+      row.dataset.overflowReady = "true";
+    }
   };
 
   const schedule = () => {
@@ -144,6 +172,7 @@ export const createOverflowRow = ({
       if (scheduledFrame) {
         cancelAnimationFrame(scheduledFrame);
       }
+      unmeasured.delete(apply);
       delete row.dataset.overflowReady;
     },
   };

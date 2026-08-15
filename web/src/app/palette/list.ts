@@ -12,7 +12,7 @@ import { createIconButton } from "../ui/buttons";
 import { createIcon } from "../ui/icons";
 import { setModalOpen } from "../ui/modals";
 import { showToast } from "../ui/notifications";
-import { createOverflowRow } from "../ui/overflow-row";
+import { createOverflowRow, flushOverflowRows } from "../ui/overflow-row";
 import { setupPopover } from "../ui/popover";
 import {
   animateSortableLayout,
@@ -1117,6 +1117,15 @@ const renderPaletteListNow = () => {
     void paletteList.offsetWidth;
     paletteList.classList.add(openGroup ? "is-entering-in" : "is-entering-out");
   }
+
+  /*
+   * The cards were assembled detached, so their action rows could not measure themselves and are
+   * still hidden. Measuring here — after they are in the document, in this same task — means they
+   * are ready before anything is painted. Left to the ResizeObserver it happens a frame later, and
+   * that frame paints the row blank: the brief grey-out on the row of buttons under each palette,
+   * twice per signed-in reload because the cloud re-renders the library twice.
+   */
+  flushOverflowRows();
 
   updateExportAvailability();
   renderViewModal();
