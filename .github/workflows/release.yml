@@ -152,32 +152,59 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
+      # The build legs hand their package to the release job rather than publishing it themselves.
+      # Eight legs each asking the API to generate release notes wrote the changelog into the body
+      # eight times, which is what a v4.1.6 release full of repeated "Full Changelog" lines was.
+      - name: Hand the package to the release job
+        uses: actions/upload-artifact@v7
+        with:
+          name: package-${{ matrix.artifact_suffix }}
+          path: release/palette-studio-v${{ needs.version.outputs.version }}-${{ matrix.artifact_suffix }}
+          if-no-files-found: error
+          retention-days: 1
+          # Installers are compressed already; running them through zlib again only costs minutes.
+          compression-level: 0
+
+  release:
+    needs: [version, build]
+    # Runs even when a leg failed, so one unlucky runner costs that one package rather than the
+    # whole release — which is what the per-leg upload used to give us.
+    if: ${{ !cancelled() && needs.version.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect the packages
+        uses: actions/download-artifact@v8
+        with:
+          pattern: package-*
+          merge-multiple: true
+          path: packages
+
       # Two attempts, because this step talks to the API and the runners' DNS occasionally is not
       # there: a macOS leg of v4.1.4 built its zip fine and then lost the whole release job to
       # `getaddrinfo ENOTFOUND api.github.com`. The action has no retry of its own, and there is no
       # step-level retry in Actions, so the second attempt is a second step. Keep the two `with:`
       # blocks identical.
-      - name: Upload to GitHub Release
-        id: upload
+      - name: Publish the release
+        id: publish
         uses: softprops/action-gh-release@v3
         continue-on-error: true
         with:
           tag_name: ${{ needs.version.outputs.tag }}
           name: Release ${{ needs.version.outputs.tag }}
-          files: release/palette-studio-v${{ needs.version.outputs.version }}-${{ matrix.artifact_suffix }}
+          files: packages/*
           draft: false
           prerelease: false
           generate_release_notes: true
           fail_on_unmatched_files: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload to GitHub Release (retry)
-        if: steps.upload.outcome == 'failure'
+      - name: Publish the release (retry)
+        if: steps.publish.outcome == 'failure'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.version.outputs.tag }}
           name: Release ${{ needs.version.outputs.tag }}
-          files: release/palette-studio-v${{ needs.version.outputs.version }}-${{ matrix.artifact_suffix }}
+          files: packages/*
           draft: false
           prerelease: false
           generate_release_notes: true
