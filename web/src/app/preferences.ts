@@ -84,13 +84,8 @@ export const applyMotionPreference = (value: string, persist = true) => {
   }
 };
 
-/* What the editor was last rendered for. `null` until the first apply, which therefore always runs. */
-let appliedNotation: string | null = null;
-
 export const applyColorNotation = (value: string, persist = true) => {
   const normalized = value || "hex";
-  const changed = appliedNotation !== normalized;
-  appliedNotation = normalized;
   if (colorNotationSelect) {
     colorNotationSelect.value = normalized;
   }
@@ -100,26 +95,15 @@ export const applyColorNotation = (value: string, persist = true) => {
   if (persist) {
     persistPreferences();
   }
-  // Only when it moved. A cloud sync re-applies the same notation on every payload, and redrawing
-  // the editor to show the values it is already showing is work nobody asked for.
-  if (changed) {
-    onNotationChange?.();
-  }
+  onNotationChange?.();
 };
 
-/*
- * `notify` forces the app-wide relabel even when the resolved language has not moved — which is
- * what you want when the picker was used, since "system" may resolve to the language already shown
- * and the selection still has to take. A cloud sync is the opposite case: it re-applies the same
- * preferences on every payload, and forcing the relabel there rebuilt every control in the app for
- * nothing. Twice per signed-in reload, which is what the flickering was.
- */
-export const applyLanguagePreference = (value: string | null | undefined, persist = true, notify = true) => {
+export const applyLanguagePreference = (value: string | null | undefined, persist = true) => {
   const normalized = normalizeLanguagePreference(value);
   if (languageSelect) {
     languageSelect.value = normalized;
   }
-  setLanguagePreference(normalized, { notify });
+  setLanguagePreference(normalized, { notify: true });
   if (persist) {
     persistPreferences();
   }
@@ -142,7 +126,7 @@ export const applyRemotePreferences = (prefs: Preferences) => {
   if (addBwToggle) {
     addBwToggle.checked = prefs.addBlackWhite ?? false;
   }
-  applyLanguagePreference(prefs.language ?? languageSelect?.value ?? "system", false, false);
+  applyLanguagePreference(prefs.language ?? languageSelect?.value ?? "system", false);
   if (prefs.colorNotation) {
     applyColorNotation(prefs.colorNotation, false);
   }

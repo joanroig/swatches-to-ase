@@ -135,34 +135,8 @@ export const createIcon = (name: IconName) => {
   return svg;
 };
 
-/*
- * Whether the button already says exactly this, read off the DOM rather than off a cache — the
- * point is to survive anything else that has emptied the button since.
- */
-const alreadyShows = (button: HTMLButtonElement, iconName: IconName, label: string, iconOnly: boolean) => {
-  if (button.getAttribute("aria-label") !== label) {
-    return false;
-  }
-  const icon = button.firstElementChild;
-  if (!(icon instanceof SVGElement) || icon.querySelector("use")?.getAttribute("href") !== iconHref(iconName)) {
-    return false;
-  }
-  const text = icon.nextElementSibling;
-  return iconOnly ? text === null : text instanceof HTMLSpanElement && text.textContent === label;
-};
-
 export const setButtonContent = (button: HTMLButtonElement | null, iconName: IconName, label: string, iconOnly = false) => {
   if (!button) {
-    return;
-  }
-  /*
-   * Nothing to do, and doing it anyway is what people saw.
-   *
-   * A cloud sync re-applies the remote preferences, which relabels every control — and this used to
-   * tear the icon out and build a new one each time, whether or not a single character had changed.
-   * Signed in that happens twice on a reload, which is exactly the two flickers.
-   */
-  if (alreadyShows(button, iconName, label, iconOnly)) {
     return;
   }
   button.textContent = "";
@@ -183,9 +157,6 @@ export const hydrateExportActionIcons = (icons: HTMLSpanElement[]) => {
   icons.forEach((icon) => {
     const name = icon.dataset.icon as IconName | undefined;
     if (!name || !ICON_NAMES.includes(name)) {
-      return;
-    }
-    if (icon.firstElementChild?.querySelector("use")?.getAttribute("href") === iconHref(name)) {
       return;
     }
     icon.textContent = "";

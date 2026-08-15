@@ -76,36 +76,3 @@ test("system dark paints a dark background before app styles load", async ({ pag
   await expect(page.locator("html")).toHaveAttribute("data-theme", "system");
   await expect(page.locator("html")).toHaveCSS("background-color", "rgb(15, 17, 26)");
 });
-
-/*
- * A relabel pass must leave alone the controls that already say the right thing.
- *
- * A cloud sync re-applies the remote preferences on every payload, which relabels every control in
- * the app — and that used to tear out each icon and build a new one regardless. Signed in it
- * happens twice on a reload, which is exactly what people saw flickering.
- */
-test("relabelling does not rebuild controls that have not changed", async ({ page }) => {
-  await page.addInitScript(() => localStorage.clear());
-  await page.goto("/");
-  await expect(page.locator("body")).toHaveClass(/is-ready/);
-
-  // Tag the standing controls — the rail and the topbar. The lists are rebuilt wholesale by a real
-  // language change and are expected to be; these are the ones that had no reason to move.
-  const tagged = await page.evaluate(() => {
-    const icons = Array.from(document.querySelectorAll(".sidebar-stack svg.icon, .topbar svg.icon"));
-    icons.forEach((icon, index) => icon.setAttribute("data-tag", String(index)));
-    const avatar = document.querySelector<HTMLImageElement>("[data-cloud-avatar]");
-    const w = window as unknown as { __avatarLoads: number };
-    w.__avatarLoads = 0;
-    avatar?.addEventListener("load", () => (w.__avatarLoads += 1));
-    return icons.length;
-  });
-  expect(tagged).toBeGreaterThan(4);
-
-  // The same language the app is already showing: nothing has changed, so nothing should be rebuilt.
-  await page.locator("#language-select").selectOption("en");
-  await page.waitForTimeout(300);
-
-  expect(await page.locator(".sidebar-stack svg.icon[data-tag], .topbar svg.icon[data-tag]").count()).toBe(tagged);
-  expect(await page.evaluate(() => (window as unknown as { __avatarLoads: number }).__avatarLoads)).toBe(0);
-});

@@ -11,7 +11,7 @@ import { t } from "../i18n";
 import { cloudState, discoveryState } from "../state";
 import type { AvatarColors, PublicPalette } from "../types";
 import { setModalOpen } from "../ui/modals";
-import { getCloudAvatarSrc, setAvatarImage } from "./avatars";
+import { getCloudAvatarSrc } from "./avatars";
 import { createDiscoveryCard, formatCount } from "./discovery-card";
 import { fetchPublicProfile, getFollowerCount, isFollowing, toggleFollow } from "./follow";
 
@@ -85,7 +85,8 @@ export const renderDiscoveryProfile = () => {
 
   const ownerName = activeProfile.ownerName?.trim() || t("cloud.profile.name.placeholder");
   discoverProfileName.textContent = ownerName;
-  setAvatarImage(discoverProfileAvatar, getCloudAvatarSrc(activeProfile.ownerAvatar), ownerName);
+  discoverProfileAvatar.src = getCloudAvatarSrc(activeProfile.ownerAvatar);
+  discoverProfileAvatar.alt = ownerName;
 
   const totalLikes = palettes.reduce((sum, palette) => sum + (palette.likesCount ?? 0), 0);
   const totalSaves = palettes.reduce((sum, palette) => sum + (palette.savesCount ?? 0), 0);
