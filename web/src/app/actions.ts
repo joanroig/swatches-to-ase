@@ -143,7 +143,7 @@ import { persistPreferences } from "./persistence";
 import { applyColorNotation, applyLanguagePreference, applyMotionPreference, applyTheme, syncNameFormat } from "./preferences";
 import { cloudState, discoveryState, libraryState, state, viewState } from "./state";
 import { hydrateExportActionIcons, setButtonContent } from "./ui/icons";
-import { closeOpenModals, onModalClosed, setModalOpen, setupModal } from "./ui/modals";
+import { onModalClosed, setModalOpen, setupModal, topmostOpenModal } from "./ui/modals";
 import { setupPopover } from "./ui/popover";
 import { createOverflowRow } from "./ui/overflow-row";
 import { appendLog, showToast } from "./ui/notifications";
@@ -651,10 +651,13 @@ export const setupActions = () => {
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      if (isEditorModalOpen() && !confirmEditorClose()) {
-        return;
-      }
-      closeOpenModals([
+      /*
+       * One layer at a time, now that dialogs can stack. Opening a sender's profile from a shared
+       * palette leaves two of them up, and dismissing both would take away the palette you were
+       * being shown along with the profile you were done with. With one open this is what it always
+       * was, since the only open dialog is also the top one.
+       */
+      const topmost = topmostOpenModal([
         importModal,
         settingsModal,
         legalModal,
@@ -672,6 +675,10 @@ export const setupActions = () => {
         viewModal,
         discoverProfileModal,
       ]);
+      // The editor asks before it goes, but only when it is the one being dismissed.
+      if (topmost && (topmost !== editorModal || confirmEditorClose())) {
+        setModalOpen(topmost, false);
+      }
     }
 
     if (!isEditorModalOpen() || event.defaultPrevented || isEditableTarget(event.target)) {

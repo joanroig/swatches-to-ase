@@ -185,3 +185,48 @@ test("a sender with no id is plain text", async ({ page }) => {
   await expect(page.locator("#view-subtitle")).toContainText("Joan");
   await expect(page.locator("#view-subtitle .view-author-button")).toHaveCount(0);
 });
+
+/*
+ * The profile it opens has to land in front of the palette it was opened from.
+ *
+ * The two dialogs were ranked by a fixed z-index, decided for the Discover order — profile first,
+ * then a palette from it. A shared link opens them the other way round, so the profile came up
+ * behind a dialog that covers the screen, and every click went to the palette instead.
+ */
+test("the sender's profile opens in front of the palette", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto("/00aaff-f2c94c?name=Dusk&by=Joan&uid=uid-123");
+
+  await page.locator("#view-subtitle .view-author-button").click();
+  await expect(page.locator("#discover-profile-modal")).toHaveAttribute("aria-hidden", "false");
+
+  const stack = await page.evaluate(() => {
+    const zOf = (id: string) => Number.parseInt(getComputedStyle(document.querySelector(id)!).zIndex, 10);
+    const middle = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+    return {
+      profile: zOf("#discover-profile-modal"),
+      view: zOf("#view-modal"),
+      // What a click in the middle of the screen would actually reach.
+      reachable: middle?.closest(".modal")?.id ?? "none",
+    };
+  });
+  expect(stack.profile).toBeGreaterThan(stack.view);
+  expect(stack.reachable).toBe("discover-profile-modal");
+});
+
+/* And closing it puts you back on the palette, rather than clearing the screen. */
+test("dismissing the profile leaves the shared palette up", async ({ page }) => {
+  await resetStorage(page);
+  await page.goto("/00aaff-f2c94c?name=Dusk&by=Joan&uid=uid-123");
+
+  await page.locator("#view-subtitle .view-author-button").click();
+  await expect(page.locator("#discover-profile-modal")).toHaveAttribute("aria-hidden", "false");
+
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#discover-profile-modal")).toHaveAttribute("aria-hidden", "true");
+  await expect(page.locator("#view-modal")).toHaveAttribute("aria-hidden", "false");
+
+  // A second press takes the palette, which is now the one in front.
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#view-modal")).toHaveAttribute("aria-hidden", "true");
+});
