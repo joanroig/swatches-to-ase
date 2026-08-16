@@ -227,17 +227,21 @@
 /*
  * Pressing the wordmark slides the colors across it.
  *
- * The bands repeat every 389.033 user units, so travelling exactly that far leaves the mark showing
- * the same picture it started with — every stripe has taken the place of the one before it, and the
- * loop closes with nothing to snap back. It moves as one continuous glide rather than in five
- * steps: the point is a run of colour crossing the mark, and a stepped version reads as five
- * separate flashes.
+ * The bands repeat every 397.795 user units: the horizontal distance from the leading edge of blue
+ * to the outer edge of red at the same height. Travelling exactly that far leaves the mark showing
+ * the same picture it started with and keeps the repeated blue band from painting over the red
+ * top-right corner. It moves as one continuous glide rather than in five steps: the point is a run
+ * of colour crossing the mark, and a stepped version reads as five separate flashes.
  *
  * Eased at both ends. Linear over this distance looks like a loop that was cut off rather than one
  * that arrived, because the motion stops at full speed.
  */
 $brand-bands: #658af1, #61e0c5, #f2ca64, #f6a26a, #e64548;
-$brand-band-cycle: 389.033px;
+$brand-band-cycle: 397.795px;
+
+.brand-band-backdrop {
+  fill: list.nth($brand-bands, 5);
+}
 
 @for $band from 1 through 5 {
   .brand-band:nth-child(#{$band}) {

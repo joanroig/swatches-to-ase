@@ -166,6 +166,61 @@ test("the mark's silhouette is the shipped icon's, not a cropped version of it",
   expect(worstOffsetPx).toBeLessThanOrEqual(1);
 });
 
+test("the resting mark keeps the shipped icon's bands at the rounded edges", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("body")).toHaveClass(/is-ready/);
+
+  const wrongBandPixels = await visibleBrand(page)
+    .locator(".brand-logo")
+    .evaluate(async (mark: SVGSVGElement) => {
+      const size = 267;
+      const load = (src: string) =>
+        new Promise<HTMLImageElement>((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = reject;
+          image.src = src;
+        });
+      const rasterise = (image: HTMLImageElement, round: boolean) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const context = canvas.getContext("2d")!;
+        if (round) {
+          context.beginPath();
+          context.roundRect(0, 0, size, size, size * 0.25);
+          context.clip();
+        }
+        context.drawImage(image, 0, 0, size, size);
+        return context.getImageData(0, 0, size, size).data;
+      };
+
+      const bands = [...mark.querySelectorAll(".brand-band")];
+      const copy = mark.cloneNode(true) as SVGSVGElement;
+      [...copy.querySelectorAll(".brand-band")].forEach((band, index) => {
+        band.setAttribute("fill", getComputedStyle(bands[index]).fill);
+      });
+      copy.setAttribute("width", String(size));
+      copy.setAttribute("height", String(size));
+
+      const target = rasterise(await load("favicon.svg"), false);
+      const actual = rasterise(
+        await load(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(copy))}`),
+        true,
+      );
+      let wrong = 0;
+      for (let index = 0; index < target.length; index += 4) {
+        const targetIsRed = target[index] === 230 && target[index + 1] === 69 && target[index + 2] === 72;
+        const actualIsBlue = actual[index] === 101 && actual[index + 1] === 138 && actual[index + 2] === 241;
+        if (targetIsRed && actualIsBlue) wrong += 1;
+      }
+      return wrong;
+    });
+
+  // The following cycle used to overlap the red band and leave a blue wedge in the top-right.
+  expect(wrongBandPixels).toBe(0);
+});
+
 test("the hover ring has room to paint on every side", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("body")).toHaveClass(/is-ready/);
@@ -295,7 +350,7 @@ test("the mark stays covered all the way through the slide", async ({ page }) =>
           band.setAttribute("fill", getComputedStyle(bands[index]).fill);
         });
         // The inline style is what the animation drives, and it beats a presentation attribute.
-        (copy.querySelector(".brand-bands") as SVGGElement).style.transform = `translateX(${-389.033 * progress}px)`;
+        (copy.querySelector(".brand-bands") as SVGGElement).style.transform = `translateX(${-397.795 * progress}px)`;
         copy.setAttribute("width", String(size));
         copy.setAttribute("height", String(size));
 
