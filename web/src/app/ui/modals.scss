@@ -9,13 +9,9 @@
   transition: opacity 0.2s ease;
 }
 
-#view-modal {
-  z-index: 12;
-}
-
+/* No z-index here or on #view-modal: which of the two is in front depends on the order they were
+   opened in, so `setModalOpen` assigns it. */
 #discover-profile-modal {
-  z-index: 11;
-
   .modal-card {
     gap: 8px;
   }
