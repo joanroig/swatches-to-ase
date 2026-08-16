@@ -170,13 +170,32 @@ test("mobile palette actions stay large and opaque", async ({ page }) => {
   const newButtonShape = await page.locator('[data-fab-action="generate"]').evaluate((button) => {
     const style = getComputedStyle(button);
     return {
-      borderColor: style.borderColor,
+      borderWidth: Number.parseFloat(style.borderWidth),
       borderRadius: Number.parseFloat(style.borderRadius),
       height: button.getBoundingClientRect().height,
     };
   });
-  expect(newButtonShape.borderColor).toBe("rgba(0, 0, 0, 0)");
+  expect(newButtonShape.borderWidth).toBe(0);
   expect(newButtonShape.borderRadius).toBeGreaterThanOrEqual(newButtonShape.height / 2);
+});
+
+test("the mobile navigation bar is opaque over page content", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 700 });
+  await seedPalette(page);
+
+  const navigation = page.locator(".bottom-nav");
+  const styles = await navigation.evaluate((bar) => {
+    const style = getComputedStyle(bar);
+    const color = style.backgroundColor;
+    const explicitAlpha = color.match(/\/\s*([\d.]+)\)/)?.[1] ?? color.match(/rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/)?.[1];
+    return {
+      alpha: color === "transparent" ? 0 : explicitAlpha ? Number(explicitAlpha) : 1,
+      backdropFilter: style.backdropFilter,
+    };
+  });
+
+  expect(styles.alpha).toBe(1);
+  expect(styles.backdropFilter).toBe("none");
 });
 
 test("the mobile wordmark bar is opaque over scrolled content", async ({ page }) => {
