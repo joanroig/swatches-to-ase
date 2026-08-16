@@ -470,11 +470,11 @@ $brand-band-cycle: 397.795px;
   padding: 4px calc(12px + env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
   min-height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
   border-radius: 10px 10px 0 0;
-  background: var(--card);
+  /* Fixed navigation must fully cover the content moving underneath it. `--card` is translucent in
+     dark themes, which left palette colors and dividers visible through the bar. */
+  background: var(--bg-elevated);
   border-top: 1px solid var(--stroke);
   box-shadow: 0 -6px 12px rgba(15, 23, 42, 0.12);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   z-index: 6;
   pointer-events: none;
 }
@@ -586,9 +586,10 @@ $brand-band-cycle: 397.795px;
 }
 
 .fab-action.primary {
-  /* A translucent stroke lightened the gradient at the cap's shallowest point, which rendered as
-     a short vertical seam on either end. Keep the shared one-pixel geometry without tinting it. */
-  border-color: transparent;
+  /* Even a transparent border remains a separate painted ring: at browser zoom it became a bright
+     gradient seam around every cap and straight edge. The shared min-height preserves its size. */
+  border: 0;
+  padding-inline: 15px;
 }
 
 .fab-action.ghost:hover:not(:disabled) {
