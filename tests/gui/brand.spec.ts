@@ -292,7 +292,7 @@ test("pressing the wordmark slides the colors across and lands back", async ({ p
   // It travels — and it travels smoothly, so no two consecutive samples sit on the same spot the
   // way five discrete steps would.
   const positions = samples.map((frame) => frame.x);
-  expect(Math.min(...positions)).toBeLessThan(-40);
+  expect(Math.max(...positions)).toBeGreaterThan(40);
   expect(new Set(positions.map((x) => x.toFixed(1))).size).toBeGreaterThan(4);
 
   // The colors themselves never change. The movement is the artwork travelling, not swatches
@@ -330,7 +330,7 @@ test("the mark stays covered all the way through the slide", async ({ page }) =>
           band.setAttribute("fill", getComputedStyle(bands[index]).fill);
         });
         // The inline style is what the animation drives, and it beats a presentation attribute.
-        (copy.querySelector(".brand-bands") as SVGGElement).style.transform = `translateX(${-397.795 * progress}px)`;
+        (copy.querySelector(".brand-bands") as SVGGElement).style.transform = `translateX(${397.795 * progress}px)`;
         copy.setAttribute("width", String(size));
         copy.setAttribute("height", String(size));
 

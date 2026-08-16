@@ -257,7 +257,7 @@ $brand-band-cycle: 397.795px;
   }
 
   to {
-    transform: translateX(-#{$brand-band-cycle});
+    transform: translateX(#{$brand-band-cycle});
   }
 }
 
