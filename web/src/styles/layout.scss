@@ -62,7 +62,9 @@
   bottom: 0;
   left: calc(var(--page-pad) * -1);
   right: calc(var(--page-pad) * -1);
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  /* This is navigation chrome, not frosted glass. A translucent fill let palette controls show
+     through the wordmark and account buttons as the page scrolled underneath it. */
+  background: var(--bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: none;
@@ -348,15 +350,9 @@ $brand-band-cycle: 397.795px;
   gap: 16px;
   align-content: start;
   padding: 12px;
-  /*
-   * The rail is what keeps its contents inside it while it closes.
-   *
-   * This used to be done a level down, by clipping the brand row — but the mark sits flush against
-   * that row's left edge, so the clip took a slice out of everything the mark painted outside
-   * itself, the hover ring included. Up here the rail's own padding stands between the mark and the
-   * edge, so the ring has room and the wordmark still cannot cross onto the panel.
-   */
-  overflow: hidden;
+  /* Labels and rows contain their own collapsing content below. Clipping the whole rail also clips
+     the logo's soft glow at both sides, so the outer rail must remain paintable. */
+  overflow: visible;
   flex: 1 1 auto;
   transition:
     padding 0.25s ease,
@@ -556,11 +552,16 @@ $brand-band-cycle: 397.795px;
 }
 
 .fab-toggle.icon-only {
+  /* `setButtonContent` adds `.icon-only`; restore the large touch target after the generic
+     icon-button rule in buttons.scss reduces it to `--control-md`. */
+  width: 56px;
+  min-width: 56px;
+  height: 56px;
   padding: 0;
   border-radius: 50%;
 }
 
-.fab-toggle .icon {
+.fab-toggle.icon-only .icon {
   width: 22px;
   height: 22px;
 }
@@ -572,16 +573,27 @@ $brand-band-cycle: 397.795px;
   max-width: 100%;
   justify-content: center;
   white-space: nowrap;
-  background: var(--card);
+  background: var(--bg-elevated);
   border: 1px solid var(--stroke);
   box-shadow: var(--fab-control-shadow);
 }
 
 .fab-action.ghost {
-  background: var(--card);
+  background: var(--bg-elevated);
   border: 1px solid var(--stroke);
   color: var(--ink);
   box-shadow: var(--fab-control-shadow);
+}
+
+.fab-action.primary {
+  /* A translucent stroke lightened the gradient at the cap's shallowest point, which rendered as
+     a short vertical seam on either end. Keep the shared one-pixel geometry without tinting it. */
+  border-color: transparent;
+}
+
+.fab-action.ghost:hover:not(:disabled) {
+  /* Both inputs are opaque, so hover stays legible instead of becoming an 8%-alpha wash. */
+  background: color-mix(in srgb, var(--bg-elevated) 92%, var(--ink));
 }
 
 .app-shell[data-sidebar="collapsed"] {
@@ -657,7 +669,9 @@ $brand-band-cycle: 397.795px;
 }
 
 .app-shell[data-sidebar="collapsed"] .sidebar-actions {
-  padding: 0 6px;
+  /* The same 40px content column as the navigation above. Six pixels left 48px-wide lower buttons
+     beneath 40px destinations, making the collapsed rail look pinched and stretched by turns. */
+  padding: 0 10px;
 }
 
 .app-shell[data-sidebar="collapsed"] .sidebar-toggle .icon {

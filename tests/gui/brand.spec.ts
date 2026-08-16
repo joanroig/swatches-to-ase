@@ -221,40 +221,20 @@ test("the resting mark keeps the shipped icon's bands at the rounded edges", asy
   expect(wrongBandPixels).toBe(0);
 });
 
-test("the hover ring has room to paint on every side", async ({ page }) => {
+test("the sidebar does not clip the logo glow", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("body")).toHaveClass(/is-ready/);
 
-  /*
-   * The mark used to sit flush against the left edge of the box that clipped it, so the ring it
-   * paints on hover came out sliced down one side. Whatever does the clipping has to stand back far
-   * enough to let the ring through — measured here rather than asserted as "nothing clips", because
-   * something has to, to keep the wordmark off the panel as the rail closes.
-   */
-  const RING = 2;
-  const room = await visibleBrand(page)
-    .locator(".brand-logo")
-    .evaluate((mark: Element) => {
-      const box = mark.getBoundingClientRect();
-      let gaps = { top: Infinity, right: Infinity, bottom: Infinity, left: Infinity };
-      for (let node = mark.parentElement; node && node !== document.body; node = node.parentElement) {
-        if (getComputedStyle(node).overflow === "visible") {
-          continue;
-        }
-        const clip = node.getBoundingClientRect();
-        gaps = {
-          top: Math.min(gaps.top, box.top - clip.top),
-          right: Math.min(gaps.right, clip.right - box.right),
-          bottom: Math.min(gaps.bottom, clip.bottom - box.bottom),
-          left: Math.min(gaps.left, box.left - clip.left),
-        };
+  const clippingAncestor = await page.locator(".brand--sidebar .brand-logo").evaluate((mark: Element) => {
+    for (let node = mark.parentElement; node && node !== document.body; node = node.parentElement) {
+      if (["hidden", "clip"].includes(getComputedStyle(node).overflow)) {
+        return node.className;
       }
-      return gaps;
-    });
-
-  Object.entries(room).forEach(([side, gap]) => {
-    expect(gap, `${side} edge has ${gap}px before the nearest clip`).toBeGreaterThanOrEqual(RING);
+    }
+    return null;
   });
+
+  expect(clippingAncestor).toBeNull();
 });
 
 test("the wordmark's last letter survives the clip that contains it", async ({ page }) => {
@@ -400,18 +380,13 @@ test("a second press restarts the run rather than doing nothing", async ({ page 
   expect(await bandFills(brand)).toEqual(BANDS);
 });
 
-test("the rail contains the wordmark as it collapses", async ({ page }) => {
+test("the wordmark contains its own text as the rail collapses", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await expect(page.locator("body")).toHaveClass(/is-ready/);
 
-  /*
-   * The other half of the clip's job, and why it cannot simply be dropped: a nowrap wordmark in a
-   * rail narrower than the text has to go somewhere, and with nothing clipping it, it went out over
-   * the panel mid-transition. The rail is what clips it — far enough from the mark to leave the
-   * hover ring alone, which the test above measures.
-   */
-  await expect(page.locator(".sidebar")).toHaveCSS("overflow", /hidden|clip/);
+  await expect(page.locator(".sidebar")).toHaveCSS("overflow", "visible");
+  await expect(page.locator(".brand--sidebar .brand-text")).toHaveCSS("overflow", "hidden");
 
   const textWidth = () => page.locator(".brand--sidebar .brand-text").evaluate((text: HTMLElement) => text.getBoundingClientRect().width);
   expect(await textWidth()).toBeGreaterThan(0);
@@ -419,4 +394,29 @@ test("the rail contains the wordmark as it collapses", async ({ page }) => {
   // And it closes to nothing of its own accord, rather than leaning on the clip to hide it.
   await page.locator(".sidebar-bottom button, .sidebar-actions button").first().click();
   await expect.poll(textWidth).toBe(0);
+});
+
+test("collapsed lower rail controls match the navigation buttons", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await expect(page.locator("body")).toHaveClass(/is-ready/);
+
+  const toggle = page.locator(".sidebar-toggle");
+  if ((await toggle.getAttribute("aria-label")) === "Collapse") {
+    await toggle.click();
+  }
+  await expect(toggle).toHaveAttribute("aria-label", "Expand");
+  await page.waitForTimeout(300);
+
+  const sizes = await page
+    .locator(".sidebar .nav-item.is-active, .sidebar-actions .sidebar-toggle, .sidebar-actions [data-action='open-settings']")
+    .evaluateAll((buttons: HTMLElement[]) =>
+      buttons.map((button) => {
+        const box = button.getBoundingClientRect();
+        return { width: box.width, height: box.height };
+      }),
+    );
+
+  expect(sizes.length).toBeGreaterThan(2);
+  sizes.forEach((size) => expect(size).toEqual(sizes[0]));
 });
