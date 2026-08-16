@@ -299,7 +299,7 @@ const es: TranslationMap = {
   "terms.content.item2": "Si publicas paletas, nos das permiso para mostrarlas a otros.",
   "terms.changes.title": "Cambios",
   "terms.changes.body": "Podemos actualizar la app y estos términos con el tiempo. El uso continuado implica aceptación.",
-  "terms.sourceAvailable.title": "Licencia de código disponible",
+  "terms.sourceAvailable.title": "Licencia de código fuente disponible",
   "terms.sourceAvailable.body":
     "Palette Studio es software con código fuente disponible bajo la PolyForm Shield 1.0.0. La licencia regula el uso y la distribución del software.",
   "privacy.title": "Política de privacidad",
