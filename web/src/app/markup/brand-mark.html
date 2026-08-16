@@ -15,10 +15,12 @@
   direction and the five together behave as an unbroken diagonal strip; none of the added length is
   inside the viewBox, so the mark at rest is unchanged.
 
-  The bands then repeat every 389.033 units across — five slots of the spacing they are drawn to —
-  so sliding by exactly that distance lands on a picture identical to the one it started from. Ids
-  are placeholders because the page carries three marks and no two elements may share one;
-  `bootstrap.ts` stamps a distinct id into each.
+  The bands then repeat every 397.795 units across. That is the exact horizontal distance from the
+  blue band's leading edge to the red band's outer edge at the same height. Using only five slots
+  of centre-line spacing makes the next blue band overlap the red one, which leaves a blue wedge in
+  the top-right corner at rest. Sliding by the full outer-edge distance lands on a picture identical
+  to the one it started from. Ids are placeholders because the page carries three marks and no two
+  elements may share one; `bootstrap.ts` stamps a distinct id into each.
 
   Keep the band geometry in step with `web/public/favicon.svg`.
 -->
@@ -32,9 +34,11 @@
       <path class="brand-band" d="M-268 -603l57 -40 955 1365 -57 40z" />
     </g>
   </defs>
+  <!-- Covers the sub-pixel antialiasing seam where the red edge meets the next blue cycle. -->
+  <rect class="brand-band-backdrop" width="267" height="267" />
   <g class="brand-bands">
-    <use href="#__BRAND_ID__" x="-389.033" />
+    <use href="#__BRAND_ID__" x="-397.795" />
     <use href="#__BRAND_ID__" />
-    <use href="#__BRAND_ID__" x="389.033" />
+    <use href="#__BRAND_ID__" x="397.795" />
   </g>
 </svg>
