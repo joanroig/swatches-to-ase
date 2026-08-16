@@ -15,17 +15,15 @@ const seedPalette = async (page) => {
             id: "mobile-palette",
             name: "Wild Moments",
             lastModified: 1_700_000_000_000,
-            colors: ["054000", "00858a", "00b3a8", "ffd6e4", "ffe3e8", "ff763f", "ffab25", "ffcf91", "061500"].map(
-              (hex, index) => ({
-                id: `mobile-color-${index}`,
-                name: "Color",
-                rgb: [
-                  Number.parseInt(hex.slice(0, 2), 16) / 255,
-                  Number.parseInt(hex.slice(2, 4), 16) / 255,
-                  Number.parseInt(hex.slice(4, 6), 16) / 255,
-                ],
-              }),
-            ),
+            colors: ["054000", "00858a", "00b3a8", "ffd6e4", "ffe3e8", "ff763f", "ffab25", "ffcf91", "061500"].map((hex, index) => ({
+              id: `mobile-color-${index}`,
+              name: "Color",
+              rgb: [
+                Number.parseInt(hex.slice(0, 2), 16) / 255,
+                Number.parseInt(hex.slice(2, 4), 16) / 255,
+                Number.parseInt(hex.slice(4, 6), 16) / 255,
+              ],
+            })),
           },
         ],
         activePaletteId: "mobile-palette",
@@ -148,6 +146,55 @@ test("mobile palette actions use one control shadow without a menu haze", async 
   expect(shadows.backdropContent).toBe("none");
 });
 
+test("mobile palette actions stay large and opaque", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedPalette(page);
+
+  const toggle = page.locator("#fab-toggle");
+  const toggleBox = (await toggle.boundingBox())!;
+  expect(toggleBox.width).toBe(56);
+  expect(toggleBox.height).toBe(56);
+
+  await toggle.click();
+  const importAction = page.locator('[data-fab-action="import"]');
+  await importAction.hover();
+
+  const alpha = await importAction.evaluate((button) => {
+    const color = getComputedStyle(button).backgroundColor;
+    if (color === "transparent") return 0;
+    const explicitAlpha = color.match(/\/\s*([\d.]+)\)/)?.[1] ?? color.match(/rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/)?.[1];
+    return explicitAlpha ? Number(explicitAlpha) : 1;
+  });
+  expect(alpha).toBe(1);
+
+  const newButtonShape = await page.locator('[data-fab-action="generate"]').evaluate((button) => {
+    const style = getComputedStyle(button);
+    return {
+      borderColor: style.borderColor,
+      borderRadius: Number.parseFloat(style.borderRadius),
+      height: button.getBoundingClientRect().height,
+    };
+  });
+  expect(newButtonShape.borderColor).toBe("rgba(0, 0, 0, 0)");
+  expect(newButtonShape.borderRadius).toBeGreaterThanOrEqual(newButtonShape.height / 2);
+});
+
+test("the mobile wordmark bar is opaque over scrolled content", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 700 });
+  await seedPalette(page);
+
+  await page.evaluate(() => window.scrollTo(0, 240));
+  await expect(page.locator(".topbar")).toHaveClass(/is-scrolled/);
+
+  const alpha = await page.locator(".topbar").evaluate((topbar) => {
+    const color = getComputedStyle(topbar, "::before").backgroundColor;
+    if (color === "transparent") return 0;
+    const explicitAlpha = color.match(/\/\s*([\d.]+)\)/)?.[1] ?? color.match(/rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/)?.[1];
+    return explicitAlpha ? Number(explicitAlpha) : 1;
+  });
+  expect(alpha).toBe(1);
+});
+
 test("mobile add button follows the viewport until the palette panel ends", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 700 });
   await seedPalette(page);
@@ -268,23 +315,24 @@ test("editor actions stay on one row and overflow by available width", async ({ 
   await page.locator("#editor-tools-trigger").click();
   await expect(page.locator("#editor-tools-trigger")).toHaveAttribute("aria-expanded", "false");
 
-  const measureToolbar = () => page.locator(".editor-toolbar").evaluate((element) => {
-    const undo = element.querySelector<HTMLElement>("#editor-undo")!.getBoundingClientRect();
-    const save = element.querySelector<HTMLElement>("#editor-save")!.getBoundingClientRect();
-    const history = element.querySelector<HTMLElement>(".editor-toolbar-group:first-child")!.getBoundingClientRect();
-    const tools = element.querySelector<HTMLElement>("#editor-tools")!.getBoundingClientRect();
-    const visibleToolLeft = ["#editor-tools-primary > button", "#editor-tools-trigger", "#editor-save"]
-      .flatMap((selector) => Array.from(element.querySelectorAll<HTMLElement>(selector)))
-      .map((control) => control.getBoundingClientRect())
-      .filter((rect) => rect.width > 0 && rect.height > 0)
-      .reduce((left, rect) => Math.min(left, rect.left), Number.POSITIVE_INFINITY);
-    return {
-      topDifference: Math.abs(undo.top - save.top),
-      overflow: element.scrollWidth - element.clientWidth,
-      groupGap: tools.left - history.right,
-      controlGap: visibleToolLeft - history.right,
-    };
-  });
+  const measureToolbar = () =>
+    page.locator(".editor-toolbar").evaluate((element) => {
+      const undo = element.querySelector<HTMLElement>("#editor-undo")!.getBoundingClientRect();
+      const save = element.querySelector<HTMLElement>("#editor-save")!.getBoundingClientRect();
+      const history = element.querySelector<HTMLElement>(".editor-toolbar-group:first-child")!.getBoundingClientRect();
+      const tools = element.querySelector<HTMLElement>("#editor-tools")!.getBoundingClientRect();
+      const visibleToolLeft = ["#editor-tools-primary > button", "#editor-tools-trigger", "#editor-save"]
+        .flatMap((selector) => Array.from(element.querySelectorAll<HTMLElement>(selector)))
+        .map((control) => control.getBoundingClientRect())
+        .filter((rect) => rect.width > 0 && rect.height > 0)
+        .reduce((left, rect) => Math.min(left, rect.left), Number.POSITIVE_INFINITY);
+      return {
+        topDifference: Math.abs(undo.top - save.top),
+        overflow: element.scrollWidth - element.clientWidth,
+        groupGap: tools.left - history.right,
+        controlGap: visibleToolLeft - history.right,
+      };
+    });
 
   const toolbar = await measureToolbar();
   expect(toolbar.topDifference).toBeLessThanOrEqual(1);

@@ -142,7 +142,7 @@ button {
    */
   &:hover:not(:disabled):not(.primary):not(.danger):not(.text-link):not(.footer-link):not(.discover-author-button):not(
       .playground-source-detach
-    ):not(.brand) {
+    ):not(.brand):not(.fab-action) {
     background: color-mix(in srgb, var(--ink) 8%, transparent);
   }
 
