@@ -281,7 +281,7 @@ const es: TranslationMap = {
   "discover.profile.empty": "Aún no hay paletas públicas.",
   "discover.profile.open": "Ver el perfil de {name}",
   "legal.title": "Legal",
-  "legal.warranty": "Palette Studio es software con código fuente disponible licenciado bajo la PolyForm Shield 1.0.0 y se ofrece SIN GARANTÍA.",
+  "legal.warranty": "El código fuente de Palette Studio está disponible bajo PolyForm Shield 1.0.0 y se ofrece SIN GARANTÍA.",
   "legal.resources": "Recursos",
   "legal.viewLicense": "Ver la licencia PolyForm Shield",
   "legal.viewLicenses": "Ver todas las licencias",
@@ -301,7 +301,7 @@ const es: TranslationMap = {
   "terms.changes.body": "Podemos actualizar la app y estos términos con el tiempo. El uso continuado implica aceptación.",
   "terms.sourceAvailable.title": "Licencia de código disponible",
   "terms.sourceAvailable.body":
-    "Palette Studio es software con código fuente disponible bajo la PolyForm Shield 1.0.0. La licencia regula el uso y la distribución del software.",
+    "El código fuente de Palette Studio está disponible bajo PolyForm Shield 1.0.0. Se permite usarlo, modificarlo y distribuirlo con fines no competitivos.",
   "privacy.title": "Política de privacidad",
   "privacy.updated": "Última actualización: 5 de febrero de 2026",
   "privacy.intro": "Recopilamos el mínimo de datos necesarios para ejecutar Palette Studio.",
